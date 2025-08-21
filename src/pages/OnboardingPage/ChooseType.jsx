@@ -21,16 +21,19 @@ export default function ChooseType() {
 
       {/* Buttons */}
       <div className="flex flex-col space-y-[21px] mt-[53px]">
-        <button className="flex items-center space-x-3 border w-[334px] h-[54px] bg-[#FFFFFF] rounded-lg px-4 py-3">
-          <img
-            src="/icons/landlord.png"
-            alt="Letora Logo"
-            className="w-[32px] h-[34px]"
-          />
-          <span className="text-[#666666] font-regular text-[14px]">
-            I want to list my apartment as Shortlet
-          </span>
-        </button>
+        <Link to="/host-sign-up">
+          {" "}
+          <button className="flex items-center space-x-3 border w-[334px] h-[54px] bg-[#FFFFFF] rounded-lg px-4 py-3">
+            <img
+              src="/icons/landlord.png"
+              alt="Letora Logo"
+              className="w-[32px] h-[34px]"
+            />
+            <span className="text-[#666666] font-regular text-[14px]">
+              I want to list my apartment as Shortlet
+            </span>
+          </button>
+        </Link>
 
         <Link to="/guest-sign-up">
           <button className="flex items-center space-x-3 border w-[334px] h-[54px] bg-[#FFFFFF] rounded-lg px-4 py-3">

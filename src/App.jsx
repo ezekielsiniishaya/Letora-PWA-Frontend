@@ -3,10 +3,11 @@ import SplashWithOnboarding from "./pages/OnboardingPage/SplashWithOnboarding";
 import ChooseType from "./pages/OnboardingPage/ChooseType";
 import GeneralSignIn from "./pages/AuthPages/GeneralSignIn";
 import GuestSignUp from "./pages/AuthPages/GuestSignUp";
-import VerifyEmail from "./pages/AuthPages/VerifyEmail";
-import CreatePassword from "./pages/AuthPages/CreatePassword";
-import ForgotPassword from "./pages/AuthPages/ForgotPassword";
-import ResetPassword from "./pages/AuthPages/ResetPassword";
+import VerifyEmail from "./components/auth/VerifyEmail";
+import CreatePassword from "./components/auth/CreatePassword";
+import ForgotPassword from "./components/auth/ForgotPassword";
+import ResetPassword from "./components/auth/ResetPassword";
+import HostSignUp from "./pages/AuthPages/HostSignUp";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="create-password" element={<CreatePassword />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/host-sign-up" element={<HostSignUp />} />
       </Routes>
     </Router>
   );

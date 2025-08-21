@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Button from "../../components/Button";
 import Header from "../../components/Header";
-import PasswordInput from "./PasswordInput";
+import PasswordInput from "../../components/auth/PasswordInput";
 import { Link } from "react-router-dom";
 
 export default function SignIn() {
