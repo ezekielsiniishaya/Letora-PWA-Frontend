@@ -32,17 +32,18 @@ export default function ChooseType() {
           </span>
         </button>
 
-        <button className="flex items-center space-x-3 border w-[334px] h-[54px] bg-[#FFFFFF] rounded-lg px-4 py-3">
-          <img
-            src="/icons/guests.png"
-            alt="Letora Logo"
-            className="w-[32px] h-[34px]"
-          />
-
-          <span className="text-[#666666] font-regular text-[14px]">
-            I want to book a Shortlet apartment
-          </span>
-        </button>
+        <Link to="/guest-sign-up">
+          <button className="flex items-center space-x-3 border w-[334px] h-[54px] bg-[#FFFFFF] rounded-lg px-4 py-3">
+            <img
+              src="/icons/guests.png"
+              alt="Letora Logo"
+              className="w-[32px] h-[34px]"
+            />
+            <span className="text-[#666666] font-regular text-[14px]">
+              I want to book a Shortlet apartment
+            </span>
+          </button>
+        </Link>
       </div>
 
       {/* Footer */}
