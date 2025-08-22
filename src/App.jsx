@@ -8,6 +8,12 @@ import CreatePassword from "./components/auth/CreatePassword";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import ResetPassword from "./components/auth/ResetPassword";
 import HostSignUp from "./pages/AuthPages/HostSignUp";
+import IdentityId from "./pages/HostIdentificationPages/IdentityID";
+import IdentityWithPictureInfo from "./pages/HostIdentificationPages/IdentityWithPictureInfo";
+import IdentitySelfie from "./pages/HostIdentificationPages/IndentitySelfie";
+import AddBankDetails from "./pages/HostIdentificationPages/AddBankDetails";
+import GuestDashboard from "./pages/GuestDashboard/GuestDashboard";
+import ApartmentsPage from "./pages/GuestDashboard/ApartmentsPage";
 
 function App() {
   return (
@@ -23,6 +29,15 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/host-sign-up" element={<HostSignUp />} />
+        <Route path="/identity-id" element={<IdentityId />} />
+        <Route
+          path="/identity-with-picture-info"
+          element={<IdentityWithPictureInfo />}
+        />
+        <Route path="/identity-selfie" element={<IdentitySelfie />} />
+        <Route path="/add-bank-details" element={<AddBankDetails />} />
+        <Route path="/guest-dashboard" element={<GuestDashboard />} />
+        <Route path="/apartments" element={<ApartmentsPage />} />{" "}
       </Routes>
     </Router>
   );

@@ -8,13 +8,6 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSignIn = (e) => {
-    e.preventDefault();
-    // Use email and password here for authentication
-    console.log("Email:", email);
-    console.log("Password:", password);
-  };
-
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
       <Header />
@@ -25,7 +18,7 @@ export default function SignIn() {
           Sign in if you already have an account
         </p>
 
-        <form className="space-y-4" onSubmit={handleSignIn}>
+        <form className="space-y-4">
           {/* Email */}
           <div>
             <label className="block text-[14px] font-medium text-[#686464] mt-[32px]">
@@ -61,7 +54,9 @@ export default function SignIn() {
           </div>
 
           {/* Sign in button */}
-          <Button text="Sign in" type="submit" />
+          <Link to="/guest-dashboard">
+            <Button text="Sign in" type="submit" />
+          </Link>
         </form>
 
         {/* OR divider */}

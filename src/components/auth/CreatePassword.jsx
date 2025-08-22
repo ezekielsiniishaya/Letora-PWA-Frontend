@@ -22,7 +22,7 @@ export default function CreatePassword() {
   const handleOkay = () => {
     console.log("Closing success modal"); // Debug log
     setIsSuccessOpen(false);
-    navigate("/dashboard");
+    navigate("/identity-id");
   };
 
   return (
