@@ -13,7 +13,9 @@ import IdentityWithPictureInfo from "./pages/HostIdentificationPages/IdentityWit
 import IdentitySelfie from "./pages/HostIdentificationPages/IndentitySelfie";
 import AddBankDetails from "./pages/HostIdentificationPages/AddBankDetails";
 import GuestDashboard from "./pages/GuestDashboard/GuestDashboard";
-import ApartmentsPage from "./pages/GuestDashboard/ApartmentsPage";
+import ApartmentsPage from "./components/dashboard/ApartmentsPage";
+import TermsPage from "./pages/StaticPages/TermsPage";
+import PrivacyPage from "./pages/StaticPages/PrivacyPage";
 
 function App() {
   return (
@@ -37,7 +39,9 @@ function App() {
         <Route path="/identity-selfie" element={<IdentitySelfie />} />
         <Route path="/add-bank-details" element={<AddBankDetails />} />
         <Route path="/guest-dashboard" element={<GuestDashboard />} />
-        <Route path="/apartments" element={<ApartmentsPage />} />{" "}
+        <Route path="/apartments" element={<ApartmentsPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPage />} />
       </Routes>
     </Router>
   );

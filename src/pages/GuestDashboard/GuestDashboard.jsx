@@ -1,215 +1,357 @@
+import { useState } from "react";
 import ApartmentSlider from "../../components/dashboard/ApartmentSlider";
+import ApartmentCard from "../../components/dashboard/ApartmentCard";
+import WithdrawPopup from "../../components/dashboard/WithdrawPopUp";
+import ShowSuccess from "../../components/ShowSuccess";
+import CancelBookingPopup from "../../components/dashboard/CancelBookingPopup";
+import ConfirmCancelPopup from "../../components/dashboard/ConfirmCancelPopup";
 
-// Main Hotel Booking App Component
-const HotelBookingApp = () => {
-  // Sample apartment data for the slider
-  const hotApartments = [
-    {
-      id: 1,
-      title: "2-Bedroom Apartment",
-      location: "Lekki, Lagos",
-      image:
-        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
-      price: "₦30,000",
-      rating: 4.5,
-      reviews: 12,
-      verified: true,
-      featured: false,
-      amenities: ["WiFi", "AC", "Kitchen", "Parking"],
-    },
-    {
-      id: 2,
-      title: "Entire Apartment",
-      location: "Victoria Island, Lagos",
-      image:
-        "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop",
-      price: "₦45,000",
-      rating: 4.8,
-      reviews: 28,
-      verified: false,
-      featured: true,
-      amenities: ["Pool", "Gym", "WiFi", "Balcony", "Security"],
-    },
-    {
-      id: 3,
-      title: "Studio Apartment",
-      location: "Ikeja, Lagos",
-      image:
-        "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=400&h=300&fit=crop",
-      price: "₦25,000",
-      rating: 4.2,
-      reviews: 8,
-      verified: true,
-      featured: false,
-      amenities: ["WiFi", "AC", "Workspace"],
-    },
-    {
-      id: 4,
-      title: "Luxury Penthouse",
-      location: "Banana Island, Lagos",
-      image:
-        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-      price: "₦85,000",
-      rating: 4.9,
-      reviews: 45,
-      verified: true,
-      featured: true,
-      amenities: ["Pool", "Gym", "Concierge", "Spa", "Rooftop"],
-    },
-  ];
+export default function Dashboard() {
+  const [showBalance, setShowBalance] = useState(true);
+  const [showWithdraw, setShowWithdraw] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const bookingData = {
-    name: "Paul Ayodamola",
-    balance: "₦569,098.897",
-    booking: {
-      type: "2-Bedroom Apartment",
-      location: "Lekki, Lagos",
-      checkIn: "30-Nov-2025",
-      checkOut: "30-Dec-2026",
-      status: "Ongoing",
-    },
+  const [showCancelBooking, setShowCancelBooking] = useState(false);
+  const [showConfirmCancel, setShowConfirmCancel] = useState(false);
+  const [showCancelSuccess, setShowCancelSuccess] = useState(false);
+
+  const balance = "569,098.879";
+
+  const lodge = {
+    id: 1,
+    title: "2-Bedroom Apartment",
+    location: "Lekki, Lagos",
+    rating: "4.0",
+    price: "₦150,000",
+    image: "/images/apartment.png",
   };
+  const apartment = {
+    id: 1,
+    title: "2-Bedroom Apartment",
+    location: "Ikoyi, Lagos",
+    likes: 15,
+    rating: "4.0",
+    price: "N100k",
+    image: "/images/apartment.png",
+  };
+  const apartments = Array.from({ length: 6 }, (_, i) => ({
+    ...apartment,
+    id: i + 1,
+  }));
 
   return (
-    <div className="max-w-sm mx-auto bg-white min-h-screen">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center px-4 py-2 bg-purple-600 text-white text-sm">
-        <div className="flex items-center space-x-1">
-          <span>9:41</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <Signal size={16} />
-          <Wifi size={16} />
-          <Battery size={16} />
-        </div>
-      </div>
-
-      {/* Header */}
-      <div className="bg-purple-600 text-white px-4 py-6">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
-            </div>
+    <div className="w-full min-h-screen bg-[#F9F9F9] overflow-x-hidden pb-[80px]">
+      <div className="relative bg-[#8C068C] h-[272px] text-white px-[20px] pt-[14px]">
+        {/* Header Row */}
+        <div className="flex flex-row justify-between items-center">
+          {/* Left: Guest info */}
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/guest.jpg"
+              alt="Guest"
+              className="w-[40px] h-[40px] rounded-full object-cover"
+            />
             <div>
-              <h2 className="font-semibold">{bookingData.name}</h2>
-              <p className="text-purple-200 text-sm">Good morning</p>
+              <h2 className="text-[16px] font-semibold">Paul Ayodamola</h2>
+              <p className="text-[12px] text-[#FBD0F8]">Good morning</p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-purple-700 rounded-full flex items-center justify-center">
-              <span className="text-white">🔍</span>
-            </div>
-            <div className="w-8 h-8 bg-purple-700 rounded-full flex items-center justify-center relative">
-              <span className="text-white">🔔</span>
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full"></div>
+
+          {/* Right: Search + Notifications */}
+          <div className="flex items-center gap-5">
+            <img
+              src="/icons/search.svg"
+              alt="Search"
+              className="w-[16.67px] h-[16.67px] cursor-pointer"
+            />
+
+            <div className="relative">
+              <img
+                src="/icons/notification.svg"
+                alt="Notifications"
+                className="w-[16.65px] h-[16.65px] cursor-pointer"
+              />
+              {/* Badge */}
+              <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[15px] h-[15px] flex items-center justify-center shadow">
+                5
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="mb-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <span className="text-purple-200 text-sm">Current Balance</span>
-            <div className="w-4 h-4 bg-purple-700 rounded-full flex items-center justify-center">
-              <span className="text-xs">?</span>
-            </div>
+        {/* Balance Section */}
+        <div className="mt-[26px] flex flex-col items-center">
+          <div className="flex items-center gap-2">
+            <p className="text-[12px] font-regular text-[#FBD0FB]">
+              Current Balance
+            </p>
+            <img
+              src={showBalance ? "/icons/eye-open.svg" : "/icons/eye-close.svg"}
+              alt="Toggle Balance"
+              className="w-[16px] h-[16px] cursor-pointer"
+              onClick={() => setShowBalance(!showBalance)}
+            />
           </div>
-          <h1 className="text-2xl font-bold">{bookingData.balance}</h1>
+          <h1 className="text-[34px] font-semibold mt-[1px]">
+            <span className="text-[21px]">N</span>
+            {showBalance ? (
+              <>
+                569,098.
+                <span className="text-[#FBD0FB] text-[18px] font-medium">
+                  879
+                </span>
+              </>
+            ) : (
+              <>
+                {"******."}
+                <span className="text-[#FBD0FB] text-[18px] font-medium">
+                  ***
+                </span>
+              </>
+            )}
+          </h1>
+          <button
+            onClick={() => setShowWithdraw(true)}
+            className="mt-[18px] bg-white text-[#8C167E] text-[14px] rounded-[5px] font-semibold flex items-center justify-center gap-2 w-[180.41px] h-[38px]"
+          >
+            <img
+              src="/icons/arrow-slant.svg"
+              alt="arrow-slant"
+              className="w-[14px] h-[12px] object-cover"
+            />
+            <span>Withdraw</span>
+          </button>
+          {/* Popups */}
+          {showWithdraw && (
+            <WithdrawPopup
+              balance={balance}
+              onClose={() => setShowWithdraw(false)}
+              onSuccess={() => setShowSuccess(true)}
+            />
+          )}
+          {/* Show Success Popup */}
+          {showSuccess && (
+            <ShowSuccess
+              image="/icons/Illustration.svg"
+              heading="Withdrawal Successful"
+              message="₦550,000 has been moved from your Letora wallet to your bank account. Arrival time may vary by bank."
+              buttonText="Done"
+              onClose={() => setShowSuccess(false)}
+              height="auto"
+            />
+          )}
         </div>
 
-        <button className="w-full bg-white text-purple-600 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2">
-          <span>↗</span>
-          <span>Withdraw</span>
-        </button>
+        {/* Background Logo (watermark bottom-right) */}
+        <img
+          src="/icons/logo.svg"
+          alt="Logo"
+          className="absolute -bottom-4 -right-9 opacity-10 w-[176px] h-[169.88px]"
+        />
       </div>
 
-      <div className="px-4 py-6 space-y-6">
-        {/* My Booking Section */}
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">My Booking 🏨</h3>
-            <button className="text-purple-600 text-sm font-medium">
-              See all
-            </button>
-          </div>
+      {/* My Booking Section */}
+      <div className="px-[21px] mt-[25px]">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="font-medium text-[14px]">My Booking 🏬</h3>
+          <button className="text-sm text-[#A20BA2]">See all</button>
+        </div>
+        <div className="bg-white rounded-[5px] w-full h-[158px] pt-[10px] px-[10px] ">
+          <div className="flex gap-4">
+            {/* Apartment Image */}
+            <img
+              src={lodge.image}
+              alt={lodge.title}
+              className="w-[105.32px] h-[86px] rounded-[2.3px] object-cover"
+            />
 
-          <div className="bg-white rounded-lg shadow-sm border p-4">
-            <div className="flex space-x-3">
-              <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+            {/* Apartment Info */}
+            <div className="flex-1 text-[#333333]  flex flex-col">
+              {/* Title + Status */}
+              <div className="flex justify-between items-center">
+                <h4 className="font-medium text-[12px]">{lodge.title}</h4>
+                <span className="text-[12px] font-medium bg-[#FFEFD7] text-[#FB9506] px-2 py-[2px] rounded-full">
+                  Ongoing
+                </span>
+              </div>
+
+              {/* Location */}
+              <div className="flex items-center mt-[4px] mb-[7px] gap-1">
                 <img
-                  src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop"
-                  alt="Current booking"
-                  className="w-full h-full object-cover"
+                  src="/icons/location.svg"
+                  alt="Location"
+                  className="w-[11px] h-[13px]"
                 />
+                <p className="text-[12px]">{lodge.location}</p>
               </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-semibold text-gray-800">
-                    {bookingData.booking.type}
-                  </h4>
-                  <span className="bg-orange-100 text-orange-600 text-xs px-2 py-1 rounded">
-                    {bookingData.booking.status}
-                  </span>
+
+              {/* Check-in / Check-out */}
+              <div className="flex gap-[30px] mt-[1px] text-[12px] text-[#505050]">
+                <div className="flex flex-col items-start">
+                  <span className="font-medium">Check-in</span>
+                  <span className="text-[#666666]">30-Nov-2025</span>
                 </div>
-                <p className="text-gray-600 text-sm mb-2">
-                  📍 {bookingData.booking.location}
-                </p>
-                <div className="flex text-xs text-gray-500 space-x-4">
-                  <div>
-                    <span className="block">Check-in</span>
-                    <span>{bookingData.booking.checkIn}</span>
-                  </div>
-                  <div>
-                    <span className="block">Check-Out</span>
-                    <span>{bookingData.booking.checkOut}</span>
-                  </div>
+                <div className="flex flex-col items-start">
+                  <span className="">Check-out</span>
+                  <span className="text-[#666666]">30-Dec-2026</span>
                 </div>
               </div>
-            </div>
-            <div className="flex space-x-2 mt-4">
-              <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-sm">
-                Cancel Booking
-              </button>
-              <button className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg text-sm">
-                View Booking
-              </button>
             </div>
           </div>
-        </div>
 
-        {/* Hot Apartments Section */}
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Hot Apartments 🔥</h3>
-            <button className="text-purple-600 text-sm font-medium">
-              See all
+          <div className="absolute left-5 right-5 mt-1 border-t border-[#E6E6E6]"></div>
+
+          {/* Buttons */}
+          <div className="flex justify-between mt-3">
+            <button
+              onClick={() => setShowCancelBooking(true)}
+              className="border border-[#A20BA2] text-[#A20BA2] px-7 rounded-[5px] text-[12px] font-semibold"
+            >
+              Cancel Booking
             </button>
-          </div>                        
 
-          <div className="pb-8">
-            <ApartmentSlider apartments={hotApartments} className="w-full" />
+            <button className="bg-[#A20BA2] text-white px-6 py-2 rounded-[5px] text-[12px] font-medium">
+              View Booking
+            </button>
+            {showCancelBooking && (
+              <CancelBookingPopup
+                onClose={() => setShowCancelBooking(false)}
+                onSubmit={(reasons) => {
+                  console.log("User reasons:", reasons);
+                  setShowCancelBooking(false);
+                  setShowConfirmCancel(true);
+                }}
+              />
+            )}
+
+            {showConfirmCancel && (
+              <ConfirmCancelPopup
+                onClose={() => setShowConfirmCancel(false)}
+                onConfirm={() => {
+                  setShowConfirmCancel(false);
+                  setShowCancelSuccess(true);
+                }}
+              />
+            )}
+
+            {showCancelSuccess && (
+              <ShowSuccess
+                image="/icons/Illustration.svg"
+                heading="Booking Successfully Cancelled!"
+                message="Your booking has been cancelled.If you're eligible for a refund, it will be processed within 7–10 business days. "
+                buttonText="Done"
+                onClose={() => setShowCancelSuccess(false)}
+                height="auto"
+              />
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Become a Host Section */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg p-4 text-white">
-          <h3 className="text-lg font-semibold mb-2">Become a Host</h3>
-          <p className="text-purple-100 text-sm mb-3">
-            Ready to earn extra with your space? Verify your identity and start
-            hosting
-          </p>
-          <button className="text-purple-200 text-sm underline">
-            Click here to begin
+      {/* Hot Apartments Section */}
+      <div className="px-[22px]">
+        <div className="flex justify-between items-center">
+          <h3 className="font-medium my-4 text-[14px]">Hot Apartments 🔥</h3>
+          <button className="text-[12px] font-medium text-[#A20BA2]">
+            See all
           </button>
-          <div className="absolute right-4 bottom-4">
-            <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
-              <span className="text-2xl">👩‍💼</span>
-            </div>
+        </div>
+      </div>
+      <div className="pl-[22px]">
+        <ApartmentSlider />
+      </div>
+      {/* Become a Host Section */}
+      <div className="px-[22px] mt-5">
+        <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-[8px] py-[8px] px-[12px] flex items-center justify-between overflow-hidden h-[91px]">
+          {/* Left: Text Content */}
+          <div className="text-white max-w-[60%] z-10">
+            <h3 className="font-semibold text-[16px] mb-1">Become a Host</h3>
+            <p className="text-[12px] leading-snug">
+              Ready to cash in on your space? <br />
+              Verify your identity and list today.
+            </p>
+            <button className="mt-2 text-[10px]">Click here to begin</button>
           </div>
+
+          {/* Right: Host Image + Star + Doodle */}
+          <div className="absolute right-0 bottom-0 h-full flex items-end justify-end">
+            {/* Host Image */}
+            <img
+              src="/images/background/become-host.png"
+              alt="Become a Host"
+              className="h-[102px] object-contain transform scale-x-[-1] relative z-10"
+            />
+
+            {/* Star (top) */}
+            <img
+              src="/icons/star.svg"
+              alt="star"
+              className="absolute top-[8px] right-[104.3px] w-[9px] h-[9px] z-20"
+            />
+
+            {/* Doodle (bottom) */}
+            <img
+              src="/icons/doodle.svg"
+              alt="doodle"
+              className="absolute bottom-[12.27px] right-[121.73px] w-[6.3px] h-[5.4px] z-20"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="px-[22px]">
+        <div className="flex justify-between items-center">
+          <h3 className="font-medium my-4 text-[14px]">
+            Available in your Location 📍
+          </h3>
+          <button className="text-[12px] font-medium text-[#A20BA2]">
+            See all
+          </button>
+        </div>
+        <div className="space-y-1">
+          {apartments.map((apt) => (
+            <ApartmentCard key={apt.id} apt={apt} />
+          ))}
+        </div>
+      </div>
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-md z-50">
+        <div className="flex justify-around items-center h-[60px]">
+          {/* Home */}
+          <button className="flex flex-col items-center text-[#A20BA2]">
+            <img src="/icons/home.svg" alt="Home" className="w-5 h-5" />
+            <span className="text-[12px] mt-1">Home</span>
+          </button>
+
+          {/* New Listing */}
+          <button className="flex flex-col items-center text-gray-600">
+            <img
+              src="/icons/new-listing.svg"
+              alt="New Listing"
+              className="w-5 h-5"
+            />
+            <span className="text-[12px] mt-1">New Listing</span>
+          </button>
+
+          {/* Bookings */}
+          <button className="flex flex-col items-center text-gray-600">
+            <img src="/icons/book.svg" alt="Bookings" className="w-5 h-5" />
+            <span className="text-[12px] mt-1">Bookings</span>
+          </button>
+
+          {/* Favorites */}
+          <button className="flex flex-col items-center text-gray-600">
+            <img src="/icons/heart.svg" alt="Favorites" className="w-5 h-5" />
+            <span className="text-[12px] mt-1">Favorites</span>
+          </button>
+
+          {/* Profile */}
+          <button className="flex flex-col items-center text-gray-600">
+            <img src="/icons/profile.svg" alt="Profile" className="w-5 h-5" />
+            <span className="text-[12px] mt-1">Profile</span>
+          </button>
         </div>
       </div>
     </div>
   );
-};
-
-export default HotelBookingApp;
+}

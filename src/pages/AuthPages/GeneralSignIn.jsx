@@ -75,12 +75,12 @@ export default function SignIn() {
 
         {/* Footer */}
         <div className="flex justify-center space-x-4 text-[14px] text-[#333333] pb-[-1px]">
-          <a href="#" className="hover:underline">
+          <Link to="/terms" className="hover:underline">
             Terms & Conditions
-          </a>
-          <a href="#" className="hover:underline">
+          </Link>
+          <Link to="/privacy-policy" className="hover:underline">
             Privacy Policy
-          </a>
+          </Link>
         </div>
       </div>
     </div>
