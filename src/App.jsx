@@ -16,6 +16,9 @@ import GuestDashboard from "./pages/GuestDashboard/GuestDashboard";
 import ApartmentsPage from "./components/dashboard/ApartmentsPage";
 import TermsPage from "./pages/StaticPages/TermsPage";
 import PrivacyPage from "./pages/StaticPages/PrivacyPage";
+import SearchPage from "./components/dashboard/SearchPage";
+import FilterPage from "./components/dashboard/FilterPage";
+import FilteredSearchPage from "./components/dashboard/FilteredSearchPage";
 
 function App() {
   return (
@@ -42,6 +45,9 @@ function App() {
         <Route path="/apartments" element={<ApartmentsPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy-policy" element={<PrivacyPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/filter" element={<FilterPage />} />
+        <Route path="/filtered-search" element={<FilteredSearchPage />} />
       </Routes>
     </Router>
   );

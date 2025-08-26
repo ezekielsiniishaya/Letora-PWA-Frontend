@@ -5,6 +5,7 @@ import WithdrawPopup from "../../components/dashboard/WithdrawPopUp";
 import ShowSuccess from "../../components/ShowSuccess";
 import CancelBookingPopup from "../../components/dashboard/CancelBookingPopup";
 import ConfirmCancelPopup from "../../components/dashboard/ConfirmCancelPopup";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const [showBalance, setShowBalance] = useState(true);
@@ -59,12 +60,13 @@ export default function Dashboard() {
 
           {/* Right: Search + Notifications */}
           <div className="flex items-center gap-5">
-            <img
-              src="/icons/search.svg"
-              alt="Search"
-              className="w-[16.67px] h-[16.67px] cursor-pointer"
-            />
-
+            <Link to="/search">
+              <img
+                src="/icons/search.svg"
+                alt="Search"
+                className="w-[16.67px] h-[16.67px] cursor-pointer"
+              />
+            </Link>
             <div className="relative">
               <img
                 src="/icons/notification.svg"
