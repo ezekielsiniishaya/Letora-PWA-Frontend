@@ -182,8 +182,18 @@ export default function FilterPage() {
               setOpenDropdown(openDropdown === "apartment" ? null : "apartment")
             }
           />
-          {/* Location (no red star) */}{" "}
-          <Dropdown label="Location" placeholder="Ikorodu, Lagos" />
+          {/* Location */}
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Location
+            </label>
+            <input
+              type="text"
+              placeholder="Ikorodu, Lagos"
+              className="w-full text-[#686464] text-[14px] rounded-lg px-3 py-2"
+            />
+          </div>
+
           {/* Budget Slider */}
           <div>
             <label className="block text-[14px] font-medium text-[#333333]">

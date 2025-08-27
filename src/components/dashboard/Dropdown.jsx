@@ -68,7 +68,7 @@ export default function Dropdown({
 
       {/* Popup */}
       {isOpen && (
-        <div className="absolute bottom-0 z-50 mt-1 w-full bg-white overflow-y-auto pb-4 rounded-t-[20px] shadow-lg border max-h-[100vh]">
+        <div className="z-50 mt-1 w-full bg-white overflow-y-auto pb-4 rounded-t-[20px] shadow-lg border max-h-[100vh]">
           <div className="px-5 py-4 text-[16px] font-medium text-black">
             {heading}
           </div>

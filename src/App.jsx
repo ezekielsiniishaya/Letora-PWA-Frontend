@@ -19,6 +19,8 @@ import PrivacyPage from "./pages/StaticPages/PrivacyPage";
 import SearchPage from "./components/dashboard/SearchPage";
 import FilterPage from "./components/dashboard/FilterPage";
 import FilteredSearchPage from "./components/dashboard/FilteredSearchPage";
+import BookingsPage from "./pages/GuestDashboard/BookingsPage";
+import BookingDetails from "./pages/GuestDashboard/BookingDetailsPage";
 
 function App() {
   return (
@@ -48,6 +50,8 @@ function App() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/filter" element={<FilterPage />} />
         <Route path="/filtered-search" element={<FilteredSearchPage />} />
+        <Route path="/bookings" element={<BookingsPage />} />
+        <Route path="/booking-details" element={<BookingDetails />} />
       </Routes>
     </Router>
   );

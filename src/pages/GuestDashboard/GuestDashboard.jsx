@@ -3,19 +3,14 @@ import ApartmentSlider from "../../components/dashboard/ApartmentSlider";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
 import WithdrawPopup from "../../components/dashboard/WithdrawPopUp";
 import ShowSuccess from "../../components/ShowSuccess";
-import CancelBookingPopup from "../../components/dashboard/CancelBookingPopup";
-import ConfirmCancelPopup from "../../components/dashboard/ConfirmCancelPopup";
 import { Link } from "react-router-dom";
+import Bookings from "../../components/dashboard/Bookings";
+import Navigation from "../../components/dashboard/Navigation";
 
 export default function Dashboard() {
   const [showBalance, setShowBalance] = useState(true);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  const [showCancelBooking, setShowCancelBooking] = useState(false);
-  const [showConfirmCancel, setShowConfirmCancel] = useState(false);
-  const [showCancelSuccess, setShowCancelSuccess] = useState(false);
-
   const balance = "569,098.879";
 
   const lodge = {
@@ -153,103 +148,14 @@ export default function Dashboard() {
       </div>
 
       {/* My Booking Section */}
+      {/* Header */}
       <div className="px-[21px] mt-[25px]">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-medium text-[14px]">My Booking 🏬</h3>
           <button className="text-sm text-[#A20BA2]">See all</button>
         </div>
-        <div className="bg-white rounded-[5px] w-full h-[158px] pt-[10px] px-[10px] ">
-          <div className="flex gap-4">
-            {/* Apartment Image */}
-            <img
-              src={lodge.image}
-              alt={lodge.title}
-              className="w-[105.32px] h-[86px] rounded-[2.3px] object-cover"
-            />
-
-            {/* Apartment Info */}
-            <div className="flex-1 text-[#333333]  flex flex-col">
-              {/* Title + Status */}
-              <div className="flex justify-between items-center">
-                <h4 className="font-medium text-[12px]">{lodge.title}</h4>
-                <span className="text-[12px] font-medium bg-[#FFEFD7] text-[#FB9506] px-2 py-[2px] rounded-full">
-                  Ongoing
-                </span>
-              </div>
-
-              {/* Location */}
-              <div className="flex items-center mt-[4px] mb-[7px] gap-1">
-                <img
-                  src="/icons/location.svg"
-                  alt="Location"
-                  className="w-[11px] h-[13px]"
-                />
-                <p className="text-[12px]">{lodge.location}</p>
-              </div>
-
-              {/* Check-in / Check-out */}
-              <div className="flex gap-[30px] mt-[1px] text-[12px] text-[#505050]">
-                <div className="flex flex-col items-start">
-                  <span className="font-medium">Check-in</span>
-                  <span className="text-[#666666]">30-Nov-2025</span>
-                </div>
-                <div className="flex flex-col items-start">
-                  <span className="">Check-out</span>
-                  <span className="text-[#666666]">30-Dec-2026</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute left-5 right-5 mt-1 border-t border-[#E6E6E6]"></div>
-
-          {/* Buttons */}
-          <div className="flex justify-between mt-3">
-            <button
-              onClick={() => setShowCancelBooking(true)}
-              className="border border-[#A20BA2] text-[#A20BA2] px-7 rounded-[5px] text-[12px] font-semibold"
-            >
-              Cancel Booking
-            </button>
-
-            <button className="bg-[#A20BA2] text-white px-6 py-2 rounded-[5px] text-[12px] font-medium">
-              View Booking
-            </button>
-            {showCancelBooking && (
-              <CancelBookingPopup
-                onClose={() => setShowCancelBooking(false)}
-                onSubmit={(reasons) => {
-                  console.log("User reasons:", reasons);
-                  setShowCancelBooking(false);
-                  setShowConfirmCancel(true);
-                }}
-              />
-            )}
-
-            {showConfirmCancel && (
-              <ConfirmCancelPopup
-                onClose={() => setShowConfirmCancel(false)}
-                onConfirm={() => {
-                  setShowConfirmCancel(false);
-                  setShowCancelSuccess(true);
-                }}
-              />
-            )}
-
-            {showCancelSuccess && (
-              <ShowSuccess
-                image="/icons/Illustration.svg"
-                heading="Booking Successfully Cancelled!"
-                message="Your booking has been cancelled.If you're eligible for a refund, it will be processed within 7–10 business days. "
-                buttonText="Done"
-                onClose={() => setShowCancelSuccess(false)}
-                height="auto"
-              />
-            )}
-          </div>
-        </div>
+        <Bookings lodge={lodge} />
       </div>
-
       {/* Hot Apartments Section */}
       <div className="px-[22px]">
         <div className="flex justify-between items-center">
@@ -317,43 +223,7 @@ export default function Dashboard() {
         </div>
       </div>
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-md z-50">
-        <div className="flex justify-around items-center h-[60px]">
-          {/* Home */}
-          <button className="flex flex-col items-center text-[#A20BA2]">
-            <img src="/icons/home.svg" alt="Home" className="w-5 h-5" />
-            <span className="text-[12px] mt-1">Home</span>
-          </button>
-
-          {/* New Listing */}
-          <button className="flex flex-col items-center text-gray-600">
-            <img
-              src="/icons/new-listing.svg"
-              alt="New Listing"
-              className="w-5 h-5"
-            />
-            <span className="text-[12px] mt-1">New Listing</span>
-          </button>
-
-          {/* Bookings */}
-          <button className="flex flex-col items-center text-gray-600">
-            <img src="/icons/book.svg" alt="Bookings" className="w-5 h-5" />
-            <span className="text-[12px] mt-1">Bookings</span>
-          </button>
-
-          {/* Favorites */}
-          <button className="flex flex-col items-center text-gray-600">
-            <img src="/icons/heart.svg" alt="Favorites" className="w-5 h-5" />
-            <span className="text-[12px] mt-1">Favorites</span>
-          </button>
-
-          {/* Profile */}
-          <button className="flex flex-col items-center text-gray-600">
-            <img src="/icons/profile.svg" alt="Profile" className="w-5 h-5" />
-            <span className="text-[12px] mt-1">Profile</span>
-          </button>
-        </div>
-      </div>
+      <Navigation />
     </div>
   );
 }
