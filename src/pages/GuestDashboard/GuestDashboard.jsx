@@ -154,10 +154,10 @@ export default function Dashboard() {
           <h3 className="font-medium text-[14px]">My Booking 🏬</h3>
           <button className="text-sm text-[#A20BA2]">See all</button>
         </div>
-        <Bookings lodge={lodge} />
+        <Bookings lodge={lodge} status={"ongoing"} />
       </div>
       {/* Hot Apartments Section */}
-      <div className="px-[22px]">
+      <div className="px-[22px] mt-1">
         <div className="flex justify-between items-center">
           <h3 className="font-medium my-4 text-[14px]">Hot Apartments 🔥</h3>
           <button className="text-[12px] font-medium text-[#A20BA2]">
@@ -165,14 +165,14 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
-      <div className="pl-[22px]">
+      <div className="pl-[22px] pb-3">
         <ApartmentSlider />
       </div>
       {/* Become a Host Section */}
-      <div className="px-[22px] mt-5">
-        <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-[8px] py-[8px] px-[12px] flex items-center justify-between overflow-hidden h-[91px]">
+      <div className="px-[22px]">
+        <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-[8px] px-[12px] flex items-center justify-between overflow-hidden h-[106.04px]">
           {/* Left: Text Content */}
-          <div className="text-white max-w-[60%] z-10">
+          <div className="text-white max-w-[70%] z-10">
             <h3 className="font-semibold text-[16px] mb-1">Become a Host</h3>
             <p className="text-[12px] leading-snug">
               Ready to cash in on your space? <br />
@@ -182,19 +182,19 @@ export default function Dashboard() {
           </div>
 
           {/* Right: Host Image + Star + Doodle */}
-          <div className="absolute right-0 bottom-0 h-full flex items-end justify-end">
+          <div className="absolute right-[-10px] bottom-0 h-full flex items-end justify-end">
             {/* Host Image */}
             <img
               src="/images/background/become-host.png"
               alt="Become a Host"
-              className="h-[102px] object-contain transform scale-x-[-1] relative z-10"
+              className="h-[117px] object-contain transform scale-x-[-1] relative z-10"
             />
 
             {/* Star (top) */}
             <img
               src="/icons/star.svg"
               alt="star"
-              className="absolute top-[8px] right-[104.3px] w-[9px] h-[9px] z-20"
+              className="absolute top-[15px] right-[114.3px] w-[9px] h-[9px] z-20"
             />
 
             {/* Doodle (bottom) */}

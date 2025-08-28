@@ -4,16 +4,32 @@ import ConfirmCancelPopup from "./ConfirmCancelPopup";
 import ShowSuccess from "../ShowSuccess";
 import { Link } from "react-router-dom";
 
-export default function MyBooking({ lodge }) {
+export default function MyBooking({ lodge, status }) {
   const [showCancelBooking, setShowCancelBooking] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
 
+  // Label + color based on status
+  const statusMap = {
+    ongoing: { label: "Ongoing", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" },
+    completed: {
+      label: "Completed",
+      bg: "bg-[#D7FFEA]",
+      text: "text-[#059669]",
+    },
+    cancelled: {
+      label: "Cancelled",
+      bg: "bg-[#FFE2E2]",
+      text: "text-[#E11D48]",
+    },
+  };
+
+  const currentStatus = statusMap[status];
+
   return (
-    <div className="">
-      {/* Booking Card */}
+    <div>
       <div className="bg-white rounded-[5px] w-full h-[158px] pt-[10px] px-[10px] relative">
-        <div className="flex gap-4">
+        <div className="flex gap-[6px]">
           {/* Apartment Image */}
           <img
             src={lodge.image}
@@ -26,13 +42,18 @@ export default function MyBooking({ lodge }) {
             {/* Title + Status */}
             <div className="flex justify-between items-center">
               <h4 className="font-medium text-[12px]">{lodge.title}</h4>
-              <span className="text-[12px] font-medium bg-[#FFEFD7] text-[#FB9506] px-2 py-[2px] rounded-full">
-                Ongoing
-              </span>
+
+              {status !== "cancelled" && (
+                <span
+                  className={`text-[10px] px-2 font-medium rounded-full ${currentStatus.bg} ${currentStatus.text}`}
+                >
+                  {currentStatus.label}
+                </span>
+              )}
             </div>
 
             {/* Location */}
-            <div className="flex items-center mt-[4px] mb-[7px] gap-1">
+            <div className="flex items-center gap-1 mt-[5px] mb-[5px]">
               <img
                 src="/icons/location.svg"
                 alt="Location"
@@ -42,7 +63,7 @@ export default function MyBooking({ lodge }) {
             </div>
 
             {/* Check-in / Check-out */}
-            <div className="flex gap-[30px] mt-[1px] text-[12px] text-[#505050]">
+            <div className="flex gap-[40px] mt-[1px] text-[12px] text-[#505050]">
               <div className="flex flex-col items-start">
                 <span className="font-medium">Check-in</span>
                 <span className="text-[#666666]">30-Nov-2025</span>
@@ -58,19 +79,35 @@ export default function MyBooking({ lodge }) {
         {/* Divider */}
         <div className="absolute left-0 right-0 mt-1 border-t border-[#E6E6E6]"></div>
 
-        {/* Buttons */}
-        <div className="flex justify-between mt-3">
-          <button
-            onClick={() => setShowCancelBooking(true)}
-            className="border border-[#A20BA2] text-[#A20BA2] px-7 rounded-[5px] text-[12px] font-semibold"
-          >
-            Cancel Booking
-          </button>
-          <Link to="/booking-details">
-            <button className="bg-[#A20BA2] text-white px-6 py-2 rounded-[5px] text-[12px] font-medium">
-              View Booking
+        {/* Buttons based on status */}
+        <div className="flex justify-center mt-4 space-x-2">
+          {status === "ongoing" && (
+            <>
+              <div className="w-full flex justify-between">
+                <button className="border-[#A20BA2] border bg-white text-[#A20BA2] text-[12px] font-semibold w-[129px] h-[27px] rounded-[5px] ">
+                  Cancel Booking
+                </button>
+                <Link
+                  to="/booking-details"
+                  className="w-[129px] h-[27px] rounded-[5px] text-[12px] font-semibold flex items-center text-white justify-center bg-[#A20BA2]"
+                >
+                  View Booking
+                </Link>
+              </div>
+            </>
+          )}
+
+          {status === "completed" && (
+            <button className="bg-[#A20BA2]  text-white w-[177px] h-[27px] rounded-[5px] text-[12px] font-medium">
+              Rate your Stay
             </button>
-          </Link>
+          )}
+
+          {status === "cancelled" && (
+            <button className="bg-[#FFF1F0] border border-[#F81A0C] text-[#F81A0C] w-[177px] h-[27px] rounded-[5px] text-[12px] font-semibold">
+              Cancelled & Refunded
+            </button>
+          )}
         </div>
 
         {/* Popups */}

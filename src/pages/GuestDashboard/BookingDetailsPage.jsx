@@ -1,11 +1,19 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import CancelBookingPopup from "../../components/dashboard/CancelBookingPopup";
+import ConfirmCancelPopup from "../../components/dashboard/ConfirmCancelPopup";
+import ShowSuccess from "../../components/ShowSuccess";
 
 export default function BookingDetails() {
   const navigate = useNavigate();
+  const [showCancelBooking, setShowCancelBooking] = useState(false);
+  const [showConfirmCancel, setShowConfirmCancel] = useState(false);
+  const [showCancelSuccess, setShowCancelSuccess] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#F9F9F9] flex flex-col items-center">
       {/* Header */}
-      <div className="w-full max-w-md px-[20px] pb-[24px] pt-[11px]">
+      <div className="w-full max-w-md px-[21px] pb-[24px] pt-[11px]">
         <div className="flex items-center space-x-[15px]">
           <img
             src="/icons/arrow-left.svg"
@@ -130,12 +138,52 @@ export default function BookingDetails() {
           </div>
         </div>
       </div>
+
       {/* Cancel button card */}
       <div className="pt-[75px] pb-[42px]">
-        <button className="border border-[#E9E9E9] w-[334px] h-[57px]  hover:bg-gray-300 bg-white text-[#686464] rounded-[10px] py-4 text-[16px] font-semibold">
+        <button
+          onClick={() => setShowCancelBooking(true)}
+          className="border border-[#E9E9E9] w-[334px] h-[57px] hover:bg-gray-300 bg-white text-[#686464] rounded-[10px] py-4 text-[16px] font-semibold"
+        >
           Cancel Booking
         </button>
       </div>
+
+      {/* Popup Modals */}
+      {showCancelBooking && (
+        <CancelBookingPopup
+          onClose={() => setShowCancelBooking(false)}
+          onSubmit={(reasons) => {
+            console.log("User reasons:", reasons);
+            setShowCancelBooking(false);
+            setShowConfirmCancel(true);
+          }}
+        />
+      )}
+
+      {showConfirmCancel && (
+        <ConfirmCancelPopup
+          onClose={() => setShowConfirmCancel(false)}
+          onConfirm={() => {
+            setShowConfirmCancel(false);
+            setShowCancelSuccess(true);
+          }}
+        />
+      )}
+
+      {showCancelSuccess && (
+        <ShowSuccess
+          image="/icons/Illustration.svg"
+          heading="Booking Successfully Cancelled!"
+          message="Your booking has been cancelled. If you're eligible for a refund, it will be processed within 7–10 business days."
+          buttonText="Done"
+          onClose={() => {
+            setShowCancelSuccess(false);
+            navigate(-1); // Go back to previous page after success
+          }}
+          height="auto"
+        />
+      )}
     </div>
   );
 }

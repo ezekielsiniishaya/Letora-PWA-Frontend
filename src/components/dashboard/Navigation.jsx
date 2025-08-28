@@ -4,15 +4,36 @@ export default function Navigation() {
   const location = useLocation();
 
   const navItems = [
-    { name: "Home", path: "/guest-dashboard", icon: "/icons/home.svg" },
+    {
+      name: "Home",
+      path: "/guest-dashboard",
+      icon: "/icons/home.svg",
+      activeIcon: "/icons/home-purple.svg",
+    },
     {
       name: "New Listing",
       path: "/apartments",
       icon: "/icons/new-listing.svg",
+      activeIcon: "/icons/new-listing-purple.svg",
     },
-    { name: "Bookings", path: "/bookings", icon: "/icons/book.svg" },
-    { name: "Favorites", path: "/favorites", icon: "/icons/heart.svg" },
-    { name: "Profile", path: "/profile", icon: "/icons/profile.svg" },
+    {
+      name: "Bookings",
+      path: "/bookings",
+      icon: "/icons/booking.svg",
+      activeIcon: "/icons/booking-purple.svg",
+    },
+    {
+      name: "Favorites",
+      path: "/favorites",
+      icon: "/icons/heart.svg",
+      activeIcon: "/icons/heart-purple.svg",
+    },
+    {
+      name: "Profile",
+      path: "/profile",
+      icon: "/icons/profile.svg",
+      activeIcon: "/icons/profile-purple.svg",
+    },
   ];
 
   return (
@@ -28,7 +49,11 @@ export default function Navigation() {
                 isActive ? "text-[#A20BA2]" : "text-gray-600"
               }`}
             >
-              <img src={item.icon} alt={item.name} className="w-5 h-5" />
+              <img
+                src={isActive ? item.activeIcon : item.icon}
+                alt={item.name}
+                className="w-5 h-5"
+              />
               <span className="text-[12px] mt-1">{item.name}</span>
             </Link>
           );
