@@ -1,14 +1,52 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import CancelBookingPopup from "../../components/dashboard/CancelBookingPopup";
 import ConfirmCancelPopup from "../../components/dashboard/ConfirmCancelPopup";
 import ShowSuccess from "../../components/ShowSuccess";
+import RatingPopup from "../../components/dashboard/RatingPopup";
 
 export default function BookingDetails() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { id } = useParams();
+  const [showRating, setShowRating] = useState(false);
   const [showCancelBooking, setShowCancelBooking] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
+
+  // Lodges + status are passed from MyBookings via navigate(..., { state })
+  const { lodge, status = "ongoing" } = location.state || {};
+
+  if (!lodge) {
+    // Case: user refreshed or typed URL directly
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <p className="text-gray-500">Booking not found for ID: {id}</p>
+        <button
+          className="mt-4 px-4 py-2 bg-[#A20BA2] text-white rounded"
+          onClick={() => navigate(-1)}
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+  // Status styles
+  const statusMap = {
+    ongoing: { label: "Ongoing", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" },
+    completed: {
+      label: "Completed",
+      bg: "bg-[#D7FFEA]",
+      text: "text-[#059669]",
+    },
+    cancelled: {
+      label: "Cancelled",
+      bg: "bg-[#FFE2E2]",
+      text: "text-[#E11D48]",
+    },
+  };
+
+  const currentStatus = statusMap[status];
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] flex flex-col items-center">
@@ -27,20 +65,18 @@ export default function BookingDetails() {
         </div>
       </div>
 
-      <div className="w-full max-w-md space-y-2 px-[21px] ">
-        {/* Header (image) with host avatar overlapping halfway */}
+      <div className="w-full max-w-md space-y-2 px-[21px] pb-[75px]">
+        {/* Header (image + host avatar) */}
         <div className="relative overflow-visible">
           <div className="rounded-[5px] overflow-hidden h-[172px] relative">
             <img
-              src="/images/apartment.png"
-              alt="Apartment"
+              src={lodge.image}
+              alt={lodge.title}
               className="w-full h-full object-cover"
             />
-            {/* Dark overlay */}
             <div className="absolute inset-0 bg-black/20"></div>
           </div>
 
-          {/* Host avatar placed so it sits half on the image and half on the next card */}
           <img
             src="/images/guest.jpg"
             alt="Host"
@@ -48,7 +84,7 @@ export default function BookingDetails() {
           />
         </div>
 
-        {/* Info card (host name, apartment title, location, status, price) */}
+        {/* Info card */}
         <div className="pt-[17px] pb-[15px] px-2">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -57,97 +93,135 @@ export default function BookingDetails() {
               </h2>
 
               <div className="flex items-center text-sm text-black font-medium mt-[6px]">
-                {/* Custom tick icon */}
                 <img
                   src="/icons/tick-black.svg"
                   alt="Verified"
                   className="w-4 h-4 mr-1"
                 />
-                <span>3-Bedroom Apartment</span>
+                <span>{lodge.title}</span>
               </div>
 
-              {/* Location */}
-              <p className="text-[12px] text-[#333333] mt-1">Maryland, Lagos</p>
+              <p className="text-[12px] text-[#333333] mt-1">
+                {lodge.location}
+              </p>
             </div>
 
-            {/* Ongoing status and price in same column */}
+            {/* Status + Price */}
             <div className="flex flex-col items-end">
-              <span className="text-[10px] px-3 rounded-full bg-[#FFEFD7] text-[#FB9506] font-medium mb-[32px]">
-                Ongoing
+              <span
+                className={`text-[10px] px-3 rounded-full font-medium mb-[32px] ${currentStatus.bg} ${currentStatus.text}`}
+              >
+                {currentStatus.label}
               </span>
-              <p className="text-[14px] font-semibold">₦150,000/Night</p>
+              <p className="text-[14px] font-semibold">{lodge.price}</p>
             </div>
           </div>
         </div>
 
-        {/* Booking Details card */}
-        <div className="bg-white rounded-[5px] h-[145px] py-[10px] px-[6px] text-[13px] text-[#505050]">
+        {/* Booking Details */}
+        <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
           <div className="space-y-4">
             <div className="flex justify-between">
               <span>Booking Date</span>
-              <span>30-Nov-2025 | 10:00 AM</span>
+              <span>{lodge.bookingDate}</span>
             </div>
             <div className="flex justify-between">
               <span>Check in</span>
-              <span>30-Nov-2025</span>
+              <span>{lodge.checkIn}</span>
             </div>
             <div className="flex justify-between">
               <span>Check out</span>
-              <span>30-Dec-2025</span>
+              <span>{lodge.checkOut}</span>
             </div>
             <div className="flex justify-between">
               <span>Duration</span>
-              <span>30 Days</span>
+              <span>{lodge.duration}</span>
             </div>
           </div>
         </div>
-        {/* Payment Details card */}
-        <div className="bg-white rounded-[5px] h-[145px] py-[10px] px-[6px] text-[13px] text-[#505050]">
+
+        {/* Payment Details */}
+        <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
           <div className="space-y-4">
             <div className="flex justify-between">
               <span>Booking fee paid</span>
-              <span>N1,500,000</span>
+              <span>{lodge.feePaid}</span>
             </div>
             <div className="flex justify-between">
               <span>Security Deposit</span>
-              <span>N100,000</span>
+              <span>{lodge.deposit}</span>
             </div>
             <div className="flex justify-between">
               <span>Convenience Fee</span>
-              <span>N2,500</span>
+              <span>{lodge.convenience}</span>
             </div>
             <div className="flex justify-between">
               <span>Total Amount Paid</span>
-              <span>N1,602,500</span>
+              <span>{lodge.total}</span>
             </div>
           </div>
         </div>
 
-        {/* Host Details card */}
-        <div className="bg-white rounded-[5px] h-[110px] py-[10px] px-[6px] text-[13px] text-[#505050]">
-          <div className="space-y-4">
-            <h3 className="font-medium mb-2">Host Details</h3>
-            <div className="flex justify-between">
-              <span>Phone Number</span>
-              <span>09876543221</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Phone Number</span>
-              <span>09876543221</span>
-            </div>
+        {/* Host Details */}
+        <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
+          <h3 className="font-medium mb-2">Host Details</h3>
+          <div className="flex justify-between">
+            <span>Phone Number</span>
+            <span>{lodge.hostPhone}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Email</span>
+            <span>{lodge.hostEmail}</span>
           </div>
         </div>
+
+        {/* Cancelled extra details */}
+        {status === "cancelled" && (
+          <>
+            <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
+              <h3 className="font-medium mb-2">Cancellation Details</h3>
+              <div className="flex justify-between">
+                <span>Cancellation Date</span>
+                <span>{lodge.cancellationDate}</span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
+              <h3 className="font-medium mb-2">Cancellation Reasons</h3>{" "}
+              <span>Guest Violated house rules</span>
+              <p className="text-sm break-words">{lodge.cancellationReason}</p>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Cancel button card */}
-      <div className="pt-[75px] pb-[42px]">
-        <button
-          onClick={() => setShowCancelBooking(true)}
-          className="border border-[#E9E9E9] w-[334px] h-[57px] hover:bg-gray-300 bg-white text-[#686464] rounded-[10px] py-4 text-[16px] font-semibold"
-        >
-          Cancel Booking
-        </button>
-      </div>
+      {/* Buttons Section */}
+      {status === "ongoing" && (
+        <div className="pt-[75px] pb-[42px]">
+          <button
+            onClick={() => setShowCancelBooking(true)}
+            className="border border-[#E9E9E9] w-[334px] h-[57px] hover:bg-gray-300 bg-white text-[#686464] rounded-[10px] py-4 text-[16px] font-semibold"
+          >
+            Cancel Booking
+          </button>
+        </div>
+      )}
+
+      {status === "completed" && (
+        <div className="pt-[75px] pb-[42px]">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowRating(true);
+            }}
+            className="bg-[#A20BA2] w-[334px] h-[57px] text-white rounded-[10px] py-4 text-[16px] font-semibold"
+          >
+            Rate your Stay
+          </button>
+        </div>
+      )}
+
+      {/* Cancelled → no button */}
 
       {/* Popup Modals */}
       {showCancelBooking && (
@@ -157,7 +231,7 @@ export default function BookingDetails() {
             console.log("User reasons:", reasons);
             setShowCancelBooking(false);
             setShowConfirmCancel(true);
-          }}
+          }} // 👈 close rating popup
         />
       )}
 
@@ -179,11 +253,12 @@ export default function BookingDetails() {
           buttonText="Done"
           onClose={() => {
             setShowCancelSuccess(false);
-            navigate(-1); // Go back to previous page after success
+            navigate(-1);
           }}
           height="auto"
         />
       )}
+      {showRating && <RatingPopup onClose={() => setShowRating(false)} />}
     </div>
   );
 }

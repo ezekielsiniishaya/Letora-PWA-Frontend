@@ -51,7 +51,7 @@ function App() {
         <Route path="/filter" element={<FilterPage />} />
         <Route path="/filtered-search" element={<FilteredSearchPage />} />
         <Route path="/bookings" element={<BookingsPage />} />
-        <Route path="/booking-details" element={<BookingDetails />} />
+        <Route path="/bookings/:id" element={<BookingDetails />} />
       </Routes>
     </Router>
   );
