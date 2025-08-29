@@ -3,13 +3,13 @@ import { useState } from "react";
 import CancelBookingPopup from "./CancelBookingPopup";
 import ConfirmCancelPopup from "./ConfirmCancelPopup";
 import ShowSuccess from "../ShowSuccess";
-import RatingPopup from "./RatingPopup"; // ✅ import your popup
+import RatingPopup from "./RatingPopup";
 
 export default function MyBooking({ lodge, status }) {
   const [showCancelBooking, setShowCancelBooking] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
-  const [showRating, setShowRating] = useState(false); // ✅ new state
+  const [showRating, setShowRating] = useState(false);
 
   const navigate = useNavigate();
 
@@ -117,7 +117,7 @@ export default function MyBooking({ lodge, status }) {
           <button
             onClick={(e) => {
               e.stopPropagation(); // prevent parent navigation
-              setShowRating(true); // ✅ open popup
+              setShowRating(true); // open popup
             }}
             className="bg-[#A20BA2] text-white w-[177px] h-[27px] rounded-[5px] text-[12px] font-medium"
           >

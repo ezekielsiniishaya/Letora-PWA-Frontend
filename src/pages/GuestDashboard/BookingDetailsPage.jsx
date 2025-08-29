@@ -164,14 +164,16 @@ export default function BookingDetails() {
 
         {/* Host Details */}
         <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
-          <h3 className="font-medium mb-2">Host Details</h3>
-          <div className="flex justify-between">
-            <span>Phone Number</span>
-            <span>{lodge.hostPhone}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Email</span>
-            <span>{lodge.hostEmail}</span>
+          <h3 className="font-medium mb-2">Your Host Details</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span>Phone Number</span>
+              <span>{lodge.hostPhone}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Phone Number</span>
+              <span>{lodge.hostPhone}</span>
+            </div>
           </div>
         </div>
 
@@ -197,7 +199,7 @@ export default function BookingDetails() {
 
       {/* Buttons Section */}
       {status === "ongoing" && (
-        <div className="pt-[75px] pb-[42px]">
+        <div className="pb-[42px]">
           <button
             onClick={() => setShowCancelBooking(true)}
             className="border border-[#E9E9E9] w-[334px] h-[57px] hover:bg-gray-300 bg-white text-[#686464] rounded-[10px] py-4 text-[16px] font-semibold"
@@ -208,7 +210,7 @@ export default function BookingDetails() {
       )}
 
       {status === "completed" && (
-        <div className="pt-[75px] pb-[42px]">
+        <div className="    pb-[42px]">
           <button
             onClick={(e) => {
               e.stopPropagation();

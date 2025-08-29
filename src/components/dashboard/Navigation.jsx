@@ -12,7 +12,7 @@ export default function Navigation() {
     },
     {
       name: "New Listing",
-      path: "/apartments",
+      path: "/guest-listing",
       icon: "/icons/new-listing.svg",
       activeIcon: "/icons/new-listing-purple.svg",
     },
@@ -26,7 +26,7 @@ export default function Navigation() {
       name: "Favorites",
       path: "/favorites",
       icon: "/icons/heart.svg",
-      activeIcon: "/icons/heart-purple.svg",
+      activeIcon: "/icons/favorite-purple.svg",
     },
     {
       name: "Profile",

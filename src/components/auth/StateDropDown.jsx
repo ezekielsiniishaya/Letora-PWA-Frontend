@@ -1,6 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 
-export default function StateDropdown() {
+export default function StateDropdown({
+  label = "State of Origin", // default label
+  placeholder = "Select state", // default placeholder
+  required = true,
+  onChange, // optional callback to send value to parent
+}) {
   const [selected, setSelected] = useState("");
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -56,10 +61,16 @@ export default function StateDropdown() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleSelect = (state) => {
+    setSelected(state);
+    setOpen(false);
+    if (onChange) onChange(state); // pass selection back to parent if needed
+  };
+
   return (
     <div className="relative mt-[32px] w-full" ref={dropdownRef}>
       <label className="block text-[14px] font-medium text-[#686464] mb-2">
-        State of Origin <span className="text-red-500 mr-1">*</span>
+        {label} {required && <span className="text-red-500 mr-1">*</span>}
       </label>
 
       <button
@@ -67,7 +78,7 @@ export default function StateDropdown() {
         className="w-full h-[48px] border rounded-md px-4 bg-white flex items-center justify-between text-sm text-[#666666]"
         onClick={() => setOpen(!open)}
       >
-        {selected || "Select state"}
+        {selected || placeholder}
         <span className="ml-2">&#9662;</span> {/* Down arrow */}
       </button>
 
@@ -77,10 +88,7 @@ export default function StateDropdown() {
             <li
               key={state}
               className="px-4 py-2 hover:bg-purple-100 cursor-pointer text-[#333333]"
-              onClick={() => {
-                setSelected(state);
-                setOpen(false);
-              }}
+              onClick={() => handleSelect(state)}
             >
               {state}
             </li>
@@ -90,3 +98,4 @@ export default function StateDropdown() {
     </div>
   );
 }
+ 

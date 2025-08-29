@@ -21,6 +21,12 @@ import FilterPage from "./components/dashboard/FilterPage";
 import FilteredSearchPage from "./components/dashboard/FilteredSearchPage";
 import BookingsPage from "./pages/GuestDashboard/BookingsPage";
 import BookingDetails from "./pages/GuestDashboard/BookingDetailsPage";
+import FavoritesPage from "./pages/GuestDashboard/FavoritesPages";
+import HotApartmentsPage from "./pages/GuestDashboard/HotApartmentsPage";
+import GuestLIsting from "./pages/GuestDashboard/GuestListingPage";
+import BasicInfoPage from "./pages/GuestDashboard/BasicInfoPage";
+import ListingApartmentDetails from "./pages/GuestDashboard/ListingApartmentDetails";
+import ListingFacilitiesPage from "./pages/GuestDashboard/ListingFacilitiesPage";
 
 function App() {
   return (
@@ -52,6 +58,15 @@ function App() {
         <Route path="/filtered-search" element={<FilteredSearchPage />} />
         <Route path="/bookings" element={<BookingsPage />} />
         <Route path="/bookings/:id" element={<BookingDetails />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/hot-apartments" element={<HotApartmentsPage />} />
+        <Route path="/guest-listing" element={<GuestLIsting />} />
+        <Route path="/basic-info" element={<BasicInfoPage />} />
+        <Route
+          path="/listing-apartment-details"
+          element={<ListingApartmentDetails />}
+        />
+        <Route path="/facilities" element={<ListingFacilitiesPage />} />
       </Routes>
     </Router>
   );

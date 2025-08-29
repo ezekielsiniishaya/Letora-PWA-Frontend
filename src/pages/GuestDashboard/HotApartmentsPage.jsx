@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import ApartmentCard from "./ApartmentCard";
-import { Link } from "react-router-dom";
+import ApartmentCard from "../../components/dashboard/ApartmentCard";
 
 const apartment = {
   id: 1,
@@ -12,7 +11,7 @@ const apartment = {
   image: "/images/apartment.png",
 };
 
-export default function ApartmentsPage() {
+export default function HotApartmentsPage() {
   const apartments = Array.from({ length: 6 }, (_, i) => ({
     ...apartment,
     id: i + 1,
@@ -28,20 +27,9 @@ export default function ApartmentsPage() {
             <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-4" />
           </button>
           <h1 className="text-[14px] font-medium text-[#000000]">
-            24 apartments available in Lagos
+            Currently Hot Apartments!!!
           </h1>
         </div>
-
-        {/* Right section: filter */}
-        <Link to="/filter">
-          <button className="p-2">
-            <img
-              src="/icons/filter.svg"
-              alt="Filter"
-              className="w-[21px] h-[21px]"
-            />
-          </button>
-        </Link>
       </div>
 
       {/* Apartments list */}

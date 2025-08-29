@@ -15,20 +15,45 @@ export default function Dashboard() {
 
   const lodge = {
     id: 1,
-    title: "2-Bedroom Apartment",
-    location: "Lekki, Lagos",
-    rating: "4.0",
-    price: "₦150,000",
+    title: "3-Bedroom Apartment",
+    location: "Maryland, Lagos",
     image: "/images/apartment.png",
+    price: "₦150,000/Night",
+    status: "ongoing",
+    bookingDate: "30-Nov-2025 | 10:00 AM",
+    checkIn: "30-Nov-2025",
+    checkOut: "30-Dec-2025",
+    duration: "30 Days",
+    feePaid: "₦1,500,000",
+    deposit: "₦100,000",
+    convenience: "₦2,500",
+    total: "₦1,602,500",
+    hostPhone: "09876543221",
+    hostEmail: "host@mail.com",
+    cancellationDate: "15-Dec-2025",
+    cancellationReason:
+      "HedamagedksckhkhcajadsakjhdbsjbkabkSKkjbxcjsakssdkhkdhkdfewdhwekdkdddkjhkjdhjashhadagasgdbcsdadghgdhaghagdh",
   };
   const apartment = {
     id: 1,
-    title: "2-Bedroom Apartment",
-    location: "Ikoyi, Lagos",
-    likes: 15,
-    rating: "4.0",
-    price: "N100k",
+    title: "3-Bedroom Apartment",
+    location: "Maryland, Lagos",
     image: "/images/apartment.png",
+    price: "₦150,000/Night",
+    status: "ongoing",
+    bookingDate: "30-Nov-2025 | 10:00 AM",
+    checkIn: "30-Nov-2025",
+    checkOut: "30-Dec-2025",
+    duration: "30 Days",
+    feePaid: "₦1,500,000",
+    deposit: "₦100,000",
+    convenience: "₦2,500",
+    total: "₦1,602,500",
+    hostPhone: "09876543221",
+    hostEmail: "host@mail.com",
+    cancellationDate: "15-Dec-2025",
+    cancellationReason:
+      "HedamagedksckhkhcajadsakjhdbsjbkabkSKkjbxcjsakssdkhkdhkdfewdhwekdkdddkjhkjdhjashhadagasgdbcsdadghgdhaghagdh",
   };
   const apartments = Array.from({ length: 6 }, (_, i) => ({
     ...apartment,
@@ -152,7 +177,7 @@ export default function Dashboard() {
       <div className="px-[21px] mt-[25px]">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-medium text-[14px]">My Booking 🏬</h3>
-          <button className="text-sm text-[#A20BA2]">See all</button>
+          <button className="text-[12px] text-[#A20BA2]">See all</button>
         </div>
         <Bookings lodge={lodge} status={"ongoing"} />
       </div>
@@ -160,9 +185,11 @@ export default function Dashboard() {
       <div className="px-[22px] mt-1">
         <div className="flex justify-between items-center">
           <h3 className="font-medium my-4 text-[14px]">Hot Apartments 🔥</h3>
-          <button className="text-[12px] font-medium text-[#A20BA2]">
-            See all
-          </button>
+          <Link to="/hot-apartments">
+            <button className="text-[12px] font-medium text-[#A20BA2]">
+              See all
+            </button>
+          </Link>
         </div>
       </div>
       <div className="pl-[22px] pb-3">
@@ -212,9 +239,11 @@ export default function Dashboard() {
           <h3 className="font-medium my-4 text-[14px]">
             Available in your Location 📍
           </h3>
-          <button className="text-[12px] font-medium text-[#A20BA2]">
-            See all
-          </button>
+          <Link to="/apartments">
+            <button className="text-[12px] font-medium text-[#A20BA2]">
+              See all
+            </button>
+          </Link>
         </div>
         <div className="space-y-1">
           {apartments.map((apt) => (
