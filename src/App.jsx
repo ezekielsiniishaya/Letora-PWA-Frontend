@@ -27,6 +27,20 @@ import GuestLIsting from "./pages/GuestDashboard/GuestListingPage";
 import BasicInfoPage from "./pages/GuestDashboard/BasicInfoPage";
 import ListingApartmentDetails from "./pages/GuestDashboard/ListingApartmentDetails";
 import ListingFacilitiesPage from "./pages/GuestDashboard/ListingFacilitiesPage";
+import MediaUploadPage from "./pages/GuestDashboard/MediaUploadPage";
+import BookingPricingPage from "./pages/GuestDashboard/BookingPricingPage";
+import SecurityDepositPage from "./pages/GuestDashboard/SecurityDepositPage";
+import HouseRulesPage from "./pages/GuestDashboard/HouseRulesPage";
+import UploadLegalsPage from "./pages/GuestDashboard/UploadLegalsPage";
+import ListingOverviewPage from "./pages/GuestDashboard/ListingOverviewPage";
+import ShortletOverviewPage from "./pages/GuestDashboard/ShortletOverview";
+import ReviewsPage from "./components/dashboard/ReviewsPage";
+import BookingDatePage from "./pages/GuestDashboard/BookingDatePage";
+import BookingOverviewPage from "./pages/GuestDashboard/BookingOverviewPage";
+import IdCheckPage from "./pages/GuestDashboard/IdCheckPage";
+import GuestIdPage from "./pages/GuestDashboard/GuestIdPage";
+import GuestIdLast from "./pages/GuestDashboard/GuestIdLast";
+import GuestIdSelfie from "./pages/GuestDashboard/GuestIdSelfie";
 
 function App() {
   return (
@@ -67,6 +81,20 @@ function App() {
           element={<ListingApartmentDetails />}
         />
         <Route path="/facilities" element={<ListingFacilitiesPage />} />
+        <Route path="/media-upload" element={<MediaUploadPage />} />
+        <Route path="/booking-pricing" element={<BookingPricingPage />} />
+        <Route path="/security-deposit" element={<SecurityDepositPage />} />
+        <Route path="/house-rules" element={<HouseRulesPage />} />
+        <Route path="/upload-legals" element={<UploadLegalsPage />} />
+        <Route path="/listing-overview" element={<ListingOverviewPage />} />
+        <Route path="/shortlet-overview" element={<ShortletOverviewPage />} />
+        <Route path="/reviews" element={<ReviewsPage />} />
+        <Route path="/booking-dates" element={<BookingDatePage />} />
+        <Route path="/booking-overview" element={<BookingOverviewPage />} />
+        <Route path="/id-check" element={<IdCheckPage />} />
+        <Route path="/guest-id" element={<GuestIdPage />} />
+        <Route path="/guest-id-last" element={<GuestIdLast />} />
+        <Route path="/guest-id-selfie" element={<GuestIdSelfie />} />
       </Routes>
     </Router>
   );

@@ -5,6 +5,7 @@ export default function ShowSuccess({
   buttonText = "Okay",
   onClose,
   height,
+  width = "w-[141.84px]",
 }) {
   return (
     <div
@@ -20,7 +21,7 @@ export default function ShowSuccess({
           <img
             src={image}
             alt="Success"
-            className="w-[141.84px] h-[74.93px] mx-auto mb-[24px]"
+            className={`${width} h-[74.93px] mx-auto mb-[24px]`}
             onError={(e) => {
               e.target.style.display = "none";
             }}

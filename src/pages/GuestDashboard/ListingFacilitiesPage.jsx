@@ -174,14 +174,15 @@ export default function ListingFacilitiesPage() {
             </label>
             <FacilityDropdown />
           </div>
-
           {/* Selected Facilities Display */}
           {selectedFacilities.length > 0 && (
-            <div className="grid grid-cols-2 gap-x-[74px] mt-4">
-              {selectedFacilities.map((facility) => (
+            <div className="grid grid-cols-2 gap-x-10 mt-4 w-full">
+              {selectedFacilities.map((facility, index) => (
                 <div
                   key={facility.value}
-                  className="flex items-center space-x-2 p-3 w-full"
+                  className={`flex items-center space-x-2 p-3 w-full ${
+                    index % 2 === 1 ? "justify-end" : ""
+                  }`}
                 >
                   <img
                     src={facility.icon}
@@ -194,11 +195,11 @@ export default function ListingFacilitiesPage() {
                 </div>
               ))}
             </div>
-          )}
+          )}                 
 
           {/* Next Button */}
           <div className="pt-[70px] pb-20">
-            <Link to="/house-rules">
+            <Link to="/media-upload">
               <Button text="Next" />
             </Link>
           </div>

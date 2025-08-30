@@ -1,0 +1,64 @@
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Button from "../../components/Button";
+
+export default function SecurityDeposit() {
+  const [deposit, setDeposit] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  };
+
+  return (
+    <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
+      {/* Header */}
+      <div className="w-full flex items-center justify-between mt-[20px]">
+        <img
+          src="/icons/arrow-left.svg"
+          alt="Back"
+          className="w-[16px] cursor-pointer"
+          onClick={() => navigate(-1)}
+        />
+        <span className="text-[13.2px] font-medium bg-[#A20BA2] text-white px-[6.6px] w-[33px] h-[18.43px] rounded-[7.92px]">
+          6/8
+        </span>
+      </div>
+
+      {/* Content */}
+      <div className="w-full max-w-sm mt-[26px]">
+        <h2 className="text-[24px] font-medium text-[#0D1321]">
+          Security Deposit
+        </h2>
+        <p className="text-[14px] text-[#666666] mt-[4px]">
+          Set your security deposit amount
+        </p>
+
+        <form className="mt-[75px] flex flex-col" onSubmit={handleSubmit}>
+          {/* Deposit Input */}
+          <label className="block text-[14px] font-medium text-[#333333] mb-2">
+            Security Deposit Amount <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            placeholder="Enter amount"
+            value={deposit}
+            onChange={(e) => setDeposit(e.target.value)}
+            className="w-full h-[48px] border border-[#D9D9D9] rounded-[8px] px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#A20BA2]"
+            max={1000000}
+          />
+          <div className="text-right text-[12px] text-[#666666] mt-1">
+            Max. N100,000
+          </div>
+
+          {/* Next Button */}
+          <Link to="/house-rules">
+            <div className="mt-[296px]">
+              <Button text="Next" type="submit" />
+            </div>
+          </Link>
+        </form>
+      </div>
+    </div>
+  );
+}
