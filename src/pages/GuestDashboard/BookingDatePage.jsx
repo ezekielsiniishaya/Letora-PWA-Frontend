@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function BookingPage() {
@@ -8,6 +8,11 @@ export default function BookingPage() {
   const [activeField, setActiveField] = useState(null);
   const [checkIn, setCheckIn] = useState(null);
   const [checkOut, setCheckOut] = useState(null);
+
+  const [days, setDays] = useState(0);
+  const [totalCost, setTotalCost] = useState(0);
+
+  const dailyRate = 30000; // per-day rate
 
   // calendar state
   const today = new Date();
@@ -36,16 +41,31 @@ export default function BookingPage() {
 
   const handleSelectDate = (day) => {
     const selectedDate = new Date(currentYear, currentMonth, day);
-    const formatted = selectedDate.toDateString();
 
     if (activeField === "checkin") {
-      setCheckIn(formatted);
+      setCheckIn(selectedDate);
     } else {
-      setCheckOut(formatted);
+      setCheckOut(selectedDate);
     }
+
     setShowCalendar(false);
     setActiveField(null);
   };
+
+  // compute days + cost whenever checkIn & checkOut are both set
+  useEffect(() => {
+    if (checkIn && checkOut) {
+      const diffTime = checkOut - checkIn;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 0) {
+        setDays(diffDays);
+        setTotalCost(diffDays * dailyRate);
+      } else {
+        setDays(0);
+        setTotalCost(0);
+      }
+    }
+  }, [checkIn, checkOut]);
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -70,11 +90,9 @@ export default function BookingPage() {
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const daysArray = [];
 
-  // add empty slots for alignment
   for (let i = 0; i < firstDayOfMonth; i++) {
     daysArray.push(null);
   }
-  // add actual days
   for (let d = 1; d <= daysInMonth; d++) {
     daysArray.push(d);
   }
@@ -115,7 +133,7 @@ export default function BookingPage() {
                 alt="Calendar"
                 className="w-4 h-4 mr-[2px]"
               />
-              <span>{checkIn ? checkIn : "Choose Date"}</span>
+              <span>{checkIn ? checkIn.toDateString() : "Choose Date"}</span>
             </button>
           </div>
 
@@ -132,7 +150,7 @@ export default function BookingPage() {
                 alt="Calendar"
                 className="w-4 h-4 mr-[2px]"
               />
-              <span>{checkOut ? checkOut : "Choose Date"}</span>
+              <span>{checkOut ? checkOut.toDateString() : "Choose Date"}</span>
             </button>
           </div>
         </div>
@@ -142,8 +160,14 @@ export default function BookingPage() {
           <p className="text-[14px] font-medium text-[#333333]">
             Total Booking Cost
           </p>
-          <p className="text-[30px] font-semibold text-black">N3,500,000</p>
-          <p className="text-[12px] font-medium text-[#505050]">10 days stay</p>
+          <p className="text-[30px] font-semibold text-black">
+            {days > 0 ? `₦${totalCost.toLocaleString()}` : "0"}
+          </p>
+          <p className="text-[12px] font-medium text-[#505050]">
+            {days > 0
+              ? `${days} day${days > 1 ? "s" : ""} stay`
+              : "Select dates"}
+          </p>
         </div>
       </div>
 
@@ -193,24 +217,35 @@ export default function BookingPage() {
                 </div>
               ))}
             </div>
-
             {/* Dates grid */}
             <div className="grid grid-cols-7 gap-1 text-[#333333] text-center text-[14.13px] mb-[10px]">
-              {daysArray.map((day, i) =>
-                day ? (
+              {daysArray.map((day, i) => {
+                if (!day) return <div key={i}></div>;
+
+                const thisDate = new Date(currentYear, currentMonth, day);
+                const todayMidnight = new Date();
+                todayMidnight.setHours(0, 0, 0, 0);
+
+                const isPast = thisDate < todayMidnight;
+
+                return (
                   <button
                     key={i}
-                    onClick={() => handleSelectDate(day)}
-                    className="py-2 rounded hover:bg-[#A20BA2] hover:text-white"
+                    onClick={() => !isPast && handleSelectDate(day)}
+                    disabled={isPast}
+                    className={`py-2 rounded ${
+                      isPast
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "hover:bg-[#A20BA2] hover:text-white"
+                    }`}
                   >
                     {day}
                   </button>
-                ) : (
-                  <div key={i}></div>
-                )
-              )}
+                );
+              })}
             </div>
-            <div className="flex justify-center  mb-5">
+
+            <div className="flex justify-center mb-5">
               <button
                 onClick={() => setShowCalendar(false)}
                 className="w-[250px] h-[42px] bg-[#A20BA2] text-[12px] font-semibold text-white py-2 rounded-lg"

@@ -43,7 +43,7 @@ export default function BasicInfoPage() {
         <form className="space-y-8">
           {/* Listing Title */}
           <div>
-            <label className="block text-[14px] font-medium text-black mt-[42px]">
+            <label className="block text-[14px] font-medium text-[#333333] mt-[42px]">
               Listing Title<span className="text-red-500 mr-1">*</span>
             </label>
             <input
@@ -68,12 +68,16 @@ export default function BasicInfoPage() {
 
           {/* State */}
           <div>
-            <StateDropdown label="State" placeholder="Chosoe Location" />
+            <StateDropdown
+              color="#333333"
+              label="State"
+              placeholder="Choose Location"
+            />
           </div>
 
           {/* Town */}
           <div>
-            <label className="block text-[14px] font-medium text-black mt-[32px]">
+            <label className="block text-[14px] font-medium text-[#333333] mt-[32px]">
               Town<span className="text-red-500 mr-1">*</span>
             </label>
             <input

@@ -4,7 +4,8 @@ export default function StateDropdown({
   label = "State of Origin", // default label
   placeholder = "Select state", // default placeholder
   required = true,
-  onChange, // optional callback to send value to parent
+  onChange,
+  color = "#686464", // optional callback to send value to parent
 }) {
   const [selected, setSelected] = useState("");
   const [open, setOpen] = useState(false);
@@ -69,8 +70,11 @@ export default function StateDropdown({
 
   return (
     <div className="relative mt-[32px] w-full" ref={dropdownRef}>
-      <label className="block text-[14px] font-medium text-[#686464] mb-2">
-        {label} {required && <span className="text-red-500 mr-1">*</span>}
+      <label
+        className="block text-[14px] font-medium mb-2"
+        style={{ color: color }}
+      >
+       {label} {required && <span className="text-red-500 mr-1">*</span>}
       </label>
 
       <button

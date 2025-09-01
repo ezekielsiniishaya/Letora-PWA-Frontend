@@ -44,9 +44,7 @@ function FacilityDetail({ icon, text }) {
 export default function ListingOverviewPage() {
   const [showGallery, setShowGallery] = useState(false);
   const [docs, setDocs] = useState({ doc1: null, doc2: null, doc3: null });
-  const [agreeInfo, setAgreeInfo] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false); // success modal state
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const images = Array(8).fill("/images/apartment-dashboard.png");
   const navigate = useNavigate();
@@ -55,12 +53,8 @@ export default function ListingOverviewPage() {
     setDocs({ ...docs, [field]: e.target.files[0] });
   };
 
-  const handleSubmit = () => {
-    setShowSuccess(true);
-  };
-
   return (
-    <div className="mx-[18px] text-[#39302A] mb-[24px] mt-[10px] bg-white">
+    <div className="px-[18px] text-[#39302A] pb-[24px] mt-[10px] bg-[#F9F9F9]">
       <div className="flex items-center mb-[20px] justify-between">
         {/* Back Arrow */}
         <button onClick={() => navigate(-1)} className="hover:bg-gray-200">
@@ -69,9 +63,9 @@ export default function ListingOverviewPage() {
         {/* Edit Button */}
         <button
           onClick={() => navigate("/basic-info")}
-          className="bg-[#686464] text-[12px] font-medium w-[65px] h-[21px] text-white px-4 rounded-full hover:bg-gray-800"
+          className="bg-[#167DDD] text-[12px] font-medium w-[151px] h-[21px] text-white px-4 rounded-full hover:bg-gray-800"
         >
-          Edit
+          Undergoing Review
         </button>
       </div>
 
@@ -261,48 +255,10 @@ export default function ListingOverviewPage() {
         </div>
       </div>
 
-      {/* Agreements */}
-      <div className="mt-[20px] space-y-3 text-[12px] text-[#0D132180]">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={agreeInfo}
-            onChange={() => setAgreeInfo(!agreeInfo)}
-            className="appearance-none border border-[#CCCCCC] w-[25px] h-[18px] rounded-[5px] 
-                 checked:bg-[#A20BA2] checked:border-[#A20BA2] relative 
-                 checked:after:content-['✔'] checked:after:absolute 
-                 checked:after:inset-0 checked:after:flex 
-                 checked:after:items-center checked:after:justify-center 
-                 checked:after:text-white checked:after:text-xs"
-          />
-          I confirm that I am authorized to list this apartment and all details
-          provided are accurate.
-        </label>
-
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={agreeTerms}
-            onChange={() => setAgreeTerms(!agreeTerms)}
-            className="appearance-none border border-[#CCCCCC] w-[28px] h-[18px] rounded-[5px] 
-                 checked:bg-[#A20BA2] checked:border-[#A20BA2] relative 
-                 checked:after:content-['✔'] checked:after:absolute 
-                 checked:after:inset-0 checked:after:flex 
-                 checked:after:items-center checked:after:justify-center 
-                 checked:after:text-white checked:after:text-xs"
-          />
-          have read and agreed to Letora’s Terms & Conditions, Guest Refund
-          policy, Content and Listing policy
-        </label>
-      </div>
-
       {/* Submit */}
       <div className="text-center">
-        <button
-          onClick={handleSubmit}
-          className="mx-auto w-full mt-[54px] bg-[#A20BA2] text-white text-[16px] font-semibold h-[57px] rounded-[10px] mb-[54px]"
-        >
-          Submit
+        <button className="mx-auto w-full mt-[100px] bg-[#FFFFFF] text-[#686464] border border-[#E9E9E9] text-[16px] font-semibold h-[57px] rounded-[10px] mb-[54px]">
+          Delete Listing
         </button>
       </div>
 

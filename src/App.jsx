@@ -41,6 +41,8 @@ import IdCheckPage from "./pages/GuestDashboard/IdCheckPage";
 import GuestIdPage from "./pages/GuestDashboard/GuestIdPage";
 import GuestIdLast from "./pages/GuestDashboard/GuestIdLast";
 import GuestIdSelfie from "./pages/GuestDashboard/GuestIdSelfie";
+import ShortletReview from "./pages/GuestDashboard/ShortletReview";
+
 
 function App() {
   return (
@@ -95,6 +97,7 @@ function App() {
         <Route path="/guest-id" element={<GuestIdPage />} />
         <Route path="/guest-id-last" element={<GuestIdLast />} />
         <Route path="/guest-id-selfie" element={<GuestIdSelfie />} />
+        <Route path="/shortlet-review" element={<ShortletReview />} />
       </Routes>
     </Router>
   );

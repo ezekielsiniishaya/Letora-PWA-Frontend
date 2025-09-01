@@ -2,24 +2,125 @@ import { useState } from "react";
 import Button from "../../components/Button";
 import { Link, useNavigate } from "react-router-dom";
 import ShowSuccess from "../../components/ShowSuccess";
+import Dropdown from "../../components/dashboard/Dropdown"; // Import the Dropdown component
 
 export default function BankAccount() {
-  const [bankName, setBankName] = useState("");
+  const [selectedBank, setSelectedBank] = useState(null);
   const [accountNumber, setAccountNumber] = useState("");
   const navigate = useNavigate();
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const bankOptions = [
+    {
+      label: "Access Bank",
+      value: "access_bank",
+      icon: "/icons/access.svg",
+    },
+    {
+      label: "Citibank Nigeria",
+      value: "citibank_nigeria",
+      icon: "/icons/citibank.svg",
+    },
+    {
+      label: "Ecobank Nigeria",
+      value: "ecobank_nigeria",
+      icon: "/icons/eco.svg",
+    },
+    {
+      label: "Fidelity Bank",
+      value: "fidelity_bank",
+      icon: "/icons/fidelity.svg",
+    },
+    {
+      label: "First Bank of Nigeria",
+      value: "first_bank_nigeria",
+      icon: "/icons/firstbank.svg",
+    },
+    {
+      label: "First City Monument Bank",
+      value: "first_city_monument_bank",
+      icon: "/icons/fcmb.svg",
+    },
+    {
+      label: "Globus Bank",
+      value: "globus_bank",
+      icon: "/icons/globus.svg",
+    },
+    {
+      label: "Guaranty Trust Bank",
+      value: "guaranty_trust_bank",
+      icon: "/icons/gt.svg",
+    },
+    {
+      label: "Keystone Bank",
+      value: "keystone_bank",
+      icon: "/icons/keystone.svg",
+    },
+    {
+      label: "Polaris Bank",
+      value: "polaris_bank",
+      icon: "/icons/polaris.svg",
+    },
+    {
+      label: "Providos Bank",
+      value: "providos_bank",
+      icon: "/icons/providos.svg",
+    },
+    {
+      label: "Stanbic IBTC Bank",
+      value: "stanbic_ibtc_bank",
+      icon: "/icons/stanbic.svg",
+    },
+    {
+      label: "Standard Chartered Bank Nigeria",
+      value: "standard_chartered_nigeria",
+      icon: "/icons/standard.svg",
+    },
+    {
+      label: "Sterling Bank",
+      value: "sterling_bank",
+      icon: "/icons/sterling.svg",
+    },
+    {
+      label: "SunTrust Bank Nigeria",
+      value: "suntrust_bank_nigeria",
+      icon: "/icons/suntrust.svg",
+    },
+    {
+      label: "Union Bank of Nigeria",
+      value: "union_bank_nigeria",
+      icon: "/icons/union.svg",
+    },
+    {
+      label: "United Bank for Africa (UBA)",
+      value: "uba",
+      icon: "/icons/uba.svg",
+    },
+    { label: "Unity Bank", value: "unity_bank", icon: "/icons/unity.svg" },
+    { label: "Wema Bank", value: "wema_bank", icon: "/icons/wema.svg" },
+    {
+      label: "Zenith Bank",
+      value: "zenith_bank",
+      icon: "/icons/zenith.svg",
+    },
+  ];
 
   const handleCreateAccount = (e) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent any event bubbling
-    console.log("Opening success modal"); // Debug log
+    e.stopPropagation();
+    console.log("Opening success modal");
     setIsSuccessOpen(true);
   };
 
   const handleOkay = () => {
-    console.log("Closing success modal"); // Debug log
+    console.log("Closing success modal");
     setIsSuccessOpen(false);
     navigate("/guest-dashboard");
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   return (
@@ -45,16 +146,19 @@ export default function BankAccount() {
         </p>
 
         <form className="mt-[32px] flex flex-col">
-          {/* Bank Name */}
+          {/* Bank Name Dropdown */}
           <div className="mb-[20px]">
-            <label className="text-[14px] font-medium text-[#333333]">
-              Enter Bank Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={bankName}
-              onChange={(e) => setBankName(e.target.value)}
-              className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none"
+            <Dropdown
+              label="Select Bank"
+              placeholder="Choose your bank"
+              options={bankOptions}
+              required={true}
+              heading="Select Bank"
+              isOpen={isDropdownOpen}
+              onToggle={toggleDropdown}
+              multiple={false}
+              selected={selectedBank}
+              setSelected={setSelectedBank}
             />
           </div>
 
@@ -95,13 +199,13 @@ export default function BankAccount() {
             text="Create Account"
             className="mt-[20px] w-full"
             onClick={handleCreateAccount}
-            type="button" // Explicitly set as button to prevent form submission
+            type="button"
           />
           {isSuccessOpen && (
             <ShowSuccess
               image="/icons/Illustration.svg"
               heading="Your Account Setup is Complete"
-              message="Our team will now review your submission for verification. This typically takes a few minutes to a few hours."
+              message="Our team will now review your submission for verification. This typically takes a few minutes to a few hours."
               buttonText="Done"
               onClose={handleOkay}
               className="h-300px"

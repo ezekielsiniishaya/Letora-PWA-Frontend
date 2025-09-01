@@ -86,7 +86,9 @@ export default function Dropdown({
                 onClick={() => handleSelect(opt)}
               >
                 <div className="flex items-center space-x-2">
-                  {opt.icon && <img src={opt.icon} className="w-5 h-5" />}
+                  {opt.icon && (
+                    <img src={opt.icon} className="w-[30px] h-[30px]" />
+                  )}
                   <span className="text-[14px]">{opt.label}</span>
                 </div>
 

@@ -24,12 +24,9 @@ export default function UploadLegalsPage() {
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
       {/* Header */}
       <div className="w-full flex items-center justify-between mt-[20px]">
-        <img
-          src="/icons/arrow-left.svg"
-          alt="Back"
-          className="w-[16px] cursor-pointer"
-          onClick={() => navigate(-1)}
-        />
+        <button onClick={() => navigate(-1)}>
+          <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-4" />
+        </button>
         <span className="text-[13.2px] font-medium bg-[#A20BA2] text-white px-[6.6px] w-[33px] h-[18.43px] rounded-[7.92px]">
           8/8
         </span>
