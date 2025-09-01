@@ -19,7 +19,7 @@ export default function BankAccount() {
   const handleOkay = () => {
     console.log("Closing success modal"); // Debug log
     setIsSuccessOpen(false);
-    navigate("/identity-id");
+    navigate("/guest-dashboard");
   };
 
   return (
@@ -33,7 +33,7 @@ export default function BankAccount() {
           onClick={() => navigate(-1)}
         />
         <span className="text-[13.2px] font-medium bg-[#A20BA2] text-white px-[6.6px] w-[33px] h-[18.43px] rounded-[7.92px]">
-          3/3
+          3/2
         </span>
       </div>
 

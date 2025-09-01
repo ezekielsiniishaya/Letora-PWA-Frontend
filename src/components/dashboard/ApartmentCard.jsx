@@ -15,11 +15,13 @@ export default function ApartmentCard({ apt }) {
         {/* Top row: tick + title + rating */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <img
-              src="/icons/tick-black.svg"
-              alt="Verified"
-              className="w-[14px] h-[14px]"
-            />
+            {apt.verified && (
+              <img
+                src="/icons/tick-black.svg"
+                alt="Verified"
+                className="w-[14px] h-[14px]"
+              />
+            )}
             <h2 className="text-[13px] font-medium text-[#333333]">
               {apt.title}
             </h2>
@@ -48,7 +50,7 @@ export default function ApartmentCard({ apt }) {
         <div className="flex items-center mt-[7.5px] justify-between text-[12px] text-[#505050]">
           {/* Circles + liked */}
           <div className="flex items-center gap-1">
-            <div className="flex -space-x-1">
+            <div className="flex -space-x-[6px]">
               <div
                 className="w-4 h-4 rounded-full"
                 style={{ backgroundColor: "#008751" }}

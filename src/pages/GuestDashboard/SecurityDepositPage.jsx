@@ -3,11 +3,43 @@ import { useNavigate, Link } from "react-router-dom";
 import Button from "../../components/Button";
 
 export default function SecurityDeposit() {
-  const [deposit, setDeposit] = useState("");
+  const [deposit, setDeposit] = useState(""); // formatted value
+  const [rawDeposit, setRawDeposit] = useState(""); // numeric raw value
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  const MAX_DEPOSIT = 100000;
+
+  const handleChange = (e) => {
+    // remove non-numeric characters (commas, spaces, etc.)
+    const numericValue = e.target.value.replace(/,/g, "");
+    if (!/^\d*$/.test(numericValue)) return; // only digits allowed
+
+    setRawDeposit(numericValue);
+
+    if (numericValue === "") {
+      setDeposit("");
+      setError("");
+      return;
+    }
+
+    const number = Number(numericValue);
+
+    // format with commas
+    setDeposit(number.toLocaleString());
+
+    if (number > MAX_DEPOSIT) {
+      setError(`Amount cannot exceed ₦${MAX_DEPOSIT.toLocaleString()}`);
+    } else {
+      setError("");
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!error) {
+      console.log("Deposit saved:", rawDeposit); // save numeric value
+    }
   };
 
   return (
@@ -40,16 +72,28 @@ export default function SecurityDeposit() {
             Security Deposit Amount <span className="text-red-500">*</span>
           </label>
           <input
-            type="number"
+            type="text" // must be text so commas display
             placeholder="Enter amount"
             value={deposit}
-            onChange={(e) => setDeposit(e.target.value)}
-            className="w-full h-[48px] border border-[#D9D9D9] rounded-[8px] px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#A20BA2]"
-            max={1000000}
+            onChange={handleChange}
+            className={`w-full h-[48px] border rounded-[8px] px-3 py-2 text-[14px] focus:outline-none focus:ring-2 ${
+              error
+                ? "border-red-500 focus:ring-red-500"
+                : "border-[#D9D9D9] focus:ring-[#A20BA2]"
+            }`}
           />
-          <div className="text-right text-[12px] text-[#666666] mt-1">
-            Max. N100,000
-          </div>
+
+          {/* Error message */}
+          {error && (
+            <div className="text-red-500 text-[12px] mt-1">{error}</div>
+          )}
+
+          {/* Max note */}
+          {!error && (
+            <div className="text-right text-[12px] text-[#666666] mt-1">
+              Max. ₦100,000
+            </div>
+          )}
 
           {/* Next Button */}
           <Link to="/house-rules">

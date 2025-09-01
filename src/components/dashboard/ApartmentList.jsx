@@ -1,5 +1,4 @@
-import React from "react";
-
+import { useNavigate } from "react-router-dom";
 export default function ApartmentList() {
   const lodge = {
     id: 1,
@@ -12,13 +11,13 @@ export default function ApartmentList() {
 
   // Repeat lodge info for multiple entries
   const apartments = Array(6).fill(lodge);
-
+  const navigate = useNavigate();
   return (
     <div className="w-full space-y-[10px] px-[21px] pb-[100px]">
       {apartments.map((apartment, index) => (
         <div
           key={index}
-          onClick={() => alert(`Clicked apartment ${apartment.id}`)}
+          onClick={() => navigate("/shortlet-overview")}
           className="relative rounded-[5px] overflow-hidden cursor-pointer group"
         >
           <img
@@ -31,7 +30,7 @@ export default function ApartmentList() {
           <div className="absolute bottom-0 left-0 mx-1 mb-1 w-[calc(100%-.5rem)] p-3 text-white text-xs bg-black/60 rounded-[5px]">
             {/* First row: title + rating */}
             <div className="flex items-center justify-between">
-              <h3 className="flex items-center gap-1 text-[14px] font-medium">
+              <h3 className="flex items-center gap-1 text-[16px] font-medium">
                 <img
                   src="/icons/tick-white.svg"
                   alt="tick"
@@ -43,27 +42,27 @@ export default function ApartmentList() {
                 <img
                   src="/icons/star-yellow.svg"
                   alt="star"
-                  className="w-3 h-3"
+                  className="w-[17.47px] h-[17.47px]"
                 />
-                <span className="text-[10px] font-medium">
+                <span className="text-[14.3px] font-medium">
                   {apartment.rating}
                 </span>
               </span>
             </div>
 
             {/* Second row: location + price */}
-            <div className="flex items-center font-medium justify-between mt-1">
+            <div className="flex items-center font-medium text-[14px] mt-3    justify-between">
               <p className="truncate">{apartment.location}</p>
-              <p>{apartment.price}</p>
+              <p className="text-[16px]">{apartment.price}</p>
             </div>
           </div>
 
           {/* Favorite (heart) button */}
-          <button className="absolute top-3 right-3 w-[20px] h-[20px] bg-white rounded-full flex items-center justify-center">
+          <button className="absolute top-3 right-3 w-[28.39px] h-[28.39px] bg-white rounded-full flex items-center justify-center">
             <img
               src="/icons/heart-gray.svg"
               alt="heart"
-              className="w-[13px] h-[11px]"
+              className="w-[18.77px] h-[16.15px]"
             />
           </button>
         </div>

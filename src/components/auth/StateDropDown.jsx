@@ -83,19 +83,23 @@ export default function StateDropdown({
       </button>
 
       {open && (
-        <ul className="absolute z-10 w-full bg-white border rounded-md h-[500px] mt-1 overflow-y-auto shadow-lg">
-          {states.map((state) => (
-            <li
-              key={state}
-              className="px-4 py-2 hover:bg-purple-100 cursor-pointer text-[#333333]"
-              onClick={() => handleSelect(state)}
-            >
-              {state}
-            </li>
-          ))}
-        </ul>
+        <div className="fixed bottom-0 left-0 w-full bg-white rounded-t-[20px] shadow-lg border-t z-50 max-h-[70vh] overflow-y-auto">
+          <div className="px-5 py-4 text-[16px] font-medium text-black">
+            Select State
+          </div>
+          <ul>
+            {states.map((state) => (
+              <li
+                key={state}
+                className="px-4 py-3 hover:bg-purple-100 cursor-pointer text-[#333333]"
+                onClick={() => handleSelect(state)}
+              >
+                {state}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
 }
- 

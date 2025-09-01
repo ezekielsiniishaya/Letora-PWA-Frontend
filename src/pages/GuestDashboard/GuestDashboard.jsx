@@ -6,6 +6,7 @@ import ShowSuccess from "../../components/ShowSuccess";
 import { Link } from "react-router-dom";
 import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
+import { Verified } from "lucide-react";
 
 export default function Dashboard() {
   const [showBalance, setShowBalance] = useState(true);
@@ -39,7 +40,9 @@ export default function Dashboard() {
     title: "3-Bedroom Apartment",
     location: "Maryland, Lagos",
     image: "/images/apartment.png",
-    price: "₦150,000/Night",
+    price: "₦150,000",
+    verified: "true",
+    rating: "4.0",
     status: "ongoing",
     bookingDate: "30-Nov-2025 | 10:00 AM",
     checkIn: "30-Nov-2025",
@@ -48,6 +51,7 @@ export default function Dashboard() {
     feePaid: "₦1,500,000",
     deposit: "₦100,000",
     convenience: "₦2,500",
+    likes: "15",
     total: "₦1,602,500",
     hostPhone: "09876543221",
     hostEmail: "host@mail.com",
@@ -58,11 +62,15 @@ export default function Dashboard() {
   const apartments = Array.from({ length: 6 }, (_, i) => ({
     ...apartment,
     id: i + 1,
+    verified: i % 2 === 0, // odd → true, even → false
+    rating: i % 2 === 0 ? "4.0" : "0.0", // alternate stars
+    title: i % 2 === 0 ? "2-Bedroom Apartment" : "Self-Con/Studio", // alternate title
+    location: i % 2 === 0 ? "Ikoyi, Lagos" : "Surulere, Lagos", // alternate location
   }));
 
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] overflow-x-hidden pb-[80px]">
-      <div className="relative bg-[#8C068C] h-[272px] text-white px-[20px] pt-[14px]">
+      <div className="relative bg-[#8C068C] h-[252px] text-white px-[20px] pt-[14px]">
         {/* Header Row */}
         <div className="flex flex-row justify-between items-center">
           {/* Left: Guest info */}
@@ -104,22 +112,22 @@ export default function Dashboard() {
         {/* Balance Section */}
         <div className="mt-[26px] flex flex-col items-center">
           <div className="flex items-center gap-2">
-            <p className="text-[12px] font-regular text-[#FBD0FB]">
+            <p className="text-[14px] font-medium text-[#FBD0FB]">
               Current Balance
             </p>
             <img
               src={showBalance ? "/icons/eye-open.svg" : "/icons/eye-close.svg"}
               alt="Toggle Balance"
-              className="w-[16px] h-[16px] cursor-pointer"
+              className="w-[18.58px] h-[18.58px] cursor-pointer"
               onClick={() => setShowBalance(!showBalance)}
             />
           </div>
-          <h1 className="text-[34px] font-semibold mt-[1px]">
-            <span className="text-[21px]">N</span>
+          <h1 className="text-[40px] font-semibold mt-[1px]">
+            <span className="text-[28.43px]">N</span>
             {showBalance ? (
               <>
                 569,098.
-                <span className="text-[#FBD0FB] text-[18px] font-medium">
+                <span className="text-[#FBD0FB] text-[20px] font-medium">
                   879
                 </span>
               </>
@@ -134,7 +142,7 @@ export default function Dashboard() {
           </h1>
           <button
             onClick={() => setShowWithdraw(true)}
-            className="mt-[18px] bg-white text-[#8C167E] text-[14px] rounded-[5px] font-semibold flex items-center justify-center gap-2 w-[180.41px] h-[38px]"
+            className="mt-[18px] bg-white text-[#8C167E] text-[15.3px] rounded-[5px] font-semibold flex items-center justify-center gap-2 w-[197.03px] h-[41.53px]"
           >
             <img
               src="/icons/arrow-slant.svg"
@@ -168,7 +176,7 @@ export default function Dashboard() {
         <img
           src="/icons/logo.svg"
           alt="Logo"
-          className="absolute -bottom-4 -right-9 opacity-10 w-[176px] h-[169.88px]"
+          className="absolute -bottom-5 -right-10 opacity-10 w-[196px] h-[189.88px]"
         />
       </div>
 
@@ -176,8 +184,12 @@ export default function Dashboard() {
       {/* Header */}
       <div className="px-[21px] mt-[25px]">
         <div className="flex justify-between items-center mb-2">
-          <h3 className="font-medium text-[14px]">My Booking 🏬</h3>
-          <button className="text-[12px] text-[#A20BA2]">See all</button>
+          <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
+          <Link to="/bookings">
+            <button className="text-[12px] font-medium text-[#A20BA2]">
+              See all
+            </button>
+          </Link>
         </div>
         <Bookings lodge={lodge} status={"ongoing"} />
       </div>
@@ -196,43 +208,45 @@ export default function Dashboard() {
         <ApartmentSlider />
       </div>
       {/* Become a Host Section */}
-      <div className="px-[22px]">
-        <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-[8px] px-[12px] flex items-center justify-between overflow-hidden h-[106.04px]">
-          {/* Left: Text Content */}
-          <div className="text-white max-w-[70%] z-10">
-            <h3 className="font-semibold text-[16px] mb-1">Become a Host</h3>
-            <p className="text-[12px] leading-snug">
-              Ready to cash in on your space? <br />
-              Verify your identity and list today.
-            </p>
-            <button className="mt-2 text-[10px]">Click here to begin</button>
-          </div>
+      <Link to="/identity-id">
+        <div className="px-[22px]">
+          <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-[8px] px-[12px] flex items-center justify-between overflow-hidden h-[106.04px]">
+            {/* Left: Text Content */}
+            <div className="text-white max-w-[70%] z-10">
+              <h3 className="font-semibold text-[16px] mb-1">Become a Host</h3>
+              <p className="text-[12px] leading-snug">
+                Ready to cash in on your space? <br />
+                Verify your identity and list today.
+              </p>
+              <button className="mt-2 text-[10px]">Click here to begin</button>
+            </div>
 
-          {/* Right: Host Image + Star + Doodle */}
-          <div className="absolute right-[-10px] bottom-0 h-full flex items-end justify-end">
-            {/* Host Image */}
-            <img
-              src="/images/background/become-host.png"
-              alt="Become a Host"
-              className="h-[117px] object-contain transform scale-x-[-1] relative z-10"
-            />
+            {/* Right: Host Image + Star + Doodle */}
+            <div className="absolute right-[-10px] bottom-0 h-full flex items-end justify-end">
+              {/* Host Image */}
+              <img
+                src="/images/background/become-host.png"
+                alt="Become a Host"
+                className="h-[117px] object-contain transform scale-x-[-1] relative z-10"
+              />
 
-            {/* Star (top) */}
-            <img
-              src="/icons/star.svg"
-              alt="star"
-              className="absolute top-[15px] right-[114.3px] w-[9px] h-[9px] z-20"
-            />
+              {/* Star (top) */}
+              <img
+                src="/icons/star.svg"
+                alt="star"
+                className="absolute top-[15px] right-[114.3px] w-[9px] h-[9px] z-20"
+              />
 
-            {/* Doodle (bottom) */}
-            <img
-              src="/icons/doodle.svg"
-              alt="doodle"
-              className="absolute bottom-[12.27px] right-[121.73px] w-[6.3px] h-[5.4px] z-20"
-            />
+              {/* Doodle (bottom) */}
+              <img
+                src="/icons/doodle.svg"
+                alt="doodle"
+                className="absolute bottom-[12.27px] right-[121.73px] w-[6.3px] h-[5.4px] z-20"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </Link>
 
       <div className="px-[22px]">
         <div className="flex justify-between items-center">

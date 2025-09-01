@@ -47,39 +47,44 @@ export default function ListingFacilitiesPage() {
     { label: "DSTW Netflix", value: "dstw_netflix", icon: "/icons/dstv.svg" },
   ];
 
-  // Handle selections from dropdown
-  const handleSelectFacility = (facility) => {
-    setSelectedFacilities((prev) => {
-      let updated;
-      if (prev.some((f) => f.value === facility.value)) {
-        updated = prev.filter((f) => f.value !== facility.value); // remove
-      } else {
-        updated = [...prev, facility]; // add
-      }
-      return updated;
-    });
-  };
-
   // Custom Dropdown Component
   const FacilityDropdown = () => {
     const [open, setOpen] = useState(false);
+    const [tempFacilities, setTempFacilities] = useState(selectedFacilities);
 
     const toggleDropdown = () => {
+      if (!open) {
+        // sync temp with actual selections when opening
+        setTempFacilities(selectedFacilities);
+      }
       setOpen(!open);
     };
 
-    // Close dropdown when clicking outside
+    const handleSelectTemp = (facility) => {
+      setTempFacilities((prev) => {
+        if (prev.some((f) => f.value === facility.value)) {
+          return prev.filter((f) => f.value !== facility.value);
+        } else {
+          return [...prev, facility];
+        }
+      });
+    };
+
+    // commit selections when clicking outside
     useEffect(() => {
       const handleClickOutside = (e) => {
         if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-          setOpen(false);
+          if (open) {
+            setSelectedFacilities(tempFacilities);
+            setOpen(false);
+          }
         }
       };
 
       document.addEventListener("mousedown", handleClickOutside);
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    }, [open, tempFacilities]);
 
     return (
       <div className="relative" ref={dropdownRef}>
@@ -89,7 +94,9 @@ export default function ListingFacilitiesPage() {
           onClick={toggleDropdown}
         >
           {selectedFacilities.length > 0 ? (
-            <span className="text-[14px] ml-2 text-[#686464]">{`${selectedFacilities.length} facilities selected`}</span>
+            <span className="text-[14px] ml-2 text-[#686464]">
+              {`${selectedFacilities.length} facilities selected`}
+            </span>
           ) : (
             <span className="text-[14px] ml-2 text-[#686464]">
               Select multiple Options
@@ -98,39 +105,42 @@ export default function ListingFacilitiesPage() {
         </button>
 
         {open && (
-          <div className="p-4 z-10 mt-1 w-full bg-white border border-[#D9D9D9] rounded-md shadow-lg overflow-y-auto">
-            <div className="text-[14px] ml-2 text-[#686464]">
-              Select Facilities & Services
+          <div className="fixed left-0 bottom-0 w-full h-[50%] bg-white border border-[#D9D9D9] rounded-t-[10px] shadow-lg overflow-y-auto z-10">
+            <div className="text-[14px] font-medium ml-8 mt-6 text-black py-2">
+              Select Choice
             </div>
             {facilitiesOptions.map((facility) => {
-              const isSelected = selectedFacilities.some(
+              const isSelected = tempFacilities.some(
                 (f) => f.value === facility.value
               );
               return (
                 <div
                   key={facility.value}
-                  className="p-3 hover:bg-gray-50 cursor-pointer flex items-center"
-                  onClick={() => handleSelectFacility(facility)}
+                  className="ml-8 py-5 hover:bg-gray-50 cursor-pointer flex items-center justify-between pr-6"
+                  onClick={() => handleSelectTemp(facility)}
                 >
-                  <img
-                    src={facility.icon}
-                    alt={facility.label}
-                    className="w-5 h-5 mr-2"
-                  />
-                  <span className="text-sm text-[#333333]">
-                    {facility.label}
-                  </span>
+                  {/* Left side: icon + label */}
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={facility.icon}
+                      alt={facility.label}
+                      className="w-5 h-5"
+                    />
+                    <span className="text-sm text-[#333333]">
+                      {facility.label}
+                    </span>
+                  </div>
 
-                  {/* Circle indicator */}
+                  {/* Circle indicator on the right */}
                   <span
-                    className={`ml-auto w-2 h-2 border rounded-full flex items-center justify-center ${
+                    className={`w-3 h-3 border rounded-full flex items-center justify-center ${
                       isSelected
-                        ? "bg-[#A20BA2] border-[#A20BA2]"
-                        : "border-[#ccc]"
+                        ? "bg-[#A20BA2] border-2 border-[#A20BA2]"
+                        : "border-[#787373] border-2"
                     }`}
                   >
                     {isSelected && (
-                      <span className="w-1 h-1 bg-white rounded-full"></span>
+                      <span className="w-2 h-2 bg-white rounded-full"></span>
                     )}
                   </span>
                 </div>
@@ -174,6 +184,7 @@ export default function ListingFacilitiesPage() {
             </label>
             <FacilityDropdown />
           </div>
+
           {/* Selected Facilities Display */}
           {selectedFacilities.length > 0 && (
             <div className="grid grid-cols-2 gap-x-10 mt-4 w-full">
@@ -195,7 +206,7 @@ export default function ListingFacilitiesPage() {
                 </div>
               ))}
             </div>
-          )}                 
+          )}
 
           {/* Next Button */}
           <div className="pt-[70px] pb-20">

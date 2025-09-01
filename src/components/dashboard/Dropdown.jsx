@@ -68,8 +68,9 @@ export default function Dropdown({
 
       {/* Popup */}
       {isOpen && (
-        <div className="z-50 mt-1 w-full bg-white overflow-y-auto pb-4 rounded-t-[20px] shadow-lg border max-h-[100vh]">
-          <div className="px-5 py-4 text-[16px] font-medium text-black">
+        <div className="fixed bottom-0               left-0 w-full bg-white rounded-t-[20px] shadow-lg border-t z-50 max-h-[70vh] overflow-y-auto">
+          {/* Heading */}
+          <div className="px-5 pt-4 text-[16px] font-medium text-black">
             {heading}
           </div>
 
@@ -81,7 +82,7 @@ export default function Dropdown({
             return (
               <div
                 key={opt.value}
-                className="flex items-center justify-between px-5 py-3 hover:bg-[#F5F5F5] cursor-pointer"
+                className="flex items-center justify-between px-5 py-6 hover:bg-[#F5F5F5] cursor-pointer"
                 onClick={() => handleSelect(opt)}
               >
                 <div className="flex items-center space-x-2">

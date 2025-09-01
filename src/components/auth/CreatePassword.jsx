@@ -60,7 +60,8 @@ export default function CreatePassword() {
           type="checkbox"
           checked={agreed}
           onChange={(e) => setAgreed(e.target.checked)}
-          className="appearance-none border border-[#CCCCCC] w-[20px] h-[20px] rounded-[5px] checked:bg-[#A20BA2] checked:border-[#A20BA2] flex-shrink-0 mt-[6px]"
+          className="appearance-none border border-[#CCCCCC] w-[20px] h-[20px] rounded-[5px] checked:bg-[#A20BA2] checked:border-[#A20BA2] flex-shrink-0 mt-[6px] relative
+    checked:after:content-['✔'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-sm"
         />
         <span className="text-[#0D132180] leading-snug pb-[86px] font-medium text-[12px] ml-2">
           I have read Letora's{" "}
@@ -81,7 +82,7 @@ export default function CreatePassword() {
         <ShowSuccess
           image="/icons/Illustration.svg"
           heading="Account Successfully Created"
-          buttonText="Okay"
+          buttonText="Done"
           onClose={handleOkay}
         />
       )}

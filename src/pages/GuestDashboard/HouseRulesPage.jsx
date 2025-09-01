@@ -53,36 +53,42 @@ export default function HouseRulesPage() {
     },
   ];
 
-  // Handle selections
-  const handleSelectRule = (rule) => {
-    setSelectedRules((prev) => {
-      let updated;
-      if (prev.some((r) => r.value === rule.value)) {
-        updated = prev.filter((r) => r.value !== rule.value); // remove
-      } else {
-        updated = [...prev, rule]; // add
-      }
-      return updated;
-    });
-  };
-
   // Custom Dropdown Component
   const HouseRulesDropdown = () => {
     const [open, setOpen] = useState(false);
+    const [tempRules, setTempRules] = useState(selectedRules);
 
-    const toggleDropdown = () => setOpen(!open);
+    const toggleDropdown = () => {
+      if (!open) {
+        setTempRules(selectedRules); // sync selections
+      }
+      setOpen(!open);
+    };
 
-    // Close dropdown when clicking outside
+    const handleSelectTemp = (rule) => {
+      setTempRules((prev) => {
+        if (prev.some((r) => r.value === rule.value)) {
+          return prev.filter((r) => r.value !== rule.value);
+        } else {
+          return [...prev, rule];
+        }
+      });
+    };
+
+    // Commit on outside click
     useEffect(() => {
       const handleClickOutside = (e) => {
         if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-          setOpen(false);
+          if (open) {
+            setSelectedRules(tempRules);
+            setOpen(false);
+          }
         }
       };
       document.addEventListener("mousedown", handleClickOutside);
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    }, [open, tempRules]);
 
     return (
       <div className="relative" ref={dropdownRef}>
@@ -92,7 +98,9 @@ export default function HouseRulesPage() {
           onClick={toggleDropdown}
         >
           {selectedRules.length > 0 ? (
-            <span className="text-[14px] ml-2 text-[#686464]">{`${selectedRules.length} rules selected`}</span>
+            <span className="text-[14px] ml-2 text-[#686464]">
+              {`${selectedRules.length} rules selected`}
+            </span>
           ) : (
             <span className="text-[14px] ml-2 text-[#686464]">
               Select multiple Options
@@ -101,37 +109,34 @@ export default function HouseRulesPage() {
         </button>
 
         {open && (
-          <div className="p-4 z-10 mt-1 w-full bg-white border border-[#D9D9D9] rounded-md shadow-lg overflow-y-auto">
-            <div className="text-[14px] ml-2 text-[#686464]">
-              Select House Rules
+          <div className="fixed left-0 bottom-0 w-full h-[50%] bg-white border border-[#D9D9D9] rounded-t-[10px] shadow-lg overflow-y-auto z-10">
+            <div className="text-[14px] font-medium ml-8 mt-6 text-black py-2">
+              Select Choice
             </div>
             {houseRulesOptions.map((rule) => {
-              const isSelected = selectedRules.some(
-                (r) => r.value === rule.value
-              );
+              const isSelected = tempRules.some((r) => r.value === rule.value);
               return (
                 <div
                   key={rule.value}
-                  className="p-3 hover:bg-gray-50 cursor-pointer flex items-center"
-                  onClick={() => handleSelectRule(rule)}
+                  className="ml-8 py-5 hover:bg-gray-50 cursor-pointer flex items-center justify-between pr-6"
+                  onClick={() => handleSelectTemp(rule)}
                 >
-                  <img
-                    src={rule.icon}
-                    alt={rule.label}
-                    className="w-5 h-5 mr-2"
-                  />
-                  <span className="text-sm text-[#333333]">{rule.label}</span>
+                  {/* Left side: icon + label */}
+                  <div className="flex items-center gap-2">
+                    <img src={rule.icon} alt={rule.label} className="w-5 h-5" />
+                    <span className="text-sm text-[#333333]">{rule.label}</span>
+                  </div>
 
                   {/* Circle indicator */}
                   <span
-                    className={`ml-auto w-2 h-2 border rounded-full flex items-center justify-center ${
+                    className={`w-3 h-3 border rounded-full flex items-center justify-center ${
                       isSelected
-                        ? "bg-[#A20BA2] border-[#A20BA2]"
-                        : "border-[#ccc]"
+                        ? "bg-[#A20BA2] border-2 border-[#A20BA2]"
+                        : "border-[#787373] border-2"
                     }`}
                   >
                     {isSelected && (
-                      <span className="w-1 h-1 bg-white rounded-full"></span>
+                      <span className="w-2 h-2 bg-white rounded-full"></span>
                     )}
                   </span>
                 </div>
@@ -172,9 +177,9 @@ export default function HouseRulesPage() {
             <HouseRulesDropdown />
           </div>
 
-          {/* Selected House Rules Display */}
+          {/* Selected Rules Display */}
           {selectedRules.length > 0 && (
-            <div className="grid grid-cols-2 mt-4 w-full">
+            <div className="grid grid-cols-2 gap-x-10 mt-4 w-full">
               {selectedRules.map((rule, index) => (
                 <div
                   key={rule.value}
@@ -187,7 +192,7 @@ export default function HouseRulesPage() {
                     alt={rule.label}
                     className="w-4 h-4 flex-shrink-0"
                   />
-                  <span className="text-[11.52px] text-[#505050] whitespace-nowrap">
+                  <span className="text-[11.52px] text-[#505050]">
                     {rule.label}
                   </span>
                 </div>
@@ -196,7 +201,7 @@ export default function HouseRulesPage() {
           )}
 
           {/* Next Button */}
-          <div className="pt-[170px] pb-20">
+          <div className="pt-[70px] pb-20">
             <Link to="/upload-legals">
               <Button text="Next" />
             </Link>

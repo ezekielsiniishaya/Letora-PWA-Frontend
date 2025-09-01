@@ -16,6 +16,10 @@ export default function ApartmentsPage() {
   const apartments = Array.from({ length: 6 }, (_, i) => ({
     ...apartment,
     id: i + 1,
+    verified: i % 2 === 0, // odd → true, even → false
+    rating: i % 2 === 0 ? "4.0" : "0.0", // alternate stars
+    title: i % 2 === 0 ? "2-Bedroom Apartment" : "Self-Con/Studio", // alternate title
+    location: i % 2 === 0 ? "Ikoyi, Lagos" : "Surulere, Lagos", // alternate location
   }));
   const navigate = useNavigate();
   return (

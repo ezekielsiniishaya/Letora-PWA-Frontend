@@ -2,6 +2,7 @@ import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { Autoplay } from "swiper/modules";
+import { useNavigate } from "react-router-dom";
 
 export default function ApartmentSlider() {
   const lodge = {
@@ -15,7 +16,7 @@ export default function ApartmentSlider() {
 
   // Repeat lodge info for multiple slides
   const slides = Array(6).fill(lodge);
-
+  const navigate = useNavigate();
   return (
     <div className="w-full]">
       <Swiper
@@ -35,7 +36,7 @@ export default function ApartmentSlider() {
         {slides.map((apartment, index) => (
           <SwiperSlide key={index}>
             <div
-              onClick={() => alert(`Clicked apartment ${apartment.id}`)}
+              onClick={() => navigate("/shortlet-overview")}
               className="relative rounded-[5px] overflow-hidden cursor-pointer group"
             >
               <img
@@ -45,7 +46,7 @@ export default function ApartmentSlider() {
               />
 
               {/* Apartment info on image */}
-              <div className="absolute bottom-0 left-0 mx-1 mb-1 w-[calc(100%-.5rem)] p-3 text-white text-xs bg-black/60 rounded-[5px]">
+              <div className="absolute bottom-0 left-0 mx-1 mb-1 w-[calc(100%-.5rem)] p-3 text-white text-[14px] bg-black/60 rounded-[5px]">
                 {/* First row: gray star + title, yellow star + rating */}
                 <div className="flex items-center justify-between">
                   <h3 className="flex items-center gap-1 text-[14px] font-medium">
@@ -60,18 +61,18 @@ export default function ApartmentSlider() {
                     <img
                       src="/icons/star-yellow.svg"
                       alt="star"
-                      className="w-3 h-3"
+                      className="w-[12.19px] h-[12.19px]"
                     />
-                    <span className="text-[10px] font-medium">
+                    <span className="text-[12px] font-medium">
                       {apartment.rating}
                     </span>
                   </span>
                 </div>
 
                 {/* Second row: location + price */}
-                <div className="flex items-center font-medium justify-between mt-1">
+                <div className="flex items-center font-medium justify-between text-[10px] mt-1">
                   <p className="truncate">{apartment.location}</p>
-                  <p>{apartment.price}</p>
+                  <p className="text-[13px]">{apartment.price}</p>
                 </div>
               </div>
 

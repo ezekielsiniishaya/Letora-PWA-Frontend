@@ -43,13 +43,14 @@ export default function SignUpForm({ type = "guest" }) {
               className="border mt-[8px] w-full h-[48px] text-[#666666] rounded-md px-4 py-2 text-sm"
             />
           </div>
-
-          {/* Gender */}
-          <GenderDropdown />
-
-          {/* State of Origin */}
-          <StateDropdown />
-
+          <div className="mt-[10px]">
+            {/* Gender */}
+            <GenderDropdown />
+          </div>
+          <div className="mt-[10px]">
+            {/* State of Origin */}
+            <StateDropdown />
+          </div>
           {/* Email */}
           <div>
             <label className="block text-[14px] font-medium text-[#686464] mt-[32px]">
@@ -62,7 +63,7 @@ export default function SignUpForm({ type = "guest" }) {
           </div>
 
           {/* Phone Number */}
-          <div className="mt-[32px]">
+          <div className="pt-[18px]">
             <label className="block text-[14px] font-medium text-[#686464] mb-2">
               Valid Phone Number <span className="text-red-500 mr-1">*</span>
             </label>
@@ -85,7 +86,7 @@ export default function SignUpForm({ type = "guest" }) {
           </div>
 
           {/* Alternate Phone Number */}
-          <div className="mt-[16px] pb-[62px]">
+          <div className="pt-[18px] pb-[62px]">
             <label className="block text-[14px] font-medium text-[#686464] mb-2">
               Alternate Valid Phone Number (optional)
             </label>

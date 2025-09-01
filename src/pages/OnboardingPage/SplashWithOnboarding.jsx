@@ -66,7 +66,7 @@ export default function SplashWithOnboarding() {
         {/* Logo + Brand Section */}
         <div className="flex flex-row items-center text-center transform transition-transform duration-300 hover:scale-105">
           <img
-            src="/logo.svg"
+            src="/icons/logo.svg"
             alt="Letora Logo"
             className="w-[63.79px] h-[63.79px] mr-[12px]"
             onError={(e) => {

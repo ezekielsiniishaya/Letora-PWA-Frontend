@@ -44,8 +44,10 @@ export default function SignIn() {
             <label className="flex items-center space-x-[8px]">
               <input
                 type="checkbox"
-                className="appearance-none border border-[#CCCCCC] w-[18px] h-[18px] rounded-[5px] checked:bg-[#A20BA2] checked:border-[#A20BA2] flex items-center justify-center"
+                className="appearance-none border border-[#CCCCCC] w-[18px] h-[18px] rounded-[5px] checked:bg-[#A20BA2] checked:border-[#A20BA2] relative 
+  checked:after:content-['✔'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-xs"
               />
+
               <span className="text-[#999999]">Remember me</span>
             </label>
             <Link to="/forgot-password" className="text-[#4D4D4D]">
@@ -68,7 +70,7 @@ export default function SignIn() {
 
         {/* Sign up button */}
         <Link to="/choose-type">
-          <button className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] mb-[140px] text-[16px] font-regular">
+          <button className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] mb-[140px] h-[56px] text-[16px] font-regular">
             Sign up
           </button>
         </Link>
