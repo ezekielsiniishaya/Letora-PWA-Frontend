@@ -116,11 +116,13 @@ export default function Dashboard() {
             <img
               src={showBalance ? "/icons/eye-open.svg" : "/icons/eye-close.svg"}
               alt="Toggle Balance"
-              className="w-[18.58px] h-[18.58px] cursor-pointer"
-              onClick={() => setShowBalance(!showBalance)}
+              className="w-[18.58px] h-[18.58px] cursor-pointer z-10" // Added z-10 here
+              onClick={() => {
+                setShowBalance(!showBalance);
+              }}
             />
           </div>
-          <h1 className="text-[40px] font-semibold mt-[1px]">
+          <h1 className="text-[38px] font-semibold mt-[1px]">
             <span className="text-[28.43px]">N</span>
             {showBalance ? (
               <>
@@ -140,7 +142,7 @@ export default function Dashboard() {
           </h1>
           <button
             onClick={() => setShowWithdraw(true)}
-            className="mt-[18px] bg-white text-[#8C167E] text-[15.3px] rounded-[5px] font-semibold flex items-center justify-center gap-2 w-[197.03px] h-[41.53px]"
+            className="mt-[18px] bg-white text-[#8C167E] text-[14px] rounded-[5px] font-semibold flex items-center justify-center gap-2 w-[197.03px] h-[41.53px]"
           >
             <img
               src="/icons/arrow-slant.svg"
