@@ -179,11 +179,11 @@ export default function HouseRulesPage() {
 
           {/* Selected Rules Display */}
           {selectedRules.length > 0 && (
-            <div className="grid grid-cols-2 gap-x-10 mt-4 w-full">
+            <div className="grid grid-cols-2 mt-4 w-full">
               {selectedRules.map((rule, index) => (
                 <div
                   key={rule.value}
-                  className={`flex items-center space-x-2 p-3 w-full ${
+                  className={`flex items-center space-x-2 py-3 w-full ${
                     index % 2 === 1 ? "justify-end" : ""
                   }`}
                 >

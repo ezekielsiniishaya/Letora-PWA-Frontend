@@ -4,6 +4,8 @@ import CancelBookingPopup from "../../components/dashboard/CancelBookingPopup";
 import ConfirmCancelPopup from "../../components/dashboard/ConfirmCancelPopup";
 import ShowSuccess from "../../components/ShowSuccess";
 import RatingPopup from "../../components/dashboard/RatingPopup";
+import ButtonWhite from "../../components/ButtonWhite";
+import Button from "../../components/Button";
 
 export default function BookingDetails() {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ export default function BookingDetails() {
       </div>
     );
   }
+
   // Status styles
   const statusMap = {
     ongoing: { label: "Ongoing", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" },
@@ -65,6 +68,7 @@ export default function BookingDetails() {
         </div>
       </div>
 
+      {/* Content wrapper */}
       <div className="w-full max-w-md space-y-2 px-[21px] pb-[75px]">
         {/* Header (image + host avatar) */}
         <div className="relative overflow-visible">
@@ -189,60 +193,57 @@ export default function BookingDetails() {
             </div>
 
             <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
-              <h3 className="font-medium mb-2">Cancellation Reasons</h3>{" "}
+              <h3 className="font-medium mb-2">Cancellation Reasons</h3>
               <span>Guest Violated house rules</span>
               <p className="text-sm break-words">{lodge.cancellationReason}</p>
             </div>
           </>
         )}
+
+        {/* Buttons Section */}
+        {status === "ongoing" && (
+          <div className="pt-[40px] pb-[42px]">
+            <ButtonWhite
+              text="Cancel Booking"
+              onClick={() => setShowConfirmCancel(true)} // start with confirm
+              className="w-full h-[57px]"
+            />
+          </div>
+        )}
+
+        {status === "completed" && (
+          <div className="pt-[40px] pb-[42px]">
+            <Button
+              text="Drop your Review"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowRating(true);
+              }}
+              className="h-[57px]"
+            />
+          </div>
+        )}
       </div>
 
-      {/* Buttons Section */}
-      {status === "ongoing" && (
-        <div className="pb-[42px]">
-          <button
-            onClick={() => setShowCancelBooking(true)}
-            className="border border-[#E9E9E9] w-[334px] h-[57px] hover:bg-gray-300 bg-white text-[#686464] rounded-[10px] py-4 text-[16px] font-semibold"
-          >
-            Cancel Booking
-          </button>
-        </div>
-      )}
-
-      {status === "completed" && (
-        <div className="    pb-[42px]">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowRating(true);
-            }}
-            className="bg-[#A20BA2] w-[334px] h-[57px] text-white rounded-[10px] py-4 text-[16px] font-semibold"
-          >
-            Rate your Stay
-          </button>
-        </div>
-      )}
-
       {/* Cancelled → no button */}
-
       {/* Popup Modals */}
+      {showConfirmCancel && (
+        <ConfirmCancelPopup
+          onClose={() => setShowConfirmCancel(false)}
+          onConfirm={() => {
+            setShowConfirmCancel(false);
+            setShowCancelBooking(true); // open reasons popup next
+          }}
+        />
+      )}
+
       {showCancelBooking && (
         <CancelBookingPopup
           onClose={() => setShowCancelBooking(false)}
           onSubmit={(reasons) => {
             console.log("User reasons:", reasons);
             setShowCancelBooking(false);
-            setShowConfirmCancel(true);
-          }} // 👈 close rating popup
-        />
-      )}
-
-      {showConfirmCancel && (
-        <ConfirmCancelPopup
-          onClose={() => setShowConfirmCancel(false)}
-          onConfirm={() => {
-            setShowConfirmCancel(false);
-            setShowCancelSuccess(true);
+            setShowCancelSuccess(true); // finally show success
           }}
         />
       )}
@@ -260,6 +261,7 @@ export default function BookingDetails() {
           height="auto"
         />
       )}
+
       {showRating && <RatingPopup onClose={() => setShowRating(false)} />}
     </div>
   );

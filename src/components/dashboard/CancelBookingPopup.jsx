@@ -104,12 +104,12 @@ export default function CancelBookingPopup({ onClose, onSubmit }) {
               maxLength={200}
               className="w-full h-full px-3 py-2 border rounded-md text-sm resize-none outline-none"
             />
-            <span className="absolute bottom-2 right-3 text-xs text-gray-400">
+            <span className="absolute bottom-5 right-6 text-xs text-gray-400">
               {otherReason.length}/200
             </span>
           </div>
         </div>
       )}
-      </div>
+    </div>
   );
 }

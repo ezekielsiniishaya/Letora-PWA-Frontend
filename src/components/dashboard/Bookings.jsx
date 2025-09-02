@@ -97,7 +97,7 @@
                   e.stopPropagation();
                   setShowConfirmCancel(true); // Step 1
                 }}
-                className="border-[#A20BA2] border bg-white text-[#A20BA2] text-[12px] font-semibold w-[129px] h-[27px] rounded-[5px]"
+                className="border-[#A20BA2] border bg-white text-[#A20BA2] text-[12px] font-semibold w-[129px] h-[2x7px] rounded-[5px]"
               >
                 Cancel Booking
               </button>

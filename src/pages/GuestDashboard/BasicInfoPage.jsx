@@ -91,7 +91,7 @@ export default function BasicInfoPage() {
           <button
             type="button"
             onClick={() => navigate("/listing-apartment-details")}
-            className="w-full bg-[#A20BA2] text-white text-[16px] font-medium py-3 rounded-md"
+            className="w-full bg-[#A20BA2] text-white text-[16px] font-semibold h-[57px] py-3 rounded-md"
           >
             Next
           </button>

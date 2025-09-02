@@ -1,21 +1,43 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
-import { Link } from "react-router-dom";
 
 export default function MediaUploadPage() {
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [, setError] = useState("");
   const navigate = useNavigate();
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFiles = Array.from(e.target.files);
+
+    if (files.length + selectedFiles.length > 10) {
+      setError("You can only upload a maximum of 10 images.");
+      return;
+    }
+
+    setFiles((prev) => [...prev, ...selectedFiles]);
+    setError("");
+  };
+
+  const handleRemove = (index) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (file) {
-      navigate("/next-step"); // replace with your actual next route
+
+    if (files.length < 7) {
+      setError("Please upload at least 7 images before proceeding.");
+      return;
     }
+
+    if (files.length > 10) {
+      setError("You can only upload up to 10 images.");
+      return;
+    }
+
+    // ✅ All good
+    navigate("/booking-pricing");
   };
 
   return (
@@ -40,66 +62,94 @@ export default function MediaUploadPage() {
           Show everyone how nice your apartment is
         </p>
 
-        <form className="mt-[45px] flex flex-col" onSubmit={handleSubmit}>
+        <form className="mt-[25px] flex flex-col" onSubmit={handleSubmit}>
           <label className="block text-[14px] font-medium text-[#333333]">
             Upload Apartment <span className="text-red-500">*</span>
           </label>
 
           {/* Upload Box */}
-          <span className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9]">
-            <label
-              className="w-full h-[200px] 
-      bg-[#CCCCCC42] 
-      rounded-lg 
-      flex flex-col items-center justify-center 
-      cursor-pointer text-[#505050] font-medium text-[12px]"
-            >
-              <input
-                type="file"
-                accept="image/*,.pdf"
-                className="hidden"
-                onChange={handleFileChange}
-              />
+          <div className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9] p-2">
+            {files.length === 0 ? (
+              // Default box if no images selected
+              <label className="w-full h-[200px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <img
+                  src="/icons/camera.svg"
+                  alt="Upload"
+                  className="w-[28px] h-[26px] mb-2"
+                />
+                <span className="text-center font-medium text-[12px] text-[#505050] w-[187px]">
+                  Browse Images (7–10 required)
+                </span>
+                <p className="w-[260px] text-center text-[12px] font-thin">
+                  Upload living room, bedroom, kitchen, amenities, etc.
+                </p>
+              </label>
+            ) : (
+              // Preview grid inside the upload box
+              <div className="grid grid-cols-3 gap-2">
+                {files.map((file, index) => (
+                  <div
+                    key={index}
+                    className="relative w-full h-[100px] rounded-lg overflow-hidden border"
+                  >
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
 
-              {/* If file selected, show preview, else show JPG icon */}
-              {file ? (
-                <>
-                  {/* Image preview */}
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt="Preview"
-                    className="w-[90%] h-[70%] object-contain mb-1"
-                  />
-                  <span className="text-[12px] text-[#333333] truncate max-w-[180px]">
-                    {file.name}
-                  </span>
-                </>
-              ) : (
-                <>
-                  {/* Default JPG placeholder icon */}
-                  <img
-                    src="/icons/camera.svg"
-                    alt="Upload"
-                    className="w-[28px] h-[26px] mb-2"
-                  />
-                  <span className="text-center font-medium text-[12px] text-[#505050] w-[187px]">
-                    Browse Image
-                  </span>
-                  <p className="w-[260px] text-center text-[12px] font-thin">
-                    Images including rooms, amenities, kitchen, interior decors,
-                    are important
-                  </p>
-                </>
-              )}
-            </label>
-          </span>
+                {/* Extra "Add more" slot */}
+                {files.length < 10 && (
+                  <label className="w-full h-[100px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    <img
+                      src="/icons/camera.svg"
+                      alt="Add"
+                      className="w-[20px] h-[20px]"
+                    />
+                  </label>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Error / Status Message */}
+          <p
+            className={`mt-2 text-[12px] ${
+              files.length < 7 ? "text-red-500" : "text-green-600"
+            }`}
+          >
+            {files.length < 7
+              ? `You need at least 7 images. Currently selected: ${files.length}`
+              : `Selected ${files.length} images (max 10).`}
+          </p>
 
           {/* Next Button */}
-          <Link to="/booking-pricing">
-            <div className="mt-[196px]">
-              <Button text="Next" type="submit" />
-            </div>
-          </Link>
+          <div className="mt-[40px]">
+            <Button text="Next" type="submit" />
+          </div>
         </form>
       </div>
     </div>

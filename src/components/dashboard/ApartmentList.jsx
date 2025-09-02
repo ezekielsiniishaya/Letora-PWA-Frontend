@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 export default function ApartmentList() {
   const lodge = {
     id: 1,
@@ -9,9 +11,20 @@ export default function ApartmentList() {
     image: "/images/apartment-dashboard.png",
   };
 
-  // Repeat lodge info for multiple entries
   const apartments = Array(6).fill(lodge);
   const navigate = useNavigate();
+
+  // State to track which apartments are favorited
+  const [favorites, setFavorites] = useState({});
+
+  const toggleFavorite = (index, e) => {
+    e.stopPropagation(); // Prevent navigating when clicking the heart
+    setFavorites((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
   return (
     <div className="w-full space-y-[10px] px-[21px] pb-[100px]">
       {apartments.map((apartment, index) => (
@@ -23,12 +36,10 @@ export default function ApartmentList() {
           <img
             src={apartment.image}
             alt={apartment.title}
-            className="w-full h-[267.92px]  object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-[267.92px] object-cover group-hover:scale-105 transition-transform duration-300"
           />
 
-          {/* Apartment info on image */}
           <div className="absolute bottom-0 left-0 mx-1 mb-1 w-[calc(100%-.5rem)] p-3 text-white text-xs bg-black/60 rounded-[5px]">
-            {/* First row: title + rating */}
             <div className="flex items-center justify-between">
               <h3 className="flex items-center gap-1 text-[16px] font-medium">
                 <img
@@ -50,17 +61,23 @@ export default function ApartmentList() {
               </span>
             </div>
 
-            {/* Second row: location + price */}
-            <div className="flex items-center font-medium text-[14px] mt-3    justify-between">
+            <div className="flex items-center font-medium text-[14px] mt-3 justify-between">
               <p className="truncate">{apartment.location}</p>
               <p className="text-[16px]">{apartment.price}</p>
             </div>
           </div>
 
           {/* Favorite (heart) button */}
-          <button className="absolute top-3 right-3 w-[28.39px] h-[28.39px] bg-white rounded-full flex items-center justify-center">
+          <button
+            className="absolute top-3 right-3 w-[28.39px] h-[28.39px] bg-white rounded-full flex items-center justify-center"
+            onClick={(e) => toggleFavorite(index, e)}
+          >
             <img
-              src="/icons/heart-gray.svg"
+              src={
+                favorites[index]
+                  ? "/icons/heart-purple.svg"
+                  : "/icons/heart-gray.svg"
+              }
               alt="heart"
               className="w-[18.77px] h-[16.15px]"
             />

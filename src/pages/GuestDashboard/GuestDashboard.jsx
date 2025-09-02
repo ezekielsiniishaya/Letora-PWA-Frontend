@@ -6,7 +6,6 @@ import ShowSuccess from "../../components/ShowSuccess";
 import { Link } from "react-router-dom";
 import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
-import { Verified } from "lucide-react";
 
 export default function Dashboard() {
   const [showBalance, setShowBalance] = useState(true);
@@ -35,6 +34,7 @@ export default function Dashboard() {
     cancellationReason:
       "HedamagedksckhkhcajadsakjhdbsjbkabkSKkjbxcjsakssdkhkdhkdfewdhwekdkdddkjhkjdhjashhadagasgdbcsdadghgdhaghagdh",
   };
+
   const apartment = {
     id: 1,
     title: "3-Bedroom Apartment",
@@ -59,21 +59,22 @@ export default function Dashboard() {
     cancellationReason:
       "HedamagedksckhkhcajadsakjhdbsjbkabkSKkjbxcjsakssdkhkdhkdfewdhwekdkdddkjhkjdhjashhadagasgdbcsdadghgdhaghagdh",
   };
+
   const apartments = Array.from({ length: 6 }, (_, i) => ({
     ...apartment,
     id: i + 1,
-    verified: i % 2 === 0, // odd → true, even → false
-    rating: i % 2 === 0 ? "4.0" : "0.0", // alternate stars
-    title: i % 2 === 0 ? "2-Bedroom Apartment" : "Self-Con/Studio", // alternate title
-    location: i % 2 === 0 ? "Ikoyi, Lagos" : "Surulere, Lagos", // alternate location
+    verified: i % 2 === 0,
+    rating: i % 2 === 0 ? "4.0" : "0.0",
+    title: i % 2 === 0 ? "2-Bedroom Apartment" : "Self-Con/Studio",
+    location: i % 2 === 0 ? "Ikoyi, Lagos" : "Surulere, Lagos",
   }));
 
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] overflow-x-hidden pb-[80px]">
+      {/* Header */}
       <div className="relative bg-[#8C068C] h-[252px] text-white px-[20px] pt-[14px]">
         {/* Header Row */}
         <div className="flex flex-row justify-between items-center">
-          {/* Left: Guest info */}
           <div className="flex items-center gap-3">
             <img
               src="/images/guest.jpg"
@@ -85,8 +86,6 @@ export default function Dashboard() {
               <p className="text-[12px] text-[#FBD0F8]">Good morning</p>
             </div>
           </div>
-
-          {/* Right: Search + Notifications */}
           <div className="flex items-center gap-5">
             <Link to="/search">
               <img
@@ -101,7 +100,6 @@ export default function Dashboard() {
                 alt="Notifications"
                 className="w-[16.65px] h-[16.65px] cursor-pointer"
               />
-              {/* Badge */}
               <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[15px] h-[15px] flex items-center justify-center shadow">
                 5
               </span>
@@ -133,7 +131,7 @@ export default function Dashboard() {
               </>
             ) : (
               <>
-                {"******."}
+                ******.
                 <span className="text-[#FBD0FB] text-[18px] font-medium">
                   ***
                 </span>
@@ -151,37 +149,16 @@ export default function Dashboard() {
             />
             <span>Withdraw</span>
           </button>
-          {/* Popups */}
-          {showWithdraw && (
-            <WithdrawPopup
-              balance={balance}
-              onClose={() => setShowWithdraw(false)}
-              onSuccess={() => setShowSuccess(true)}
-            />
-          )}
-          {/* Show Success Popup */}
-          {showSuccess && (
-            <ShowSuccess
-              image="/icons/Illustration.svg"
-              heading="Withdrawal Successful"
-              message="₦550,000 has been moved from your Letora wallet to your bank account. Arrival time may vary by bank."
-              buttonText="Done"
-              onClose={() => setShowSuccess(false)}
-              height="auto"
-            />
-          )}
-        </div>
 
-        {/* Background Logo (watermark bottom-right) */}
-        <img
-          src="/icons/logo.svg"
-          alt="Logo"
-          className="absolute -bottom-5 -right-10 opacity-10 w-[196px] h-[189.88px]"
-        />
+          <img
+            src="/icons/logo.svg"
+            alt="Logo"
+            className="absolute -bottom-5 -right-10 opacity-10 w-[196px] h-[189.88px]"
+          />
+        </div>
       </div>
 
       {/* My Booking Section */}
-      {/* Header */}
       <div className="px-[21px] mt-[25px]">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
@@ -193,7 +170,8 @@ export default function Dashboard() {
         </div>
         <Bookings lodge={lodge} status={"ongoing"} />
       </div>
-      {/* Hot Apartments Section */}
+
+      {/* Hot Apartments */}
       <div className="px-[22px] mt-1">
         <div className="flex justify-between items-center">
           <h3 className="font-medium my-4 text-[14px]">Hot Apartments 🔥</h3>
@@ -207,11 +185,11 @@ export default function Dashboard() {
       <div className="pl-[22px] pb-3">
         <ApartmentSlider />
       </div>
-      {/* Become a Host Section */}
+
+      {/* Become a Host */}
       <Link to="/identity-id">
         <div className="px-[22px]">
           <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-[8px] px-[12px] flex items-center justify-between overflow-hidden h-[106.04px]">
-            {/* Left: Text Content */}
             <div className="text-white max-w-[70%] z-10">
               <h3 className="font-semibold text-[16px] mb-1">Become a Host</h3>
               <p className="text-[12px] leading-snug">
@@ -220,24 +198,17 @@ export default function Dashboard() {
               </p>
               <button className="mt-2 text-[10px]">Click here to begin</button>
             </div>
-
-            {/* Right: Host Image + Star + Doodle */}
             <div className="absolute right-[-10px] bottom-0 h-full flex items-end justify-end">
-              {/* Host Image */}
               <img
                 src="/images/background/become-host.png"
                 alt="Become a Host"
                 className="h-[117px] object-contain transform scale-x-[-1] relative z-10"
               />
-
-              {/* Star (top) */}
               <img
                 src="/icons/star.svg"
                 alt="star"
                 className="absolute top-[15px] right-[114.3px] w-[9px] h-[9px] z-20"
               />
-
-              {/* Doodle (bottom) */}
               <img
                 src="/icons/doodle.svg"
                 alt="doodle"
@@ -248,6 +219,7 @@ export default function Dashboard() {
         </div>
       </Link>
 
+      {/* Available Apartments */}
       <div className="px-[22px]">
         <div className="flex justify-between items-center">
           <h3 className="font-medium my-4 text-[14px]">
@@ -265,8 +237,32 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
       {/* Bottom Navigation */}
       <Navigation />
+
+      {/* Withdraw Popup */}
+      {showWithdraw && (
+        <WithdrawPopup
+          balance={balance}
+          onClose={() => setShowWithdraw(false)}
+          onSuccess={() => {
+            setShowWithdraw(false);
+            setShowSuccess(true);
+          }}
+        />
+      )}
+      {/* Show Success Popup */}
+      {showSuccess && (
+        <ShowSuccess
+          image="/icons/Illustration.svg"
+          heading="Withdrawal Successful"
+          message="₦550,000 has been moved from your Letora wallet to your bank account. Arrival time may vary by bank."
+          buttonText="Done"
+          onClose={() => setShowSuccess(false)}
+          height="auto"
+        />
+      )}
     </div>
   );
 }

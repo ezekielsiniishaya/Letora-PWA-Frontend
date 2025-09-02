@@ -139,8 +139,8 @@ export default function BookingDetails() {
           </div>
         </div>
       </div>
-      <div className="pb-[42px]">
-        <Link to="/id-check">
+      <div className="pb-[82px]">
+        <Link to="">
           <button className="border border-[#E9E9E9] w-[334px] h-[57px] hover:bg-gray-300 bg-[#A20BA2]  text-white rounded-[10px] py-4 text-[16px] font-semibold">
             Make Payment Now
           </button>

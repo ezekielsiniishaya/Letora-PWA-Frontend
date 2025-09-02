@@ -1,45 +1,40 @@
 import { useState } from "react";
 import ShowSuccess from "../../components/ShowSuccess";
 import { useNavigate } from "react-router-dom";
+import PropertyDetails from "../../components/dashboard/PropertyDetails";
+import Facilities from "../../components/dashboard/Facilities";
+import HouseRules from "../../components/dashboard/HouseRules";
 
-// --- Small reusable components ---
-function HouseRules({ icon, text }) {
-  return (
-    <div className="flex items-center gap-1 text-[#505050] text-[12px] font-medium">
-      <img src={icon} alt={text} className="w-5 h-5 object-contain" />
-      <p className="whitespace-nowrap">{text}</p>
-    </div>
-  );
-}
-
-function PropertyDetail({ iconSrc, label, value }) {
-  return (
-    <div className="flex flex-col items-start gap-1">
-      <p className="text-[12px] font-medium text-[#333333] break-words">
-        {label}
-      </p>
-      <div className="flex items-center gap-1 text-[#505050]">
-        <img
-          src={iconSrc}
-          alt={label}
-          className="w-[19px] h-[15px] object-contain flex-shrink-0"
-        />
-        <p className="font-medium text-[11.5px] leading-snug break-words">
-          {value}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function FacilityDetail({ icon, text }) {
-  return (
-    <div className="flex items-center gap-1 text-[#505050] text-[12px] font-medium">
-      <img src={icon} alt={text} className="w-5 h-5 object-contain" />
-      <p className="whitespace-nowrap">{text}</p>
-    </div>
-  );
-}
+const houseRules = [
+  { icon: "/icons/no-smoking.svg", text: "No Smoking" },
+  { icon: "/icons/no-pets.svg", text: "No Pets Allowed" },
+  { icon: "/icons/no-music.svg", text: "No Loud Music" },
+  { icon: "/icons/flush.svg", text: "Flush Properly" },
+  { icon: "/icons/dispose.svg", text: "Dispose Wastes Properly" },
+];
+const propertyDetails = [
+  { iconSrc: "/icons/bed-sm.svg", label: "Bedroom", value: "3" },
+  { iconSrc: "/icons/bath.svg", label: "Bathtub", value: "3" },
+  { iconSrc: "/icons/car.svg", label: "Parking Space", value: "Medium" },
+  {
+    iconSrc: "/icons/apartment.svg",
+    label: "Apartment Type",
+    value: "2-Bedroom Apartment",
+  },
+  { iconSrc: "/icons/guest.svg", label: "Guest Size", value: "4" },
+  { iconSrc: "/icons/zap.svg", label: "Electricity", value: "Band A" },
+  { iconSrc: "/icons/kitchen.svg", label: "Kitchen Size", value: "Medium" },
+];
+const facilities = [
+  { icon: "/icons/laundry.svg", text: "Laundry Service" },
+  { icon: "/icons/playstation.svg", text: "Play station" },
+  { icon: "/icons/chef.svg", text: "Chef Service" },
+  { icon: "/icons/generator.svg", text: "Generator Backup" },
+  { icon: "/icons/ac.svg", text: "Air conditioning" },
+  { icon: "/icons/wifi.svg", text: "Wifi" },
+  { icon: "/icons/solar.svg", text: "Solar" },
+  { icon: "/icons/swimming.svg", text: "Swimming pool" },
+];
 
 export default function ListingOverviewPage() {
   const [showGallery, setShowGallery] = useState(false);
@@ -135,39 +130,7 @@ export default function ListingOverviewPage() {
         <h2 className="text-[#39302A] text-[14px] font-semibold">
           Property Details
         </h2>
-        <div className="grid grid-cols-3 gap-x-[55px] gap-y-5 mt-[10px]">
-          <PropertyDetail
-            iconSrc="/icons/bed-sm.svg"
-            label="Bedroom"
-            value="3"
-          />
-          <PropertyDetail iconSrc="/icons/bath.svg" label="Bathtub" value="3" />
-          <PropertyDetail
-            iconSrc="/icons/car.svg"
-            label="Parking Space"
-            value="Medium"
-          />
-          <PropertyDetail
-            iconSrc="/icons/apartment.svg"
-            label="Apartment Type"
-            value="2-Bedroom"
-          />
-          <PropertyDetail
-            iconSrc="/icons/guest.svg"
-            label="Guest Size"
-            value="4"
-          />
-          <PropertyDetail
-            iconSrc="/icons/zap.svg"
-            label="Electricity"
-            value="Band A"
-          />
-          <PropertyDetail
-            iconSrc="/icons/kitchen.svg"
-            label="Kitchen Size"
-            value="Medium"
-          />
-        </div>
+        <PropertyDetails list={propertyDetails} />
       </div>
 
       {/* Description */}
@@ -186,16 +149,7 @@ export default function ListingOverviewPage() {
         <h2 className="text-[#39302A] text-[14px] font-semibold">
           Facilities & Services
         </h2>
-        <div className="flex flex-wrap gap-[32px] mt-[10px]">
-          <FacilityDetail icon="/icons/laundry.svg" text="Laundry Service" />
-          <FacilityDetail icon="/icons//wifi.svg" text="Wifi" />
-          <FacilityDetail icon="/icons/ac.svg" text="Air Conditioning" />
-          <FacilityDetail icon="/icons/swimming.svg" text="Swimming Pool" />
-          <FacilityDetail icon="/icons/solar.svg" text="Solar" />
-          <FacilityDetail icon="/icons/generator.svg" text="Generator Backup" />
-          <FacilityDetail icon="/icons/playstation.svg" text="Play station" />
-          <FacilityDetail icon="/icons/chef.svg" text="Chef Service" />
-        </div>
+        <Facilities list={facilities} />
       </div>
 
       {/* House Rules */}
@@ -203,19 +157,7 @@ export default function ListingOverviewPage() {
         <h2 className="text-[#333333] text-[14px] font-semibold">
           House Rules
         </h2>
-        <div className="grid grid-cols-2 gap-x-[130px] gap-y-4 mt-[10px]">
-          <HouseRules icon="/icons/no-smoking.svg" text="No Smoking" />
-          <HouseRules icon="/icons/no-pets.svg" text="No Pets Allowed" />
-          <HouseRules
-            icon="/icons/no-music.svg"
-            text="No Loud Music/Partying"
-          />
-          <HouseRules icon="/icons/flush.svg" text="Flush Properly" />
-          <HouseRules
-            icon="/icons/dispose.svg"
-            text="Dispose Wastes Properly"
-          />
-        </div>
+        <HouseRules list={houseRules} />
       </div>
 
       {/* Security Deposit */}

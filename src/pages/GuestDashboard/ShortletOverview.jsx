@@ -2,42 +2,37 @@ import { useState } from "react";
 import ShowSuccess from "../../components/ShowSuccess";
 import { Link, useNavigate } from "react-router-dom";
 import Reviews from "../../components/dashboard/ReviewsSections";
-// --- Small reusable components ---
-function HouseRules({ icon, text }) {
-  return (
-    <div className="flex items-center gap-1 text-[#505050] text-[12px] font-medium">
-      <img src={icon} alt={text} className="w-5 h-5 object-contain" />
-      <p className="whitespace-nowrap">{text}</p>
-    </div>
-  );
-}
 
-function PropertyDetail({ iconSrc, label, value }) {
-  return (
-    <div className="flex flex-col items-start gap-1">
-      <p className="text-[12px] w-[105px] font-medium text-[#333333]">
-        {label}
-      </p>
-      <div className="flex items-center gap-1 w-[105px] text-[#505050]">
-        <img
-          src={iconSrc}
-          alt={label}
-          className="w-[19px] h-[15px] object-contain"
-        />
-        <p className="font-medium text-[11.5px] leading-snug">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function FacilityDetail({ icon, text }) {
-  return (
-    <div className="flex items-center gap-1 text-[#505050] text-[12px] font-medium">
-      <img src={icon} alt={text} className="w-5 h-5 object-contain" />
-      <p className="whitespace-nowrap">{text}</p>
-    </div>
-  );
-}
+const houseRules = [
+  { icon: "/icons/no-smoking.svg", text: "No Smoking" },
+  { icon: "/icons/no-pets.svg", text: "No Pets Allowed" },
+  { icon: "/icons/no-music.svg", text: "No Loud Music" },
+  { icon: "/icons/flush.svg", text: "Flush Properly" },
+  { icon: "/icons/dispose.svg", text: "Dispose Wastes Properly" },
+];
+const propertyDetails = [
+  { iconSrc: "/icons/bed-sm.svg", label: "Bedroom", value: "3" },
+  { iconSrc: "/icons/bath.svg", label: "Bathtub", value: "3" },
+  { iconSrc: "/icons/car.svg", label: "Parking Space", value: "Medium" },
+  {
+    iconSrc: "/icons/apartment.svg",
+    label: "Apartment Type",
+    value: "2-Bedroom Apartment",
+  },
+  { iconSrc: "/icons/guest.svg", label: "Guest Size", value: "4" },
+  { iconSrc: "/icons/zap.svg", label: "Electricity", value: "Band A" },
+  { iconSrc: "/icons/kitchen.svg", label: "Kitchen Size", value: "Medium" },
+];
+const facilities = [
+  { icon: "/icons/laundry.svg", text: "Laundry Service" },
+  { icon: "/icons/playstation.svg", text: "Play station" },
+  { icon: "/icons/chef.svg", text: "Chef Service" },
+  { icon: "/icons/generator.svg", text: "Generator Backup" },
+  { icon: "/icons/ac.svg", text: "Air conditioning" },
+  { icon: "/icons/wifi.svg", text: "Wifi" },
+  { icon: "/icons/solar.svg", text: "Solar" },
+  { icon: "/icons/swimming.svg", text: "Swimming pool" },
+];
 
 export default function ShortletOverviewPage() {
   const [showGallery, setShowGallery] = useState(false);
@@ -139,44 +134,39 @@ export default function ShortletOverviewPage() {
       </div>
 
       {/* Property Details */}
-      <div className="mt-[31.66px]">
-        <h2 className="text-[#39302A] text-[14px] font-semibold">
-          Property Details
-        </h2>
-        <div className="grid grid-cols-3 gap-x-[30px] gap-y-5 mt-[10px]">
-          <PropertyDetail
-            iconSrc="/icons/bed-sm.svg"
-            label="Bedroom"
-            value="3"
-          />
-          <PropertyDetail iconSrc="/icons/bath.svg" label="Bathtub" value="3" />
-          <PropertyDetail
-            iconSrc="/icons/car.svg"
-            label="Parking"
-            value="Medium"
-          />
-          <PropertyDetail
-            iconSrc="/icons/apartment.svg"
-            label="Apartment Type"
-            value="2-Bedroom"
-          />
-          <PropertyDetail
-            iconSrc="/icons/guest.svg"
-            label="Guest Size"
-            value="4"
-          />
-          <PropertyDetail
-            iconSrc="/icons/zap.svg"
-            label="Electricity"
-            value="Band A"
-          />
-          <PropertyDetail
-            iconSrc="/icons/kitchen.svg"
-            label="Kitchen Size"
-            value="Medium"
-          />
+      {propertyDetails.length > 0 && (
+        <div className="grid grid-cols-3 mt-4 w-full">
+          {propertyDetails.map((detail, index) => (
+            <div
+              key={detail.label}
+              className={`flex flex-col py-1 w-full ${
+                index % 3 === 1
+                  ? "ml-10 items-start" // center column, but keep left alignment inside
+                  : index % 3 === 2
+                  ? "items-end"
+                  : "items-start"
+              }`}
+            >
+              {/* Label */}
+              <span className="text-[12px] font-medium text-[#333333] mb-1">
+                {detail.label}
+              </span>
+
+              {/* Icon + Value */}
+              <div className="flex items-center space-x-1">
+                <img
+                  src={detail.iconSrc}
+                  alt={detail.label}
+                  className="w-[19px] h-[18px] flex-shrink-0"
+                />
+                <span className="text-[11px] font-medium text-[#505050]">
+                  {detail.value}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      )}
 
       {/* Description */}
       <div className="mt-[31.66px]">
@@ -194,16 +184,32 @@ export default function ShortletOverviewPage() {
         <h2 className="text-[#39302A] text-[14px] font-semibold">
           Facilities & Services
         </h2>
-        <div className="flex flex-wrap gap-[32px] mt-[10px]">
-          <FacilityDetail icon="/icons/laundry.svg" text="Laundry Service" />
-          <FacilityDetail icon="/icons//wifi.svg" text="Wifi" />
-          <FacilityDetail icon="/icons/ac.svg" text="Air Conditioning" />
-          <FacilityDetail icon="/icons/swimming.svg" text="Swimming Pool" />
-          <FacilityDetail icon="/icons/solar.svg" text="Solar" />
-          <FacilityDetail icon="/icons/generator.svg" text="Generator Backup" />
-          <FacilityDetail icon="/icons/playstation.svg" text="Play station" />
-          <FacilityDetail icon="/icons/chef.svg" text="Chef Service" />
-        </div>
+
+        {facilities.length > 0 && (
+          <div className="grid grid-cols-3 gap-x-[32px] gap-y-3 mt-[10px] w-full">
+            {facilities.map((f, index) => (
+              <div
+                key={f.text}
+                className={`flex items-center space-x-[16.93px] w-full ${
+                  index % 3 === 1
+                    ? "ml-4  items-start" // center column: nudge right, keep inner left-aligned
+                    : index % 3 === 2
+                    ? "justify-end items-center" // right column: push content to the right
+                    : "items-start" // left column: default left
+                }`}
+              >
+                <img
+                  src={f.icon}
+                  alt={f.text}
+                  className="w-4 h-4 flex-shrink-0"
+                />
+                <span className="text-[12px] font-medium text-[#505050] whitespace-nowrap">
+                  {f.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       {/* Reviews */}
       <h2 className="text-[#333333] text-[14px] font-semibold mt-[31.66px]">
@@ -217,22 +223,33 @@ export default function ShortletOverviewPage() {
           </span>
         </Link>
       </div>
-
       {/* House Rules */}
       <div className="mt-[31.66px]">
         <h2 className="text-[#333333] text-[14px] font-semibold">
           House Rules
         </h2>
-        <div className="grid grid-cols-2 gap-x-9 gap-y-4 mt-[10px]">
-          <HouseRules icon="/icons/no-smoking.svg" text="No Smoking" />
-          <HouseRules icon="/icons/no-pets.svg" text="No Pets Allowed" />
-          <HouseRules icon="/icons/no-music.svg" text="No Loud Music" />
-          <HouseRules icon="/icons/flush.svg" text="Flush Properly" />
-          <HouseRules
-            icon="/icons/dispose.svg"
-            text="Dispose Wastes Properly"
-          />
-        </div>
+
+        {houseRules.length > 0 && (
+          <div className="grid grid-cols-2 gap-x-[32px] gap-y-[16.93px] mt-[10px] w-full">
+            {houseRules.map((rule, index) => (
+              <div
+                key={rule.text}
+                className={`flex items-center space-x-2 w-full ${
+                  index % 2 === 0 ? "justify-start" : "justify-end"
+                }`}
+              >
+                <img
+                  src={rule.icon}
+                  alt={rule.text}
+                  className="w-4 h-4 flex-shrink-0"
+                />
+                <span className="text-[12px] text-[#505050] font-medium whitespace-nowrap">
+                  {rule.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Security Deposit */}
@@ -292,7 +309,7 @@ export default function ShortletOverviewPage() {
       </div>
       {/* Submit */}
       <div className="text-center">
-        <Link to="/booking-dates">
+        <Link to="/id-check">
           <button className="mx-auto w-full mt-[54px] bg-[#A20BA2] text-white text-[16px] font-semibold h-[57px] rounded-[10px] mb-[54px]">
             Book @ N456,000/Night
           </button>

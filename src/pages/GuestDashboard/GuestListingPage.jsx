@@ -41,8 +41,8 @@ export default function GuestListing() {
         </div>
 
         {/* Start Button */}
-        <Link to="/basic-info" className="block mt-40 w-full max-w-sm">
-          <button className="w-full bg-[#A20BA2] text-white text-[16px] font-medium py-3 rounded-md">
+        <Link to="/basic-info" className="block mt-40 w-full">
+          <button className="w-full bg-[#A20BA2] text-white h-[57px] text-[16px] font-semibold py-3 rounded-md">
             Start
           </button>
         </Link>

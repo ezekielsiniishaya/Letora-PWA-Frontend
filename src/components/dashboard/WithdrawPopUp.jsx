@@ -11,16 +11,15 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="relative bg-white rounded-lg p-6 w-[90%] max-w-sm">
-        {/* Close button */}
-        <button
-          className="absolute top-2 right-3 text-gray-500 hover:text-gray-700"
-          onClick={onClose}
-        >
-          ✕
-        </button>
+    <>
+      {/* Overlay - clicking closes popup */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-50"
+        onClick={onClose}
+      ></div>
 
+      {/* Popup at the bottom */}
+      <div className="fixed bottom-0 left-0 w-full h-[224px] max-w-md mx-auto bg-white rounded-t-[15px] p-6 z-50">
         {/* Withdraw form */}
         <form onSubmit={handleWithdraw} className="mt-4 space-y-3">
           <div>
@@ -48,6 +47,6 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
           </button>
         </form>
       </div>
-    </div>
+    </>
   );
 }

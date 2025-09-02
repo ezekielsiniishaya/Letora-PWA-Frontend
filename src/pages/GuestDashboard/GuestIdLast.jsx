@@ -41,7 +41,7 @@ export default function IdentityWithPictureInfo() {
             sunglasses or filters please.
           </p>
         </div>
-        <Link to="/identity-selfie">
+        <Link to="/guest-id-selfie">
           <div className="mt-[64px]">
             <Button text="Next" type="submit" />
           </div>
