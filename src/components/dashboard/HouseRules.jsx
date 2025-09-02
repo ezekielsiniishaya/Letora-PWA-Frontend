@@ -6,7 +6,7 @@ export default function HouseRules({ list }) {
       {list.map((rule, index) => (
         <div
           key={rule.text}
-          className={`flex items-center space-x-2 w-full ${
+          className={`flex items-center space-x-[5px] w-full ${
             index % 2 === 0 ? "justify-start" : "justify-end"
           }`}
         >

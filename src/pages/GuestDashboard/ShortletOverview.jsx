@@ -2,6 +2,9 @@ import { useState } from "react";
 import ShowSuccess from "../../components/ShowSuccess";
 import { Link, useNavigate } from "react-router-dom";
 import Reviews from "../../components/dashboard/ReviewsSections";
+import PropertyDetails from "../../components/dashboard/PropertyDetails";
+import Facilities from "../../components/dashboard/Facilities";
+import HouseRules from "../../components/dashboard/HouseRules";
 
 const houseRules = [
   { icon: "/icons/no-smoking.svg", text: "No Smoking" },
@@ -44,7 +47,7 @@ export default function ShortletOverviewPage() {
 
   return (
     <div className="mx-[18px] text-[#39302A] mb-[24px] mt-[30px] bg-white">
-      <div className="flex items-center mb-[40px]">
+      <div className="flex items-center mb-[30px]">
         {/* Back Arrow */}
         <button onClick={() => navigate(-1)} className="hover:bg-gray-200">
           <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
@@ -134,40 +137,12 @@ export default function ShortletOverviewPage() {
       </div>
 
       {/* Property Details */}
-      {propertyDetails.length > 0 && (
-        <div className="grid grid-cols-3 mt-4 w-full">
-          {propertyDetails.map((detail, index) => (
-            <div
-              key={detail.label}
-              className={`flex flex-col py-1 w-full ${
-                index % 3 === 1
-                  ? "ml-10 items-start" // center column, but keep left alignment inside
-                  : index % 3 === 2
-                  ? "items-end"
-                  : "items-start"
-              }`}
-            >
-              {/* Label */}
-              <span className="text-[12px] font-medium text-[#333333] mb-1">
-                {detail.label}
-              </span>
-
-              {/* Icon + Value */}
-              <div className="flex items-center space-x-1">
-                <img
-                  src={detail.iconSrc}
-                  alt={detail.label}
-                  className="w-[19px] h-[18px] flex-shrink-0"
-                />
-                <span className="text-[11px] font-medium text-[#505050]">
-                  {detail.value}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
+      <div className="mt-[31.66px]">
+        <h2 className="text-[#39302A] text-[14px] font-semibold">
+          Property Details
+        </h2>
+        <PropertyDetails list={propertyDetails} />
+      </div>
       {/* Description */}
       <div className="mt-[31.66px]">
         <h2 className="text-[#39302A] text-[14px] font-semibold">
@@ -184,33 +159,9 @@ export default function ShortletOverviewPage() {
         <h2 className="text-[#39302A] text-[14px] font-semibold">
           Facilities & Services
         </h2>
-
-        {facilities.length > 0 && (
-          <div className="grid grid-cols-3 gap-x-[32px] gap-y-3 mt-[10px] w-full">
-            {facilities.map((f, index) => (
-              <div
-                key={f.text}
-                className={`flex items-center space-x-[16.93px] w-full ${
-                  index % 3 === 1
-                    ? "ml-4  items-start" // center column: nudge right, keep inner left-aligned
-                    : index % 3 === 2
-                    ? "justify-end items-center" // right column: push content to the right
-                    : "items-start" // left column: default left
-                }`}
-              >
-                <img
-                  src={f.icon}
-                  alt={f.text}
-                  className="w-4 h-4 flex-shrink-0"
-                />
-                <span className="text-[12px] font-medium text-[#505050] whitespace-nowrap">
-                  {f.text}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+        <Facilities list={facilities} />
       </div>
+
       {/* Reviews */}
       <h2 className="text-[#333333] text-[14px] font-semibold mt-[31.66px]">
         Reviews (20)
@@ -228,28 +179,7 @@ export default function ShortletOverviewPage() {
         <h2 className="text-[#333333] text-[14px] font-semibold">
           House Rules
         </h2>
-
-        {houseRules.length > 0 && (
-          <div className="grid grid-cols-2 gap-x-[32px] gap-y-[16.93px] mt-[10px] w-full">
-            {houseRules.map((rule, index) => (
-              <div
-                key={rule.text}
-                className={`flex items-center space-x-2 w-full ${
-                  index % 2 === 0 ? "justify-start" : "justify-end"
-                }`}
-              >
-                <img
-                  src={rule.icon}
-                  alt={rule.text}
-                  className="w-4 h-4 flex-shrink-0"
-                />
-                <span className="text-[12px] text-[#505050] font-medium whitespace-nowrap">
-                  {rule.text}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
+        <HouseRules list={houseRules} />
       </div>
 
       {/* Security Deposit */}

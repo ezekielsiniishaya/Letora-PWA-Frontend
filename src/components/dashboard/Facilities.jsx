@@ -6,7 +6,7 @@ export default function Facilities({ list }) {
       {list.map((f, index) => (
         <div
           key={f.text}
-          className={`flex items-center space-x-[16.93px] w-full ${
+          className={`flex items-center space-x-[3px] w-full ${
             index % 3 === 1
               ? "ml-4 items-start" // center column nudged right
               : index % 3 === 2
