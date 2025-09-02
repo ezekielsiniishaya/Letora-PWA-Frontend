@@ -128,9 +128,11 @@ export default function ShortletOverviewPage() {
                 />
                 Verified
               </span>
-              <p className="text-white py-[6px] px-[6px] bg-[#A20BA2] h-[25px] font-semibold text-[12px] mt-[6px] rounded flex items-center justify-center">
-                ₦456,000/Night
-              </p>
+              <Link to="/id-check">
+                <p className="text-white py-[6px] px-[6px] bg-[#A20BA2] h-[25px] font-semibold text-[12px] mt-[6px] rounded flex items-center justify-center">
+                  ₦456,000/Night
+                </p>
+              </Link>
             </div>
           </div>
         </div>

@@ -161,7 +161,7 @@ export default function BookingPage() {
             Total Booking Cost
           </p>
           <p className="text-[30px] font-semibold text-black">
-            {days > 0 ? `₦${totalCost.toLocaleString()}` : "0"}
+            {days > 0 ? `N${totalCost.toLocaleString()}` : "0"}
           </p>
           <p className="text-[12px] font-medium text-[#505050]">
             {days > 0
@@ -174,7 +174,7 @@ export default function BookingPage() {
       {/* Bottom button */}
       <div className="p-4">
         <Link to="/booking-overview">
-          <button className="w-full h-[57px] mt-[157px] rounded-[10px] py-3 bg-[#A20BA2] text-white font-medium text-[14px]">
+          <button className="w-full h-[57px] mt-[157px] rounded-[10px] font-semibold py-3 bg-[#A20BA2] text-white text-[16px]">
             Proceed
           </button>
         </Link>

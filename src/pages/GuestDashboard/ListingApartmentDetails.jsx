@@ -49,7 +49,7 @@ export default function ListingApartmentDetails() {
           <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-4" />
         </button>
         <span className="text-[13.2px] font-medium bg-[#A20BA2] text-white px-[6.6px] w-[33px] h-[18.43px] flex items-center justify-center rounded-[7.92px]">
-          1/8
+          2/8
         </span>
       </div>
 

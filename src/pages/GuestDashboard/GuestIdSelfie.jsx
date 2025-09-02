@@ -98,7 +98,7 @@ export default function IdentitySelfie() {
           buttonText="Explore Apartments"
           onClose={() => {
             setShowSuccess(false);
-            navigate("/booking-dates");
+            navigate("/apartments");
           }}
         />
       )}

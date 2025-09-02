@@ -14,7 +14,7 @@ export default function BasicInfoPage() {
     { label: "2-bedroom Apartment", value: "2-bedroom Apartment" },
     { label: "3-bedroom Apartment", value: "3-bedroom Apartment" },
     { label: "Entire Apartment", value: "Entire Apartment" },
-    { label: "BO/Amex", value: "BO/Amex" },
+    { label: "BQ/Annex", value: "BQ/Ann ex" },
     { label: "Duplex", value: "Duplex" },
   ];
 
