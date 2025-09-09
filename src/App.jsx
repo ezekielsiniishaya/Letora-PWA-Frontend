@@ -42,7 +42,12 @@ import GuestIdPage from "./pages/GuestDashboard/GuestIdPage";
 import GuestIdLast from "./pages/GuestDashboard/GuestIdLast";
 import GuestIdSelfie from "./pages/GuestDashboard/GuestIdSelfie";
 import ShortletReview from "./pages/GuestDashboard/ShortletReview";
-
+import HostDashboardPage from "./pages/HostDashboard/HostDashboardPage";
+import ConfirmEdit from "./pages/HostDashboard/ConfirmEdit";
+import ViewListing from "./pages/HostDashboard/ViewListing";
+import HostBookingDetails from "./pages/GuestDashboard/BookingDetailsPage";
+import HostHome from "./pages/HostDashboard/HostHome";
+import ProfilePage from "./pages/HostDashboard/ProfilePage";
 
 function App() {
   return (
@@ -98,6 +103,15 @@ function App() {
         <Route path="/guest-id-last" element={<GuestIdLast />} />
         <Route path="/guest-id-selfie" element={<GuestIdSelfie />} />
         <Route path="/shortlet-review" element={<ShortletReview />} />
+        <Route path="/host-dashboard" element={<HostDashboardPage />} />
+        <Route path="/confirm-edit" element={<ConfirmEdit />} />
+        <Route path="/view-listing" element={<ViewListing />} />
+        <Route
+          path="/host-booking-details/:id"
+          element={<HostBookingDetails />}
+        />
+        <Route path="/host-home" element={<HostHome />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Routes>
     </Router>
   );

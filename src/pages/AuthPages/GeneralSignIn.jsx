@@ -2,11 +2,24 @@ import { useState } from "react";
 import Button from "../../components/Button";
 import Header from "../../components/Header";
 import PasswordInput from "../../components/auth/PasswordInput";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, } from "react-router-dom";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // For now, just check rememberMe and navigate
+    if (rememberMe) {
+      navigate("/host-home");
+    } else {
+      navigate("/guest-dashboard");
+    }
+  };
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
@@ -18,7 +31,7 @@ export default function SignIn() {
           Sign in if you already have an account
         </p>
 
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div>
             <label className="block text-[14px] font-medium text-[#686464] mt-[32px]">
@@ -44,6 +57,8 @@ export default function SignIn() {
             <label className="flex items-center space-x-[8px]">
               <input
                 type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="appearance-none border border-[#CCCCCC] w-[18px] h-[18px] rounded-[5px] checked:bg-[#A20BA2] checked:border-[#A20BA2] relative 
   checked:after:content-['✔'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-xs"
               />
@@ -56,9 +71,7 @@ export default function SignIn() {
           </div>
 
           {/* Sign in button */}
-          <Link to="/guest-dashboard">
-            <Button text="Sign in" type="submit" />
-          </Link>
+          <Button text="Sign in" type="submit" />
         </form>
 
         {/* OR divider */}

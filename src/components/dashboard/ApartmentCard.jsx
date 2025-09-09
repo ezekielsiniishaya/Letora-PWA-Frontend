@@ -30,7 +30,7 @@ export default function ApartmentCard({ apt }) {
             <img
               src="/icons/star-gray.svg"
               alt="Rating"
-              className="w-[14px] h-[14px] mr-1"
+              className="w-[12.19px] h-[12.19px] mr-1"
             />
             <span>{apt.rating}</span>
           </div>

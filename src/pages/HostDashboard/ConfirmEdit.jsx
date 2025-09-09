@@ -41,8 +41,8 @@ const facilities = [
 export default function ListingOverviewPage() {
   const [showGallery, setShowGallery] = useState(false);
   const [docs, setDocs] = useState({ doc1: null, doc2: null, doc3: null });
-  const [showSuccess, setShowSuccess] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [successType, setSuccessType] = useState(null); // "submit" | "delete" | null
 
   const images = Array(8).fill("/images/apartment-dashboard.png");
   const navigate = useNavigate();
@@ -52,12 +52,16 @@ export default function ListingOverviewPage() {
   };
 
   const handleDeleteClick = () => {
-    setShowConfirm(true); // show confirm modal first
+    setShowConfirm(true);
   };
 
   const handleConfirmDelete = () => {
-    setShowConfirm(false);
-    setShowSuccess(true); // then show success modal
+    setShowConfirm(false); // close confirm modal first
+    setSuccessType("delete"); // then trigger delete success modal
+  };
+
+  const handleSubmit = () => {
+    setSuccessType("submit");
   };
 
   return (
@@ -70,9 +74,9 @@ export default function ListingOverviewPage() {
         {/* Edit Button */}
         <button
           onClick={() => navigate("/basic-info")}
-          className="bg-[#167DDD] text-[12px] font-medium w-[151px] h-[21px] text-white px-4 rounded-full hover:bg-gray-800"
+          className="bg-[#686464] text-[12px] font-medium w-[65px] h-[21px] text-white px-4 rounded-full hover:bg-gray-800"
         >
-          Undergoing Review
+          Edit
         </button>
       </div>
 
@@ -209,11 +213,21 @@ export default function ListingOverviewPage() {
         </div>
       </div>
 
+      {/* Submit */}
+      <div className="text-center">
+        <button
+          onClick={handleSubmit}
+          className="mx-auto w-full mt-[54px] bg-[#A20BA2] text-white text-[16px] font-semibold h-[57px] rounded-[10px]"
+        >
+          Submit
+        </button>
+      </div>
+
       {/* Delete Button */}
       <div className="text-center">
         <button
           onClick={handleDeleteClick}
-          className="mx-auto w-full mt-[100px] bg-[#FFFFFF] text-[#686464] border border-[#E9E9E9] text-[16px] font-semibold h-[57px] rounded-[10px] mb-[54px]"
+          className="mx-auto w-full mt-5 bg-[#FFFFFF] text-[#686464] border border-[#E9E9E9] text-[16px] font-semibold h-[57px] rounded-[10px] mb-[54px]"
         >
           Delete Listing
         </button>
@@ -241,7 +255,7 @@ export default function ListingOverviewPage() {
         </div>
       )}
 
-      {/* Confirm Modal */}
+      {/* Confirm Delete Modal */}
       {showConfirm && (
         <ShowSuccess
           image="/icons/delete.svg"
@@ -253,16 +267,28 @@ export default function ListingOverviewPage() {
         />
       )}
 
-      {/* Success Modal */}
-      {showSuccess && (
+      {/* Success Modals */}
+      {successType === "submit" && (
+        <ShowSuccess
+          image="/icons/document.png"
+          heading="Listing Submitted for Review"
+          message="Letora will now run standard checks to verify your identity and listing details. You’ll be notified once it’s approved."
+          buttonText="Done"
+          onClose={() => {
+            setSuccessType(null);
+            navigate("/shortlet-review");
+          }}
+        />
+      )}
+
+      {successType === "delete" && (
         <ShowSuccess
           image="/icons/success.svg"
           heading="List Deleted!"
           message=" "
           buttonText="Done"
-          width=""
           onClose={() => {
-            setShowSuccess(false);
+            setSuccessType(null);
             navigate("/shortlet-review");
           }}
         />
