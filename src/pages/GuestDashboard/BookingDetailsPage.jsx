@@ -15,9 +15,11 @@ export default function HostBookingDetails() {
   const [showCancelBooking, setShowCancelBooking] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
+  const [depositHeld, setDepositHeld] = useState(false);
+  const [showHoldSuccess, setShowHoldSuccess] = useState(false);
 
   // Lodges + status are passed from MyBookings via navigate(..., { state })
-  const { lodge, status = "ongoing" } = location.state || {};
+  const { lodge, status = "ongoing", role = "host" } = location.state || {};
 
   if (!lodge) {
     // Case: user refreshed or typed URL directly
@@ -168,16 +170,37 @@ export default function HostBookingDetails() {
 
         {/* Host Details */}
         <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
-          <h3 className="font-medium mb-2">Your Host Details</h3>
+          <h3 className="font-medium mb-2">
+            {role === "guest" ? "Your Host Details" : "Your Guest Details"}
+          </h3>
           <div className="space-y-3">
-            <div className="flex justify-between">
-              <span>Phone Number</span>
-              <span>{lodge.hostPhone}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Phone Number</span>
-              <span>{lodge.hostPhone}</span>
-            </div>
+            {role === "guest" ? (
+              <>
+                <div className="flex justify-between">
+                  <span>Host Name</span>
+                  <span>{lodge.hostName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Phone Number</span>
+                  <span>{lodge.hostPhone}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between">
+                  <span>Guest Name</span>
+                  <span>{lodge.guestName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Phone Number</span>
+                  <span>{lodge.guestPhone}</span>
+                </div>{" "}
+                <div className="flex justify-between">
+                  <span>Phone Number</span>
+                  <span>{lodge.guestPhone}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -210,17 +233,28 @@ export default function HostBookingDetails() {
             />
           </div>
         )}
-
         {status === "completed" && (
           <div className="pt-[40px] pb-[42px]">
-            <Button
-              text="Drop your Review"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowRating(true);
-              }}
-              className="h-[57px]"
-            />
+            {role === "host" ? (
+              <Button
+                text="Hold Security Deposit"
+                icon="/icons/lock.svg"
+                onClick={() => !depositHeld && setShowHoldSuccess(true)}
+                className={`h-[57px] ${
+                  depositHeld ? "bg-[#FBD0FB] cursor-not-allowed" : ""
+                }`}
+                disabled={depositHeld}
+              />
+            ) : (
+              <Button
+                text="Drop your Review"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRating(true);
+                }}
+                className="h-[57px]"
+              />
+            )}
           </div>
         )}
       </div>
@@ -263,6 +297,19 @@ export default function HostBookingDetails() {
       )}
 
       {showRating && <RatingPopup onClose={() => setShowRating(false)} />}
+      {showHoldSuccess && (
+        <ShowSuccess
+          image="/icons/lock2.svg"
+          heading="Security Deposit Held"
+          message="Your request to withhold the guest’s security deposit has been approved. This booking is now officially in dispute."
+          buttonText="Done"
+          onClose={() => {
+            setShowHoldSuccess(false);
+            setDepositHeld(true); // mark as held
+          }}
+          height="auto"
+        />
+      )}
     </div>
   );
 }

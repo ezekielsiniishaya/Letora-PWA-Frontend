@@ -12,133 +12,137 @@ export default function FaqPage() {
 
   const forGuest = [
     {
-      question: "How do I book a shortlet on the platform?",
+      question: "How much does it cost to make a booking?",
       answer:
-        "You can search for listings based on your location and budget, then proceed to book directly through our secure payment system.",
+        "Guests pay the Booking Amount set by the Host, plus a fixed ₦2,500 convenience fee. A 10% platform fee is applied on every booking. Please note that the convenience fee is strictly non-refundable.",
     },
     {
-      question: "Are the apartments verified?",
+      question: "Can I get a refund if I cancel my booking?",
       answer:
-        "We perform background checks and request verification documents from hosts, but we recommend reading reviews and chatting with the host before booking.",
+        "Yes, but it depends on timing: If you cancel within 1 hour of booking, you'll be refunded the Booking Amount and Security Deposit, but not the ₦2,500 convenience fee. After 1 hour, the first day is non-refundable, and unused days may only be refunded if the Host agrees.",
     },
     {
-      question: "What payment methods do you accept?",
+      question: "What happens if the Host cancels my booking?",
       answer:
-        "We accept debit/credit cards, bank transfers, and mobile money (where available).",
+        "If the Host cancels after confirmation, you will receive a full refund of the Booking Amount and Security Deposit. The convenience fee remains non-refundable.",
     },
     {
-      question: "Is my payment safe?",
+      question: "Are security deposits refundable?",
       answer:
-        "Yes. Your payment is held in escrow and only released to the host after your check-in is confirmed.",
+        "Yes. Security deposits are refunded in full within 7-10 business days if there are no damages or rule violations reported.",
     },
     {
-      question: "Can I cancel a booking?",
+      question: "What if I find the apartment unsafe or misrepresented?",
       answer:
-        "Yes. Each host has their own cancellation policy. Be sure to read it before booking.",
+        "If the property is misrepresented, unsafe, or inaccessible, you may qualify for a full refund of the Booking Amount and Security Deposit.",
     },
     {
-      question:
-        "What if I get to the property and it doesn't match the listing?",
+      question: "What if I leave the property early?",
       answer:
-        "Contact us within 12 hours of check-in with photo or video proof, and we'll investigate and issue a refund if necessary.",
+        "If you vacate early due to a verified issue (e.g., hygiene, major breakdown), you may receive a partial refund for unused nights. The convenience fee is still non-refundable.",
     },
     {
-      question: "Do I pay a security deposit?",
+      question: "How do I submit a complaint?",
       answer:
-        "Some listings require a refundable security deposit. This will be stated clearly on the listing before you book.",
+        "You must file a complaint within 24 hours of check-in via the Letora Resolution Portal, with supporting evidence such as photos or videos.",
     },
     {
-      question: "How do I report a user or listing?",
+      question: "Is the convenience fee ever refundable?",
       answer:
-        "Each listing has a 'Report' button. You can also contact our support directly with screenshots or details.",
+        "No. The ₦2,500 convenience fee is non-refundable in all cases, including Host cancellations or force majeure events.",
     },
   ];
 
   const forHost = [
     {
-      question: "How do I list my apartment?",
+      question: "How much does it cost to list my apartment?",
       answer:
-        "Sign up, complete your profile, upload property details and photos, and set your availability and pricing.",
+        "Listing is free. However, Letora charges a 10% fee on every successful booking made through the platform.",
     },
     {
-      question: "When do I get paid as a host?",
+      question: "When will I receive my payout?",
       answer:
-        "You'll receive your payment 24 hours after the guest checks in, once there are no disputes.",
+        "Payouts are released 24 hours after the Guest's check-in, provided no disputes are raised.",
     },
     {
-      question: "Are there any fees for Hosts?",
+      question: "What happens if I need to cancel a booking?",
       answer:
-        "We charge a small commission per booking. The exact percentage is shown before you publish your listing.",
+        "If you cancel after confirmation, the Guest will receive a refund of their Booking Amount and Security Deposit. The convenience fee remains non-refundable.",
     },
     {
-      question: "What happens if I upload fake or altered documents?",
+      question: "Can I make claims for damages?",
       answer:
-        "Your account will be suspended permanently, and legal action may be taken depending on the severity of the violation.",
+        "Yes. Hosts can file a claim within 24 hours of Guest check-out, with timestamped photo or video evidence of damages or breaches.",
     },
     {
-      question: "Can I decline a booking?",
+      question: "What if damages exceed the Security Deposit?",
       answer:
-        "Yes. You are not obligated to accept every booking, but consistent cancellations may affect your visibility.",
+        "If damages exceed ₦500,000, you may pursue additional recovery through legal proceedings. Letora will provide necessary booking details to support your claim.",
     },
     {
-      question: "Do I need any documents to verify my listing?",
+      question: "Do I keep the Security Deposit automatically?",
       answer:
-        "Yes. We require a valid ID, proof of ownership or authorization to sublet, and recent photos of the property.",
+        "No. You must submit evidence within 24 hours of checkout. Without a claim, the Security Deposit will be refunded in full to the Guest.",
     },
     {
-      question: "Who is responsible for damages caused by guests?",
+      question: "What happens if a Guest leaves early?",
       answer:
-        "As the tenant/landlord-host, you are fully responsible for your guest's actions and any property damage. We advise collecting a refundable security deposit from guests.",
+        "Guests may qualify for a partial refund. The payout you receive will reflect the nights stayed and Letora's 10% booking fee deduction.",
+    },
+    {
+      question: "Can I refuse a Guest refund request?",
+      answer:
+        "Yes, for unused days, refunds require Host consent. However, if the property was misrepresented or unsafe, Letora may override and issue refunds.",
     },
   ];
 
   const forApartments = [
     {
-      question: "Can a tenant list a rented apartment on this platform?",
+      question: "How accurate are apartment listings?",
       answer:
-        "Yes, tenants are allowed to list apartments they're renting as long as they have permission from the landlord or property owner. During listing, tenants must confirm that they have this consent.",
+        "Hosts are required to provide truthful information and photos. Guests are entitled to refunds if listings are materially misrepresented.",
     },
     {
-      question: "What is the Verified Consent Badge?",
+      question: "What if I arrive and the apartment is locked or occupied?",
       answer:
-        "It's a trust badge shown on listings where the tenant has uploaded valid landlord permission. It helps build confidence with guests and may boost visibility on the platform.",
+        "You will be eligible for a full refund of the Booking Amount and Security Deposit.",
+    },
+    {
+      question: "Are amenities guaranteed?",
+      answer:
+        "Yes. If promised amenities are missing, Guests may file a complaint and request a refund.",
+    },
+    {
+      question: "What if there are safety or hygiene issues?",
+      answer:
+        "If the property poses immediate health or safety risks, Guests may receive a full or partial refund depending on the severity.",
+    },
+    {
+      question: "Can apartments be booked in advance?",
+      answer:
+        "No. Bookings commence immediately on the Booking Date. Reservations cannot be scheduled for future dates.",
+    },
+    {
+      question: "Who handles damages to the apartment?",
+      answer:
+        "Damages caused by Guests are covered by the Security Deposit. If damages exceed ₦500,000, the Host may seek legal recovery.",
+    },
+    {
+      question: "Are house rules enforceable?",
+      answer:
+        "Yes. Violations (e.g., smoking, unauthorized parties, pets) may result in forfeiture of the Guest's Security Deposit.",
     },
     {
       question:
-        "What if a landlord changes their mind after giving permission?",
+        "What happens during force majeure events (e.g., floods, unrest, outages)?",
       answer:
-        "The tenant must remove the listing immediately. Continuing to host after permission is withdrawn violates platform policy and may result in removal or suspension.",
-    },
-    {
-      question: "Is document upload required when listing an apartment?",
-      answer:
-        "Yes. After confirming you have permission to list, you must upload Proof of ownership (for landlords), or Landlord consent or tenancy agreement (for tenants). Your listing won't go live without this.",
-    },
-    {
-      question: "Is written permission from the landlord required?",
-      answer:
-        "No, it's not required upfront. Tenants simply confirm they have consent during listing. However, we strongly recommend uploading a Landlord Consent Letter or a tenancy agreement that permits subletting.",
-    },
-    {
-      question: "Can verbal consent from a landlord suffice?",
-      answer:
-        "It may be enough to list initially. But in the event of a complaint or legal issue, the tenant must present written proof of permission. For their own protection, we advise uploading this early.",
-    },
-    {
-      question: "Is the platform responsible for tenant-landlord agreements?",
-      answer:
-        "No. The platform provides tools and terms to support safe hosting, but all rental agreements and legal permissions are between the tenant and landlord.",
-    },
-    {
-      question: "Will guests see these documents?",
-      answer:
-        "No. Uploaded documents are for internal verification only. However, listings with verified documents will display a 'Verified Permission' badge for added trust.",
+        "Refunds are not processed for force majeure events, as these are outside Host and Letora's control.",
     },
   ];
 
   return (
     <div className="bg-[#F5F5F5]">
-      <Header2 title="Edit Profile" />
+      <Header2 title="Frequently Asked Questions" />
       <div className="min-h-screen text-[#000000] px-[24px] mt-[28px]">
         {/* For Guests Section */}
         <p className="text-[14px] mb-2 font-semibold mt-[35px]">For Guests</p>
@@ -173,10 +177,10 @@ export default function FaqPage() {
         </div>
 
         {/* For Apartments Section */}
-        <p className="text-[14px] font-semibold mt-[35px] mb-[20px]">
+        <p className="text-[14px] mb-[21px] font-semibold mt-[35px]">
           On Apartments
         </p>
-        <div className="grid gap-[8px] mb-20">
+        <div className="grid gap-[8px] pb-20">
           {forApartments.map((faq, index) => (
             <div key={index} className="bg-white p-[16px] rounded-md">
               <h2 className="font-semibold text-[14px] text-[#333333] mb-2">

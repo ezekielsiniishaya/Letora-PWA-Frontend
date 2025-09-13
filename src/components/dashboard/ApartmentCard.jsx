@@ -1,8 +1,14 @@
-import React from "react";
+import { Link } from "react-router-dom";
 
-export default function ApartmentCard({ apt }) {
+export default function ApartmentCard({ apt, role = "guest" }) {
+  // role can be "guest" or "host"
+  const link = role === "host" ? `/view-listing/` : `/shortlet-overview/`;
+
   return (
-    <div className="bg-white rounded-[5px] p-[8px] flex gap-3">
+    <Link
+      to={link}
+      className="bg-white rounded-[5px] p-[8px] flex gap-3 hover:shadow-md transition"
+    >
       {/* Image */}
       <img
         src={apt.image}
@@ -69,6 +75,6 @@ export default function ApartmentCard({ apt }) {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

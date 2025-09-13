@@ -55,6 +55,8 @@ import HostReviews from "./pages/HostDashboard/HostReviews";
 import FaqPage from "./pages/HostDashboard/FaqPage";
 import GuestNotificationsPage from "./pages/GuestDashboard/GuestNotificationsPage";
 import HostNotificationsPage from "./pages/HostDashboard/HostNotificationsPage";
+import GuestEmptyState from "./components/dashboard/GuestEmptyState";
+import HostEmptyState from "./components/dashboard/HostEmptyState";
 
 function App() {
   return (
@@ -124,8 +126,13 @@ function App() {
         <Route path="/change-bank-details" element={<ChangeBankPage />} />
         <Route path="/host-reviews" element={<HostReviews />} />
         <Route path="/faq" element={<FaqPage />} />
-        <Route path="/guest-notifications" element={<GuestNotificationsPage />} />
+        <Route
+          path="/guest-notifications"
+          element={<GuestNotificationsPage />}
+        />
         <Route path="/host-notifications" element={<HostNotificationsPage />} />
+        <Route path="/guest" element={<GuestEmptyState />} />
+        <Route path="/host" element={<HostEmptyState />} />
       </Routes>
     </Router>
   );

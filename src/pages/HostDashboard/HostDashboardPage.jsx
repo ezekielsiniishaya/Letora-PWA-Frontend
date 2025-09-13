@@ -57,6 +57,10 @@ export default function HostDashboardPage() {
       feePaid: "₦1,500,000",
       deposit: "₦100,000",
       total: "₦1,602,500",
+      guestName: "Chinedu Chinedu",
+      guestPhone: "09876543221",
+      hostName: "Paul Ayodamola",
+      hostPhone: "09876543221",
     },
     {
       id: 102,
@@ -72,6 +76,10 @@ export default function HostDashboardPage() {
       feePaid: "₦450,000",
       deposit: "₦50,000",
       total: "₦501,500",
+      guestName: "Chinedu Chinedu",
+      guestPhone: "09876543221",
+      hostName: "Paul Ayodamola",
+      hostPhone: "09876543221",
     },
     {
       id: 103,
@@ -87,6 +95,10 @@ export default function HostDashboardPage() {
       feePaid: "₦450,000",
       deposit: "₦50,000",
       total: "₦501,500",
+      guestName: "Chinedu Chinedu",
+      guestPhone: "09876543221",
+      hostName: "Paul Ayodamola",
+      hostPhone: "09876543221",
     },
     {
       id: 104,
@@ -102,6 +114,10 @@ export default function HostDashboardPage() {
       feePaid: "₦450,000",
       deposit: "₦50,000",
       total: "₦501,500",
+      guestName: "Chinedu Chinedu",
+      guestPhone: "09876543221",
+      hostName: "Paul Ayodamola",
+      hostPhone: "09876543221",
     },
   ];
 
@@ -154,7 +170,9 @@ export default function HostDashboardPage() {
       <main className="flex-1 mt-[15px] p-4 space-y-1">
         {activeTab === "myListings" ? (
           listings.length > 0 ? (
-            listings.map((apt) => <ApartmentCard key={apt.id} apt={apt} />)
+            listings.map((apt) => (
+              <ApartmentCard role="host" key={apt.id} apt={apt} />
+            ))
           ) : (
             <p className="text-center text-gray-500">No listings found</p>
           )
@@ -164,6 +182,15 @@ export default function HostDashboardPage() {
               key={booking.id}
               lodge={booking}
               status={booking.status}
+              onClick={() =>
+                navigate(`/host-booking/${booking.id}`, {
+                  state: {
+                    lodge: booking,
+                    status: booking.status,
+                    role: "host",
+                  },
+                })
+              }
               completedButtonText={
                 booking.status === "completed"
                   ? "Hold Security Deposit"
