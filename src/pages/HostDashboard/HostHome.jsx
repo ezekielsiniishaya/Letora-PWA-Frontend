@@ -94,16 +94,18 @@ export default function Dashboard() {
                 className="w-[16.67px] h-[16.67px] cursor-pointer"
               />
             </Link>
-            <div className="relative">
-              <img
-                src="/icons/notification.svg"
-                alt="Notifications"
-                className="w-[16.65px] h-[16.65px] cursor-pointer"
-              />
-              <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[15px] h-[15px] flex items-center justify-center shadow">
-                5
-              </span>
-            </div>
+            <Link to="/host-notifications">
+              <div className="relative">
+                <img
+                  src="/icons/notification.svg"
+                  alt="Notifications"
+                  className="w-[16.65px] h-[16.65px] cursor-pointer"
+                />
+                <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[15px] h-[15px] flex items-center justify-center shadow">
+                  5
+                </span>
+              </div>
+            </Link>
           </div>
         </div>
 

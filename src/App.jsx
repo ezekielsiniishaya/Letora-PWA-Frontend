@@ -48,6 +48,13 @@ import ViewListing from "./pages/HostDashboard/ViewListing";
 import HostBookingDetails from "./pages/GuestDashboard/BookingDetailsPage";
 import HostHome from "./pages/HostDashboard/HostHome";
 import ProfilePage from "./pages/HostDashboard/ProfilePage";
+import EditProfile from "./pages/HostDashboard/EditProfile";
+import RevenuePage from "./pages/HostDashboard/RevenuePage";
+import ChangeBankPage from "./pages/HostDashboard/ChangeBankPage";
+import HostReviews from "./pages/HostDashboard/HostReviews";
+import FaqPage from "./pages/HostDashboard/FaqPage";
+import GuestNotificationsPage from "./pages/GuestDashboard/GuestNotificationsPage";
+import HostNotificationsPage from "./pages/HostDashboard/HostNotificationsPage";
 
 function App() {
   return (
@@ -112,6 +119,13 @@ function App() {
         />
         <Route path="/host-home" element={<HostHome />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/revenue" element={<RevenuePage />} />
+        <Route path="/change-bank-details" element={<ChangeBankPage />} />
+        <Route path="/host-reviews" element={<HostReviews />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/guest-notifications" element={<GuestNotificationsPage />} />
+        <Route path="/host-notifications" element={<HostNotificationsPage />} />
       </Routes>
     </Router>
   );

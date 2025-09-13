@@ -1,9 +1,19 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navigation from "../../components/dashboard/Navigation";
+import LogoutConfirmPopup from "../../components/dashboard/LogoutConfirmPopup";
 
 export default function ProfilePage() {
   const [showBecomeHost, setShowBecomeHost] = useState(true);
+  const [showLogout, setShowLogout] = useState(false);
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    // Clear your auth (example with localStorage)
+    localStorage.removeItem("token");
+
+    // redirect to login (using react-router)
+    navigate("/sign-in");
+  };
 
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] pb-[80px]">
@@ -44,13 +54,15 @@ export default function ProfilePage() {
               <span>Paulayodamola@gmail.com</span>
             </div>
           </div>
-          <button className="w-[33px] h-[33px] bg-[#A20BA2] rounded-full flex items-center justify-center">
-            <img
-              src="/icons/pen.svg"
-              alt="Edit Profile"
-              className="w-[12.37px] h-[12.37px]"
-            />
-          </button>
+          <Link to="/edit-profile">
+            <button className="w-[33px] h-[33px] bg-[#A20BA2] rounded-full flex items-center justify-center">
+              <img
+                src="/icons/pen.svg"
+                alt="Edit Profile"
+                className="w-[12.37px] h-[12.37px]"
+              />
+            </button>
+          </Link>
         </div>
       </div>
 
@@ -106,7 +118,7 @@ export default function ProfilePage() {
         <OptionItem
           icon="/icons/my-dashboard.svg"
           text="My Dashboard"
-          link="/host-home"
+          link="/host-dashboard"
         />
         <OptionItem
           icon="/icons/my-revenue.svg"
@@ -116,9 +128,13 @@ export default function ProfilePage() {
         <OptionItem
           icon="/icons/change-bank.svg"
           text="Change Bank Details"
-          link="/bank-details"
+          link="/change-bank-details"
         />
-        <OptionItem icon="/icons/review.svg" text="Reviews" link="/reviews" />
+        <OptionItem
+          icon="/icons/review.svg"
+          text="Reviews"
+          link="/host-reviews"
+        />
       </div>
 
       {/* Account Options */}
@@ -133,20 +149,25 @@ export default function ProfilePage() {
         <OptionItem
           icon="/icons/logout.svg"
           text="Logout"
-          link="/logout"
           noArrow
+          onClick={() => setShowLogout(true)}
         />
       </div>
+      {showLogout && (
+        <LogoutConfirmPopup
+          onClose={() => setShowLogout(false)}
+          onConfirm={handleLogout}
+        />
+      )}
 
       {/* Bottom Navigation */}
       <Navigation />
     </div>
   );
 }
-
-function OptionItem({ icon, text, link, noArrow }) {
-  return (
-    <Link to={link} className="flex items-center justify-between px-4 py-6">
+function OptionItem({ icon, text, link, noArrow, onClick }) {
+  const content = (
+    <div className="flex items-center justify-between px-4 py-6">
       <div className="flex items-center gap-3">
         <img src={icon} alt={text} className="w-[18px] h-[18px]" />
         <span
@@ -166,6 +187,14 @@ function OptionItem({ icon, text, link, noArrow }) {
         ) : (
           <img src="/icons/greater-than.svg" alt=">" className="w-3 h-3" />
         ))}
-    </Link>
+    </div>
+  );
+
+  return link ? (
+    <Link to={link}>{content}</Link>
+  ) : (
+    <button onClick={onClick} className="w-full text-left">
+      {content}
+    </button>
   );
 }

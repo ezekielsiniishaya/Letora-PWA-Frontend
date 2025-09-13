@@ -4,20 +4,21 @@ export default function ShowSuccess({
   message,
   buttonText = "Okay",
   onClose,
-  onConfirm, // only used in confirm mode
+  onConfirm,
   height,
   width = "w-[141.84px]",
   confirmMode = false,
+  button = true,
 }) {
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-      onClick={onClose} // closes when clicking backdrop
+      onClick={onClose}
     >
       <div
         className="bg-white rounded-[8.71px] p-6 w-[300px] text-center mx-4"
         style={{ height: height || "auto" }}
-        onClick={(e) => e.stopPropagation()} // stops inner clicks from closing
+        onClick={(e) => e.stopPropagation()}
       >
         {image && (
           <img
@@ -47,21 +48,28 @@ export default function ShowSuccess({
         )}
 
         {/* Buttons */}
-        {confirmMode ? (
-          <button
-            onClick={onConfirm}
-            className="w-full rounded-[10px] h-[49.83px] text-[13px] py-3 bg-[#F81A0C] text-white font-semibold hover:bg-red-700 transition-colors"
-          >
-            Confirm
-          </button>
-        ) : (
-          <button
-            onClick={onClose}
-            className="w-full rounded-[10px] text-[13px] h-[49.83px] py-3 bg-[#A20BA2] text-white font-semibold hover:bg-[#8A0A8A] transition-colors"
-          >
-            {buttonText}
-          </button>
-        )}
+        {button &&
+          (confirmMode ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onConfirm?.();
+              }}
+              className="w-full rounded-[10px] h-[49.83px] text-[13px] py-3 bg-[#F81A0C] text-white font-semibold hover:bg-red-700 transition-colors"
+            >
+              Confirm
+            </button>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                (onConfirm || onClose)?.();
+              }}
+              className="w-full rounded-[10px] text-[13px] h-[49.83px] py-3 bg-[#A20BA2] text-white font-semibold hover:bg-[#8A0A8A] transition-colors"
+            >
+              {buttonText}
+            </button>
+          ))}
       </div>
     </div>
   );
