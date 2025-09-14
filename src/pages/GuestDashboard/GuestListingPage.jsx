@@ -20,13 +20,13 @@ export default function GuestListing() {
   return (
     <div className="flex flex-col min-h-screen bg-[#F9F9F9]">
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-[21px]">
+      <main className="flex-1 flex  flex-col items-center justify-center px-[21px]">
         {/* Card */}
-        <div className="bg-white rounded-[5px] overflow-hidden max-w-sm w-full">
+        <div className="bg-white p-3 rounded-[8px] overflow-hidden max-w-sm w-full">
           <img
             src={currentImage}
             alt="Listing"
-            className="w-full p-3 rounded-[5px] h-[242px] object-cover"
+            className="w-full rounded-[10px] h-[242px] object-cover"
           />
 
           <div className="mt-2 mb-5 w-[329px] px-[-12px] mx-auto text-center">

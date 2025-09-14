@@ -68,10 +68,7 @@ export default function ListingOverviewPage() {
           <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
         </button>
         {/* Edit Button */}
-        <button
-          onClick={() => navigate("/basic-info")}
-          className="bg-[#167DDD] text-[12px] font-medium w-[151px] h-[21px] text-white px-4 rounded-full hover:bg-gray-800"
-        >
+        <button className="bg-[#167DDD] text-[12px] font-medium w-[151px] h-[21px] text-white px-4 rounded-full">
           Undergoing Review
         </button>
       </div>

@@ -210,13 +210,12 @@ export default function ListingOverviewPage() {
             type="checkbox"
             checked={agreeInfo}
             onChange={() => setAgreeInfo(!agreeInfo)}
-            className="appearance-none border border-[#CCCCCC] w-[25px] h-[18px] rounded-[5px] 
-                 checked:bg-[#A20BA2] checked:border-[#A20BA2] relative 
-                 checked:after:content-['✔'] checked:after:absolute 
-                 checked:after:inset-0 checked:after:flex 
-                 checked:after:items-center checked:after:justify-center 
-                 checked:after:text-white checked:after:text-xs"
+            className="peer appearance-none [-webkit-appearance:none] border border-[#CCC] w-[23px] h-[18px] rounded-[5px]
+             checked:bg-[#A20BA2] checked:border-[#A20BA2]"
           />
+          <span className="absolute left-[20.5px] text-white text-xs hidden peer-checked:block">
+            ✔
+          </span>
           I confirm that I am authorized to list this apartment and all details
           provided are accurate.
         </label>
@@ -226,13 +225,12 @@ export default function ListingOverviewPage() {
             type="checkbox"
             checked={agreeTerms}
             onChange={() => setAgreeTerms(!agreeTerms)}
-            className="appearance-none border border-[#CCCCCC] w-[28px] h-[18px] rounded-[5px] 
-                 checked:bg-[#A20BA2] checked:border-[#A20BA2] relative 
-                 checked:after:content-['✔'] checked:after:absolute 
-                 checked:after:inset-0 checked:after:flex 
-                 checked:after:items-center checked:after:justify-center 
-                 checked:after:text-white checked:after:text-xs"
+            className="peer appearance-none [-webkit-appearance:none] border border-[#CCC] w-[25px] h-[18px] rounded-[5px]
+             checked:bg-[#A20BA2] checked:border-[#A20BA2]"
           />
+          <span className="absolute left-[20.5px] text-white text-xs hidden peer-checked:block">
+            ✔
+          </span>
           have read and agreed to Letora’s Terms & Conditions, Guest Refund
           policy, Content and Listing policy
         </label>

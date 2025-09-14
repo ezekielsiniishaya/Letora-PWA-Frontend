@@ -196,7 +196,7 @@ export default function ShortletOverviewPage() {
             className="w-[19px] h-[14px] md:w-[25px] md:h-[18px] object-contain"
           />
           <p className="whitespace-nowrap md:text-[16px] md:font-bold">
-            N100, 000
+            ₦100, 000
             <span className="text-[12px] md:text-[13px] md:font-bold">.00</span>
           </p>
         </div>
@@ -243,7 +243,7 @@ export default function ShortletOverviewPage() {
       <div className="text-center">
         <Link to="/id-check">
           <button className="mx-auto w-full mt-[54px] bg-[#A20BA2] text-white text-[16px] font-semibold h-[57px] rounded-[10px] mb-[54px]">
-            Book @ N456,000/Night
+            Book @ ₦456,000/Night
           </button>
         </Link>
       </div>

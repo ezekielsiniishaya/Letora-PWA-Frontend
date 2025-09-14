@@ -10,7 +10,7 @@ export default function ApartmentSlider() {
     title: "2-Bedroom Apartment",
     location: "Lekki, Lagos",
     rating: "4.0",
-    price: "N150,000",
+    price: "₦150,000",
     image: "/images/apartment-dashboard.png",
   };
 

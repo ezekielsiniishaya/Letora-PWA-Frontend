@@ -26,48 +26,48 @@ export default function RevenuePage() {
 
       {/* Aggregated Balance */}
       <div className="flex justify-center">
-        <div className="relative mt-[20px] bg-[#A20BA2] text-white rounded-[5px] w-[225px] h-[74px] mb-6 flex flex-col items-center justify-center text-center">
+        <div className="relative mt-[20px] bg-[#A20BA2] text-white rounded-[5px] w-[297px] h-[110px] mb-6 flex flex-col items-center justify-center text-center">
           <img
             src="/icons/bg-layer.svg"
             alt="bg-layer"
-            className="absolute right-0 top-0 w-[96px] opacity-30"
+            className="absolute right-0 top-0 w-[126px] h-full opacity-30"
           />
-          <p className="text-[12px] font-medium">Aggregated balance</p>
-          <h2 className="text-[18px] mt-[8px] font-medium">
-            N4,466,787.<span className="text-[#FBD0FB] text-[14px]">56</span>
+          <p className="text-[15.89px] font-medium">Aggregated balance</p>
+          <h2 className="text-[23.84px] mt-[8px] font-medium">
+            N4,466,787.<span className="text-[#FBD0FB] text-[18px]">56</span>
           </h2>
         </div>
       </div>
 
       {/* Inflow / Outflow */}
       <div className="relative grid grid-cols-2 justify-center gap-4 mb-6">
-        <div className="relative w-[173px] bg-white border border-[#DADADA] h-[60px] rounded-[5px] p-3 flex flex-col">
-          <p className="text-[12px] font-medium text-[#666666]">
+        <div className="relative w-[175px] bg-white border border-[#DADADA] h-[74px] rounded-[5px] p-3 flex flex-col">
+          <p className="text-[12.15px] font-medium text-[#666666]">
             This week Inflow
           </p>
-          <h3 className="text-[14px] mt-1 font-medium text-[#666666]">
-            N4,466,787.56
+          <h3 className="text-[18px] mt-1 font-medium text-[#333333]">
+            N4,466,787.<span className="text-[14px] text-[#909090]">56</span>
           </h3>
-          <div className="bg-[#008751] w-[17.1px] h-[17.1px] rounded-full flex items-center justify-center absolute top-5 right-4">
+          <div className="bg-[#008751] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center absolute top-7 right-4">
             <img
               src="/icons/arrow-down.svg"
               alt="inflow"
-              className="w-[4.29px] h-[9.17px]"
+              className="w-[6.29px] h-[9.17px]"
             />
           </div>
         </div>
-        <div className="relative bg-white border border-[#DADADA] w-[173px] h-[60px] rounded-[5px] p-3 flex flex-col">
-          <p className="text-[12px] font-medium text-[#666666]">
-            This week Outflow
+        <div className="relative w-[175px] bg-white border border-[#DADADA] h-[74px] rounded-[5px] p-3 flex flex-col">
+          <p className="text-[12.15px] font-medium text-[#666666]">
+            This week outflow
           </p>
-          <h3 className="text-[14px] mt-1 font-medium text-[#666666]">
-            N4,466,787.56
+          <h3 className="text-[18px] mt-1 font-medium text-[#333333]">
+            N4,466,787.<span className="text-[14px] text-[#909090]">56</span>
           </h3>
-          <div className="bg-[#FF2416] w-[17.1px] h-[17.1px] rounded-full flex items-center justify-center absolute top-5 right-4">
+          <div className="bg-[#FF2416] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center absolute top-7 right-4">
             <img
               src="/icons/arrow-up.svg"
-              alt="outflow"
-              className="w-[4.29px] h-[9.17px]"
+              alt="inflow"
+              className="w-[6.29px] h-[9.17px]"
             />
           </div>
         </div>

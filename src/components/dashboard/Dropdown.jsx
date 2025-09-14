@@ -68,7 +68,7 @@ export default function Dropdown({
 
       {/* Popup */}
       {isOpen && (
-        <div className="fixed bottom-0               left-0 w-full bg-white rounded-t-[20px] shadow-lg border-t z-50 max-h-[70vh] overflow-y-auto">
+        <div className="fixed bottom-0 left-0 w-full bg-white rounded-t-[20px] shadow-lg border-t z-50 max-h-[70vh] overflow-y-auto">
           {/* Heading */}
           <div className="px-5 pt-4 text-[16px] font-medium text-black">
             {heading}
@@ -87,7 +87,7 @@ export default function Dropdown({
               >
                 <div className="flex items-center space-x-2">
                   {opt.icon && (
-                    <img src={opt.icon} className="w-[30px] h-[30px]" />
+                    <img src={opt.icon} className="w-[17px] h-[17px]" />
                   )}
                   <span className="text-[14px]">{opt.label}</span>
                 </div>

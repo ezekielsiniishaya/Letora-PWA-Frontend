@@ -2,7 +2,7 @@ import { useState } from "react";
 import Button from "../../components/Button";
 import Header from "../../components/Header";
 import PasswordInput from "../../components/auth/PasswordInput";
-import { Link, useNavigate, } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -59,9 +59,12 @@ export default function SignIn() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="appearance-none border border-[#CCCCCC] w-[18px] h-[18px] rounded-[5px] checked:bg-[#A20BA2] checked:border-[#A20BA2] relative 
-  checked:after:content-['✔'] checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-white checked:after:text-xs"
+                className="peer appearance-none [-webkit-appearance:none] border border-[#CCC] w-[18px] h-[18px] rounded-[5px]
+             checked:bg-[#A20BA2] checked:border-[#A20BA2]"
               />
+              <span className="absolute left-4 text-white text-xs hidden peer-checked:block">
+                ✔
+              </span>
 
               <span className="text-[#999999]">Remember me</span>
             </label>

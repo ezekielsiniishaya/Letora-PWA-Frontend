@@ -53,7 +53,7 @@ export default function BookingPricingPage() {
               type="range"
               min={30000}
               max={1000000}
-              step={1000}
+              step={5000}
               value={budget}
               onChange={(e) => setBudget(Number(e.target.value))}
               className="w-full mt-3 slider-custom"
@@ -71,7 +71,7 @@ export default function BookingPricingPage() {
             {/* Price / Night */}
             <div className="text-center mt-4">
               <span className="text-[18px] font-semibold text-[#333333]">
-                N{budget.toLocaleString()}/{" "}
+                ₦{budget.toLocaleString()}/{" "}
                 <span className="font-light text-[15px]">Night</span>
               </span>
             </div>

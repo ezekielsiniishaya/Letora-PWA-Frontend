@@ -7,7 +7,7 @@ const apartment = {
   location: "Ikoyi, Lagos",
   likes: 15,
   rating: "4.0",
-  price: "N100k",
+  price: "₦100k",
   image: "/images/apartment.png",
 };
 

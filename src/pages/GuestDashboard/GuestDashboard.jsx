@@ -91,7 +91,7 @@ export default function Dashboard() {
               <img
                 src="/icons/search.svg"
                 alt="Search"
-                className="w-[16.67px] h-[16.67px] cursor-pointer"
+                className="w-[18.67px] h-[18.67px] cursor-pointer"
               />
             </Link>
             <Link to="/guest-notifications">
@@ -99,9 +99,9 @@ export default function Dashboard() {
                 <img
                   src="/icons/notification.svg"
                   alt="Notifications"
-                  className="w-[16.65px] h-[16.65px] cursor-pointer"
+                  className="w-[18.65px] h-[18.65px] cursor-pointer"
                 />
-                <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[15px] h-[15px] flex items-center justify-center shadow">
+                <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[16px] h-[16px] flex items-center justify-center shadow">
                   5
                 </span>
               </div>
@@ -125,7 +125,7 @@ export default function Dashboard() {
             />
           </div>
           <h1 className="text-[38px] font-semibold mt-[1px]">
-            <span className="text-[28.43px]">N</span>
+            <span className="text-[28.43px]">₦</span>
             {showBalance ? (
               <>
                 569,098.

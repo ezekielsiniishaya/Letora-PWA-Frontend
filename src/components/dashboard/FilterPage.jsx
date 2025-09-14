@@ -201,13 +201,13 @@ export default function FilterPage() {
             </label>
             <div className="flex items-center text-[14px] text-[#333333] justify-between mt-2">
               <span className="">Price</span>
-              <span className="font-medium">N{budget.toLocaleString()}</span>
+              <span className="font-medium">₦{budget.toLocaleString()}</span>
             </div>
             <input
               type="range"
               min={30000}
               max={1000000}
-              step={1000}
+              step={5000}
               value={budget}
               onChange={(e) => setBudget(Number(e.target.value))}
               className="w-full mt-3 slider-custom"

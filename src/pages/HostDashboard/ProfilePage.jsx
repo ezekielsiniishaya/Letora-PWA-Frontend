@@ -142,10 +142,14 @@ export default function ProfilePage() {
         <OptionItem
           icon="/icons/change-password.svg"
           text="Change Password"
-          link="/change-password"
+          link="/forgot-password"
         />
         <OptionItem icon="/icons/faq.svg" text="FAQ" link="/faq" />
-        <OptionItem icon="/icons/support.svg" text="Support" link="/support" />
+        <OptionItem
+          icon="/icons/support.svg"
+          text="Support"
+          link="mailto:support@letora.com"
+        />
         <OptionItem
           icon="/icons/logout.svg"
           text="Logout"

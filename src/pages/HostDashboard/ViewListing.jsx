@@ -274,7 +274,7 @@ export default function ListingOverviewPage() {
           buttonText="Done"
           onClose={() => {
             setSuccessType(null);
-            navigate("/shortlet-review");
+            navigate("/host-dashboard");
           }}
         />
       )}
