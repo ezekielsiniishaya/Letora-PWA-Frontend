@@ -21,8 +21,7 @@ export default function ChooseType() {
 
       {/* Buttons */}
       <div className="flex flex-col space-y-[21px] mt-[53px]">
-        <Link to="/host-sign-up">
-          {" "}
+        <Link to="/sign-up?role=host">
           <button className="flex items-center space-x-3 border w-[334px] h-[54px] bg-[#FFFFFF] rounded-lg px-4 py-3">
             <img
               src="/icons/landlord.png"
@@ -35,7 +34,7 @@ export default function ChooseType() {
           </button>
         </Link>
 
-        <Link to="/guest-sign-up">
+        <Link to="/sign-up?role=guest">
           <button className="flex items-center space-x-3 border w-[334px] h-[54px] bg-[#FFFFFF] rounded-lg px-4 py-3">
             <img
               src="/icons/guests.png"

@@ -1,10 +1,74 @@
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import Button from "../Button";
 import Header from "../Header";
 import GenderDropdown from "./GenderDropDown";
 import StateDropdown from "./StateDropDown";
-import { Link } from "react-router-dom";
 
-export default function SignUpForm({ type = "guest" }) {
+export default function SignUpForm() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Get role from URL parameter, default to "guest"
+  const urlRole = searchParams.get("role") || "guest";
+
+  // Track form data
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    gender: "",
+    stateOrigin: "",
+    email: "",
+    phone: "",
+    phone2: "",
+    password: "",
+    role: urlRole.toUpperCase(), // Convert to uppercase for server
+  });
+
+  // Update role when URL parameter changes
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      role: urlRole.toUpperCase(),
+    }));
+  }, [urlRole]);
+
+  // Update form data on change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Handle form submission - ensure role is included
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Prepare the data with the correct role
+    const submissionData = {
+      ...formData,
+      role: urlRole.toUpperCase(), // Ensure role is from URL, not form input
+    };
+
+    try {
+      const res = await fetch("http://localhost:4000/api/users/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submissionData),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.message || "Registration failed");
+        return;
+      }
+
+      navigate("/verify-email");
+    } catch (err) {
+      console.error("Error registering user:", err);
+      alert("Registration error. Check console for details.");
+    }
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
       {/* Header */}
@@ -16,19 +80,23 @@ export default function SignUpForm({ type = "guest" }) {
           Lets Get to Know you 🤟
         </h2>
         <p className="text-[16px] text-[#666666] mt-[4px]">
-          Create an account as a {type}
+          Create an account as a {urlRole}
         </p>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {/* First Name */}
           <div>
             <label className="block text-[14px] font-medium text-[#686464] mt-[32px]">
               First Name <span className="text-red-500 mr-1">*</span>
             </label>
             <input
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
               placeholder="As seen in your documents"
               type="text"
               className="border mt-[8px] w-full h-[48px] bg-white rounded-md px-4 py-2 text-sm"
+              required
             />
           </div>
 
@@ -38,27 +106,46 @@ export default function SignUpForm({ type = "guest" }) {
               Last Name <span className="text-red-500 mr-1">*</span>
             </label>
             <input
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
               placeholder="As seen in your documents"
               type="text"
               className="border mt-[8px] w-full h-[48px] text-[#666666] rounded-md px-4 py-2 text-sm"
+              required
             />
           </div>
+
+          {/* Gender */}
           <div className="mt-[10px]">
-            {/* Gender */}
-            <GenderDropdown />
+            <GenderDropdown
+              value={formData.gender}
+              onChange={(gender) => setFormData({ ...formData, gender })}
+            />
           </div>
+
+          {/* State of Origin */}
           <div className="mt-[10px]">
-            {/* State of Origin */}
-            <StateDropdown />
+            <StateDropdown
+              value={formData.stateOrigin}
+              onChange={(stateOrigin) =>
+                setFormData({ ...formData, stateOrigin })
+              }
+            />
           </div>
+
           {/* Email */}
           <div>
             <label className="block text-[14px] font-medium text-[#686464] mt-[32px]">
               Email <span className="text-red-500 mr-1">*</span>
             </label>
             <input
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               type="email"
               className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none"
+              required
             />
           </div>
 
@@ -68,7 +155,6 @@ export default function SignUpForm({ type = "guest" }) {
               Valid Phone Number <span className="text-red-500 mr-1">*</span>
             </label>
             <div className="flex items-center border rounded-md h-[48px] px-3 bg-white">
-              {/* Nigerian flag circle */}
               <div
                 className="w-5 h-5 rounded-full flex-shrink-0 mr-2"
                 style={{
@@ -78,20 +164,23 @@ export default function SignUpForm({ type = "guest" }) {
               ></div>
               <span className="text-sm text-[#666666] mr-2">+234</span>
               <input
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
                 type="tel"
                 placeholder="Enter phone number"
                 className="flex-1 outline-none bg-white text-sm"
+                required
               />
             </div>
           </div>
 
-          {/* Alternate Phone Number */}
+          {/* Alternate Phone */}
           <div className="pt-[18px] pb-[62px]">
             <label className="block text-[14px] font-medium text-[#686464] mb-2">
               Alternate Valid Phone Number (optional)
             </label>
             <div className="flex items-center border rounded-md h-[48px] px-3 bg-white">
-              {/* Nigerian flag circle */}
               <div
                 className="w-5 h-5 rounded-full flex-shrink-0 mr-2"
                 style={{
@@ -101,6 +190,9 @@ export default function SignUpForm({ type = "guest" }) {
               ></div>
               <span className="text-sm text-[#666666] mr-2">+234</span>
               <input
+                name="phone2"
+                value={formData.phone2}
+                onChange={handleChange}
                 type="tel"
                 placeholder="Enter alternate phone number"
                 className="flex-1 outline-none bg-white text-sm"
@@ -108,10 +200,8 @@ export default function SignUpForm({ type = "guest" }) {
             </div>
           </div>
 
-          <Link to="/verify-email">
-            {/* Proceed button */}
-            <Button text="Proceed" />
-          </Link>
+          {/* Submit Button */}
+          <Button type="submit" text="Proceed" />
         </form>
 
         {/* OR divider */}
@@ -123,7 +213,7 @@ export default function SignUpForm({ type = "guest" }) {
 
         {/* Sign in button */}
         <Link to="/sign-in">
-          <button className="w-full  bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] h-[56px] mb-[56px] text-[16px] font-regular">
+          <button className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] h-[56px] mb-[56px] text-[16px] font-regular">
             Sign in
           </button>
         </Link>

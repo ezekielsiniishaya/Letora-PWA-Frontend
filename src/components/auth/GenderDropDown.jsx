@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-export default function GenderDropdown() {
-  const [selected, setSelected] = useState("");
+export default function GenderDropdown({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -29,7 +28,7 @@ export default function GenderDropdown() {
         className="w-full h-[48px] border rounded-md bg-white px-4 flex items-center justify-between text-sm text-[#666666]"
         onClick={() => setOpen(!open)}
       >
-        {selected || "Select your gender"}
+        {value || "Select your gender"}
         <span className="ml-2">&#9662;</span> {/* Down arrow */}
       </button>
 
@@ -38,9 +37,9 @@ export default function GenderDropdown() {
           {options.map((option) => (
             <li
               key={option}
-              className="px-4 py-3  hover:bg-purple-100 cursor-pointer text-[#333333]"
+              className="px-4 py-3 hover:bg-purple-100 cursor-pointer text-[#333333]"
               onClick={() => {
-                setSelected(option);
+                onChange(option); // This now updates the form data
                 setOpen(false);
               }}
             >
