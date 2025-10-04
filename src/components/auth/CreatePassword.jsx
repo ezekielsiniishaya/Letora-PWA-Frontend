@@ -78,7 +78,7 @@ export default function CreatePassword() {
       navigate("/identity-id");
     } else {
       // For GUEST or any other role, redirect to home page
-      navigate("/homepage");
+      navigate("/guest-homepage");
     }
   };
 
