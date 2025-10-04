@@ -1,19 +1,31 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import { useApartmentCreation } from "../../hooks/useApartmentCreation";
 
 export default function SecurityDeposit() {
   const [deposit, setDeposit] = useState(""); // formatted value
   const [rawDeposit, setRawDeposit] = useState(""); // numeric raw value
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { apartmentData, updateSecurityDeposit, setCurrentStep } =
+    useApartmentCreation();
 
   const MAX_DEPOSIT = 100000;
 
+  // Use existing data or initialize
+  useEffect(() => {
+    if (apartmentData.securityDeposit?.amount) {
+      const amount = apartmentData.securityDeposit.amount;
+      setRawDeposit(amount.toString());
+      setDeposit(amount.toLocaleString());
+    }
+  }, [apartmentData.securityDeposit]);
+
   const handleChange = (e) => {
-    // remove non-numeric characters (commas, spaces, etc.)
     const numericValue = e.target.value.replace(/,/g, "");
-    if (!/^\d*$/.test(numericValue)) return; // only digits allowed
+    if (!/^\d*$/.test(numericValue)) return;
 
     setRawDeposit(numericValue);
 
@@ -24,8 +36,6 @@ export default function SecurityDeposit() {
     }
 
     const number = Number(numericValue);
-
-    // format with commas
     setDeposit(number.toLocaleString());
 
     if (number > MAX_DEPOSIT) {
@@ -35,10 +45,42 @@ export default function SecurityDeposit() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!error) {
-      console.log("Deposit saved:", rawDeposit); // save numeric value
+
+    // Validate deposit amount
+    if (!rawDeposit || rawDeposit === "") {
+      setError("Please enter a security deposit amount");
+      return;
+    }
+
+    if (error) {
+      return;
+    }
+
+    const depositAmount = Number(rawDeposit);
+
+    if (depositAmount <= 0) {
+      setError("Please enter a valid security deposit amount");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Save to context
+      updateSecurityDeposit({ amount: depositAmount });
+
+      // Update current step
+      setCurrentStep(7);
+
+      // Navigate to next step - NO API CALL!
+      navigate("/house-rules");
+    } catch (err) {
+      console.error("Error saving security deposit:", err);
+      setError("An error occurred while saving the security deposit");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -66,13 +108,20 @@ export default function SecurityDeposit() {
           Set your security deposit amount
         </p>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+
         <form className="mt-[75px] flex flex-col" onSubmit={handleSubmit}>
           {/* Deposit Input */}
           <label className="block text-[14px] font-medium text-[#333333] mb-2">
             Security Deposit Amount <span className="text-red-500">*</span>
           </label>
           <input
-            type="text" // must be text so commas display
+            type="text"
             placeholder="Enter amount"
             value={deposit}
             onChange={handleChange}
@@ -81,6 +130,7 @@ export default function SecurityDeposit() {
                 ? "border-red-500 focus:ring-red-500"
                 : "border-[#D9D9D9] focus:ring-[#A20BA2]"
             }`}
+            disabled={loading}
           />
 
           {/* Error message */}
@@ -96,11 +146,13 @@ export default function SecurityDeposit() {
           )}
 
           {/* Next Button */}
-          <Link to="/house-rules">
-            <div className="mt-[296px]">
-              <Button text="Next" type="submit" />
-            </div>
-          </Link>
+          <div className="mt-[296px]">
+            <Button
+              text={loading ? "Saving..." : "Next"}
+              type="submit"
+              disabled={loading || !!error || !rawDeposit}
+            />
+          </div>
         </form>
       </div>
     </div>

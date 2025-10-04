@@ -1,13 +1,43 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import { useApartmentCreation } from "../../hooks/useApartmentCreation";
 
 export default function BookingPricingPage() {
-  const [budget, setBudget] = useState(30000); // slider state
+  const [budget, setBudget] = useState(30000);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { apartmentData, updatePricing, setCurrentStep } =
+    useApartmentCreation();
 
-  const handleSubmit = (e) => {
+  // Use existing data or initialize
+  useEffect(() => {
+    if (apartmentData.pricing?.pricePerNight) {
+      setBudget(apartmentData.pricing.pricePerNight);
+    }
+  }, [apartmentData.pricing]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      // Save to context
+      updatePricing({ pricePerNight: budget });
+
+      // Update current step
+      setCurrentStep(6);
+
+      // Navigate to next step - NO API CALL!
+      navigate("/security-deposit");
+    } catch (err) {
+      console.error("Error saving pricing:", err);
+      setError("An error occurred while saving the price");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,8 +61,15 @@ export default function BookingPricingPage() {
           Booking Pricing
         </h2>
         <p className="text-[14px] text-[#666666] mt-[4px]">
-          Now let's talk Money{" "}
+          Now let's talk Money
         </p>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
 
         <form className="mt-[45px] flex flex-col" onSubmit={handleSubmit}>
           {/* Money Icon */}
@@ -78,11 +115,13 @@ export default function BookingPricingPage() {
           </div>
 
           {/* Next Button */}
-          <Link to="/security-deposit">
-            <div className="mt-[196px]">
-              <Button text="Next" type="submit" />
-            </div>
-          </Link>
+          <div className="mt-[196px]">
+            <Button
+              text={loading ? "Saving..." : "Next"}
+              type="submit"
+              disabled={loading}
+            />
+          </div>
         </form>
       </div>
     </div>

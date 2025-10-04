@@ -2,11 +2,14 @@ import { useState } from "react";
 import Button from "../../components/Button";
 import { Link, useNavigate } from "react-router-dom";
 import ShowSuccess from "../../components/ShowSuccess";
-import Dropdown from "../../components/dashboard/Dropdown"; // Import the Dropdown component
+import Dropdown from "../../components/dashboard/Dropdown";
+import { uploadBankDetailsAPI } from "../../services/hostApi.js";
 
 export default function BankAccount() {
   const [selectedBank, setSelectedBank] = useState(null);
   const [accountNumber, setAccountNumber] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -15,102 +18,164 @@ export default function BankAccount() {
     {
       label: "Access Bank",
       value: "access_bank",
+      code: "044",
       icon: "/icons/access.svg",
     },
     {
       label: "Citibank Nigeria",
       value: "citibank_nigeria",
+      code: "023",
       icon: "/icons/citibank.svg",
     },
     {
       label: "Ecobank Nigeria",
       value: "ecobank_nigeria",
+      code: "050",
       icon: "/icons/eco.svg",
     },
     {
       label: "Fidelity Bank",
       value: "fidelity_bank",
+      code: "070",
       icon: "/icons/fidelity.svg",
     },
     {
       label: "First Bank of Nigeria",
       value: "first_bank_nigeria",
+      code: "011",
       icon: "/icons/firstbank.svg",
     },
     {
       label: "First City Monument Bank",
       value: "first_city_monument_bank",
+      code: "214",
       icon: "/icons/fcmb.svg",
     },
     {
       label: "Globus Bank",
       value: "globus_bank",
+      code: "00103",
       icon: "/icons/globus.svg",
     },
     {
       label: "Guaranty Trust Bank",
       value: "guaranty_trust_bank",
+      code: "058",
       icon: "/icons/gt.svg",
     },
     {
       label: "Keystone Bank",
       value: "keystone_bank",
+      code: "082",
       icon: "/icons/keystone.svg",
     },
     {
       label: "Polaris Bank",
       value: "polaris_bank",
+      code: "076",
       icon: "/icons/polaris.svg",
     },
     {
       label: "Providos Bank",
       value: "providos_bank",
+      code: "101",
       icon: "/icons/providos.svg",
     },
     {
       label: "Stanbic IBTC Bank",
       value: "stanbic_ibtc_bank",
+      code: "221",
       icon: "/icons/stanbic.svg",
     },
     {
       label: "Standard Chartered Bank Nigeria",
       value: "standard_chartered_nigeria",
+      code: "068",
       icon: "/icons/standard.svg",
     },
     {
       label: "Sterling Bank",
       value: "sterling_bank",
+      code: "232",
       icon: "/icons/sterling.svg",
     },
     {
       label: "SunTrust Bank Nigeria",
       value: "suntrust_bank_nigeria",
+      code: "100",
       icon: "/icons/suntrust.svg",
     },
     {
       label: "Union Bank of Nigeria",
       value: "union_bank_nigeria",
+      code: "032",
       icon: "/icons/union.svg",
     },
     {
       label: "United Bank for Africa (UBA)",
       value: "uba",
+      code: "033",
       icon: "/icons/uba.svg",
     },
-    { label: "Unity Bank", value: "unity_bank", icon: "/icons/unity.svg" },
-    { label: "Wema Bank", value: "wema_bank", icon: "/icons/wema.svg" },
+    {
+      label: "Unity Bank",
+      value: "unity_bank",
+      code: "215",
+      icon: "/icons/unity.svg",
+    },
+    {
+      label: "Wema Bank",
+      value: "wema_bank",
+      code: "035",
+      icon: "/icons/wema.svg",
+    },
     {
       label: "Zenith Bank",
       value: "zenith_bank",
+      code: "057",
       icon: "/icons/zenith.svg",
     },
   ];
 
-  const handleCreateAccount = (e) => {
+  const handleCreateAccount = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Opening success modal");
-    setIsSuccessOpen(true);
+
+    // Validation
+    if (!selectedBank) {
+      setError("Please select a bank");
+      return;
+    }
+
+    if (!accountNumber || accountNumber.length !== 10) {
+      setError("Please enter a valid 10-digit account number");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Prepare bank details - only bankName and accountNo needed
+      const bankDetails = {
+        bankName: selectedBank.label,
+        accountNo: accountNumber,
+        // accountName is no longer needed - backend will derive it from user profile
+      };
+
+      // Upload bank details to backend
+      const response = await uploadBankDetailsAPI(bankDetails);
+
+      console.log("Bank details uploaded successfully:", response);
+      setIsSuccessOpen(true);
+    } catch (err) {
+      console.error("Error uploading bank details:", err);
+      setError(
+        err.message || "Failed to upload bank details. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOkay = () => {
@@ -121,6 +186,13 @@ export default function BankAccount() {
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
+    setError(""); // Clear error when interacting with dropdown
+  };
+
+  const handleAccountNumberChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ""); // Only allow numbers
+    setAccountNumber(value);
+    setError(""); // Clear error when typing
   };
 
   return (
@@ -145,7 +217,17 @@ export default function BankAccount() {
           Yeah, We need to pay you 😏
         </p>
 
-        <form className="mt-[32px] flex flex-col">
+        <form
+          className="mt-[32px] flex flex-col"
+          onSubmit={handleCreateAccount}
+        >
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Bank Name Dropdown */}
           <div className="mb-[20px]">
             <Dropdown
@@ -171,9 +253,16 @@ export default function BankAccount() {
             <input
               type="text"
               value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
+              onChange={handleAccountNumberChange}
+              maxLength={10}
               className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none"
+              placeholder="Enter account number"
             />
+            {accountNumber && accountNumber.length !== 10 && (
+              <p className="text-red-500 text-xs mt-1">
+                Account number must be 10 digits
+              </p>
+            )}
           </div>
 
           {/* Info Box */}
@@ -196,11 +285,13 @@ export default function BankAccount() {
           </p>
 
           <Button
-            text="Create Account"
+            text={isLoading ? "Processing..." : "Create Account"}
             className="mt-[20px] w-full"
             onClick={handleCreateAccount}
-            type="button"
+            type="submit"
+            disabled={isLoading || !selectedBank || accountNumber.length !== 10}
           />
+
           {isSuccessOpen && (
             <ShowSuccess
               image="/icons/Illustration.svg"

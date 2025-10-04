@@ -1,66 +1,98 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import { useApartmentCreation } from "../../hooks/useApartmentCreation";
 
 export default function HouseRulesPage() {
   const navigate = useNavigate();
-  const [selectedRules, setSelectedRules] = useState([]);
+  const { apartmentData, updateHouseRules, setCurrentStep } =
+    useApartmentCreation();
+  const [selectedRules, setSelectedRules] = useState(
+    apartmentData.houseRules || []
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const dropdownRef = useRef(null);
 
   const houseRulesOptions = [
-    { label: "No Smoking", value: "no_smoking", icon: "/icons/no-smoking.svg" },
+    { label: "No Smoking", value: "NO_SMOKING", icon: "/icons/no-smoking.svg" },
     {
       label: "Smoking Allowed",
-      value: "smoking_allowed",
+      value: "SMOKING_ALLOWED",
       icon: "/icons/smoking.svg",
     },
     {
       label: "Flush Properly",
-      value: "flush_properly",
+      value: "FLUSH_PROPERLY",
       icon: "/icons/flush.svg",
     },
     {
-      label: "Dispose Wastes Properly",
-      value: "dispose_wastes_properly",
+      label: "Dispose Waste Properly",
+      value: "DISPOSE_WASTE_PROPERLY",
       icon: "/icons/dispose.svg",
     },
     {
-      label: "No Loud Music/Partying",
-      value: "no_loud_music_partying",
-      icon: "/icons/no-music.svg",
-    },
-    {
       label: "Partying Allowed",
-      value: "partying_allowed",
+      value: "PARTYING_ALLOWED",
       icon: "/icons/party.svg",
     },
     {
-      label: "No Pets allowed",
-      value: "no_pets_allowed",
+      label: "No Pets Allowed",
+      value: "NO_PETS_ALLOWED",
       icon: "/icons/no-pets.svg",
     },
-    { label: "Pets allowed", value: "pets_allowed", icon: "/icons/pets.svg" },
-    { label: "No Crowds", value: "no_crowds", icon: "/icons/crowd.svg" },
+    { label: "Pets Allowed", value: "PETS_ALLOWED", icon: "/icons/pets.svg" },
+    { label: "No Crowd", value: "NO_CROWD", icon: "/icons/crowd.svg" },
     {
       label: "No Damage to Properties",
-      value: "no_damage_to_properties",
+      value: "NO_DAMAGE_TO_PROPERTIES",
       icon: "/icons/no-damage.svg",
     },
-    {
-      label: "Kids are Allowed",
-      value: "kids_allowed",
-      icon: "/icons/kids.svg",
-    },
+    { label: "Kids Allowed", value: "KIDS_ALLOWED", icon: "/icons/kids.svg" },
   ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (selectedRules.length === 0) {
+      setError("Please select at least one house rule");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      // Save to context
+      updateHouseRules(selectedRules);
+
+      // Update current step
+      setCurrentStep(8);
+
+      // Navigate to next step - NO API CALL!
+      navigate("/upload-legals");
+    } catch (err) {
+      console.error("Error saving house rules:", err);
+      setError("An error occurred while saving house rules");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Custom Dropdown Component
   const HouseRulesDropdown = () => {
     const [open, setOpen] = useState(false);
     const [tempRules, setTempRules] = useState(selectedRules);
 
+    // Use useCallback to memoize the function
+    const applySelections = useCallback(() => {
+      setSelectedRules(tempRules);
+      setOpen(false);
+    }, [tempRules]);
+
     const toggleDropdown = () => {
       if (!open) {
-        setTempRules(selectedRules); // sync selections
+        setTempRules(selectedRules);
       }
       setOpen(!open);
     };
@@ -75,20 +107,20 @@ export default function HouseRulesPage() {
       });
     };
 
-    // Commit on outside click
+    // commit selections when clicking outside
     useEffect(() => {
       const handleClickOutside = (e) => {
         if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
           if (open) {
-            setSelectedRules(tempRules);
-            setOpen(false);
+            applySelections();
           }
         }
       };
+
       document.addEventListener("mousedown", handleClickOutside);
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
-    }, [open, tempRules]);
+    }, [open, applySelections]); // Now include applySelections in dependencies
 
     return (
       <div className="relative" ref={dropdownRef}>
@@ -121,13 +153,11 @@ export default function HouseRulesPage() {
                   className="ml-8 py-5 hover:bg-gray-50 cursor-pointer flex items-center justify-between pr-6"
                   onClick={() => handleSelectTemp(rule)}
                 >
-                  {/* Left side: icon + label */}
                   <div className="flex items-center gap-2">
                     <img src={rule.icon} alt={rule.label} className="w-5 h-5" />
                     <span className="text-sm text-[#333333]">{rule.label}</span>
                   </div>
 
-                  {/* Circle indicator */}
                   <span
                     className={`w-3 h-3 border rounded-full flex items-center justify-center ${
                       isSelected
@@ -142,6 +172,17 @@ export default function HouseRulesPage() {
                 </div>
               );
             })}
+
+            {/* Apply Button inside dropdown - COPIED FROM FACILITIES PAGE */}
+            <div className="sticky bottom-0 bg-white border-t p-4">
+              <button
+                type="button"
+                onClick={applySelections}
+                className="w-full bg-[#A20BA2] text-white py-3 rounded-md font-medium"
+              >
+                Apply ({tempRules.length} selected)
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -166,9 +207,16 @@ export default function HouseRulesPage() {
         <p className="text-[#666666] text-[14px]">Your Apartment, Your Rules</p>
       </header>
 
+      {/* Error Message */}
+      {error && (
+        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
       {/* Form */}
       <div className="flex-1 mt-[80px]">
-        <form className="space-y-9">
+        <form className="space-y-9" onSubmit={handleSubmit}>
           {/* House Rules Dropdown */}
           <div>
             <label className="block text-sm font-medium text-[#333333] mb-1">
@@ -202,9 +250,11 @@ export default function HouseRulesPage() {
 
           {/* Next Button */}
           <div className="pt-[70px] pb-20">
-            <Link to="/upload-legals">
-              <Button text="Next" />
-            </Link>
+            <Button
+              text={loading ? "Saving..." : "Next"}
+              type="submit"
+              disabled={loading || selectedRules.length === 0}
+            />
           </div>
         </form>
       </div>

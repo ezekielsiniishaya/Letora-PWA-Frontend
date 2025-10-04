@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 
 export default function Dropdown({
   label,
@@ -8,9 +8,10 @@ export default function Dropdown({
   heading = "Select Choice",
   isOpen,
   onToggle,
-  multiple = false, // enable multi-select
+  multiple = false,
+  selected, // Receive selected value from parent
+  setSelected, // Receive setter from parent
 }) {
-  const [selected, setSelected] = useState(multiple ? [] : null);
   const dropdownRef = useRef(null);
 
   const handleSelect = (opt) => {
@@ -87,7 +88,7 @@ export default function Dropdown({
               >
                 <div className="flex items-center space-x-2">
                   {opt.icon && (
-                    <img src={opt.icon} className="w-[17px] h-[17px]" />
+                    <img src={opt.icon} className="w-[17px] h-[17px]" alt="" />
                   )}
                   <span className="text-[14px]">{opt.label}</span>
                 </div>

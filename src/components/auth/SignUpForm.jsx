@@ -4,6 +4,7 @@ import Button from "../Button";
 import Header from "../Header";
 import GenderDropdown from "./GenderDropDown";
 import StateDropdown from "./StateDropDown";
+import { registerAPI } from "../../services/authApi"; // Import from authApi
 
 export default function SignUpForm() {
   const navigate = useNavigate();
@@ -21,9 +22,11 @@ export default function SignUpForm() {
     email: "",
     phone: "",
     phone2: "",
-    password: "",
     role: urlRole.toUpperCase(), // Convert to uppercase for server
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Update role when URL parameter changes
   useEffect(() => {
@@ -37,11 +40,14 @@ export default function SignUpForm() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    setError(""); // Clear error when user starts typing
   };
 
   // Handle form submission - ensure role is included
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
     // Prepare the data with the correct role
     const submissionData = {
@@ -50,25 +56,21 @@ export default function SignUpForm() {
     };
 
     try {
-      const res = await fetch("http://localhost:4000/api/users/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submissionData),
+      // Remove the const result declaration since we don't use it
+      await registerAPI(submissionData);
+
+      // Success - redirect to verify email page
+      // You might want to pass the email as state or store it in context
+      navigate("/verify-email", {
+        state: { email: formData.email },
       });
-
-      if (!res.ok) {
-        const error = await res.json();
-        alert(error.message || "Registration failed");
-        return;
-      }
-
-      navigate("/verify-email");
     } catch (err) {
       console.error("Error registering user:", err);
-      alert("Registration error. Check console for details.");
+      setError(err.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
-
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
       {/* Header */}
@@ -82,6 +84,13 @@ export default function SignUpForm() {
         <p className="text-[16px] text-[#666666] mt-[4px]">
           Create an account as a {urlRole}
         </p>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           {/* First Name */}
@@ -97,6 +106,7 @@ export default function SignUpForm() {
               type="text"
               className="border mt-[8px] w-full h-[48px] bg-white rounded-md px-4 py-2 text-sm"
               required
+              disabled={loading}
             />
           </div>
 
@@ -113,6 +123,7 @@ export default function SignUpForm() {
               type="text"
               className="border mt-[8px] w-full h-[48px] text-[#666666] rounded-md px-4 py-2 text-sm"
               required
+              disabled={loading}
             />
           </div>
 
@@ -121,6 +132,7 @@ export default function SignUpForm() {
             <GenderDropdown
               value={formData.gender}
               onChange={(gender) => setFormData({ ...formData, gender })}
+              disabled={loading}
             />
           </div>
 
@@ -131,6 +143,7 @@ export default function SignUpForm() {
               onChange={(stateOrigin) =>
                 setFormData({ ...formData, stateOrigin })
               }
+              disabled={loading}
             />
           </div>
 
@@ -144,8 +157,9 @@ export default function SignUpForm() {
               value={formData.email}
               onChange={handleChange}
               type="email"
-              className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none"
+              className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none disabled:opacity-50"
               required
+              disabled={loading}
             />
           </div>
 
@@ -169,8 +183,9 @@ export default function SignUpForm() {
                 onChange={handleChange}
                 type="tel"
                 placeholder="Enter phone number"
-                className="flex-1 outline-none bg-white text-sm"
+                className="flex-1 outline-none bg-white text-sm disabled:opacity-50"
                 required
+                disabled={loading}
               />
             </div>
           </div>
@@ -195,13 +210,18 @@ export default function SignUpForm() {
                 onChange={handleChange}
                 type="tel"
                 placeholder="Enter alternate phone number"
-                className="flex-1 outline-none bg-white text-sm"
+                className="flex-1 outline-none bg-white text-sm disabled:opacity-50"
+                disabled={loading}
               />
             </div>
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" text="Proceed" />
+          <Button
+            type="submit"
+            text={loading ? "Creating Account..." : "Proceed"}
+            disabled={loading}
+          />
         </form>
 
         {/* OR divider */}
@@ -213,7 +233,10 @@ export default function SignUpForm() {
 
         {/* Sign in button */}
         <Link to="/sign-in">
-          <button className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] h-[56px] mb-[56px] text-[16px] font-regular">
+          <button
+            className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] h-[56px] mb-[56px] text-[16px] font-regular disabled:opacity-50"
+            disabled={loading}
+          >
             Sign in
           </button>
         </Link>

@@ -1,43 +1,99 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import { useApartmentCreation } from "../../hooks/useApartmentCreation";
 
 export default function MediaUploadPage() {
-  const [files, setFiles] = useState([]);
-  const [, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { apartmentData, updateImages, setCurrentStep } =
+    useApartmentCreation();
 
-  const handleFileChange = (e) => {
+  // Convert files to base64 objects
+  const filesToBase64 = (filesArray) => {
+    return Promise.all(
+      filesArray.map(
+        (file) =>
+          new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              resolve({
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                data: reader.result, // base64 string
+                lastModified: file.lastModified,
+              });
+            };
+            reader.onerror = () => {
+              console.error("Error reading file:", file.name);
+              resolve(null);
+            };
+            reader.readAsDataURL(file);
+          })
+      )
+    ).then((results) => results.filter((r) => r !== null));
+  };
+
+  const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files);
+    e.target.value = ""; // reset input
 
-    if (files.length + selectedFiles.length > 10) {
+    if (selectedFiles.length === 0) return;
+
+    const totalFiles = apartmentData.images.length + selectedFiles.length;
+    if (totalFiles > 10) {
       setError("You can only upload a maximum of 10 images.");
       return;
     }
 
-    setFiles((prev) => [...prev, ...selectedFiles]);
+    // Validate
+    const validFiles = selectedFiles.filter((file) => {
+      if (!file.type.startsWith("image/")) {
+        setError("Please select only image files.");
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError("File size should be less than 5MB.");
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    // Convert to base64
+    const newImages = await filesToBase64(validFiles);
+    updateImages([...apartmentData.images, ...newImages]);
     setError("");
   };
 
   const handleRemove = (index) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    const newImages = apartmentData.images.filter((_, i) => i !== index);
+    updateImages(newImages);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (files.length < 7) {
+    if (apartmentData.images.length < 7) {
       setError("Please upload at least 7 images before proceeding.");
       return;
     }
 
-    if (files.length > 10) {
-      setError("You can only upload up to 10 images.");
-      return;
-    }
+    setLoading(true);
+    setError("");
 
-    // ✅ All good
-    navigate("/booking-pricing");
+    try {
+      setCurrentStep(5);
+      navigate("/booking-pricing");
+    } catch (err) {
+      console.error("Error saving images:", err);
+      setError("An error occurred while saving images. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,15 +118,21 @@ export default function MediaUploadPage() {
           Show everyone how nice your apartment is
         </p>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+
         <form className="mt-[25px] flex flex-col" onSubmit={handleSubmit}>
           <label className="block text-[14px] font-medium text-[#333333]">
-            Upload Apartment <span className="text-red-500">*</span>
+            Upload Apartment Images <span className="text-red-500">*</span>
           </label>
 
           {/* Upload Box */}
           <div className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9] p-2">
-            {files.length === 0 ? (
-              // Default box if no images selected
+            {apartmentData.images.length === 0 ? (
               <label className="w-full h-[200px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
                 <input
                   type="file"
@@ -92,18 +154,22 @@ export default function MediaUploadPage() {
                 </p>
               </label>
             ) : (
-              // Preview grid inside the upload box
               <div className="grid grid-cols-3 gap-2">
-                {files.map((file, index) => (
+                {apartmentData.images.map((img, index) => (
                   <div
-                    key={index}
+                    key={`${img.name}-${index}`}
                     className="relative w-full h-[100px] rounded-lg overflow-hidden border"
                   >
                     <img
-                      src={URL.createObjectURL(file)}
-                      alt="Preview"
+                      src={img.data}
+                      alt={`Preview ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
+                    {index === 0 && (
+                      <div className="absolute top-1 left-1 bg-[#A20BA2] text-white text-[8px] px-1 py-0.5 rounded">
+                        Primary
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={() => handleRemove(index)}
@@ -114,9 +180,8 @@ export default function MediaUploadPage() {
                   </div>
                 ))}
 
-                {/* Extra "Add more" slot */}
-                {files.length < 10 && (
-                  <label className="w-full h-[100px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer">
+                {apartmentData.images.length < 10 && (
+                  <label className="w-full h-[100px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-400">
                     <input
                       type="file"
                       accept="image/*"
@@ -127,28 +192,37 @@ export default function MediaUploadPage() {
                     <img
                       src="/icons/camera.svg"
                       alt="Add"
-                      className="w-[20px] h-[20px]"
+                      className="w-[20px] h-[20px] mb-1"
                     />
+                    <span className="text-[10px] text-gray-600 text-center">
+                      Add More ({10 - apartmentData.images.length} left)
+                    </span>
                   </label>
                 )}
               </div>
             )}
           </div>
 
-          {/* Error / Status Message */}
+          {/* Status Message */}
           <p
             className={`mt-2 text-[12px] ${
-              files.length < 7 ? "text-red-500" : "text-green-600"
+              apartmentData.images.length < 7
+                ? "text-red-500"
+                : "text-green-600"
             }`}
           >
-            {files.length < 7
-              ? `You need at least 7 images. Currently selected: ${files.length}`
-              : `Selected ${files.length} images (max 10).`}
+            {apartmentData.images.length < 7
+              ? `You need at least 7 images. Currently selected: ${apartmentData.images.length}`
+              : `Selected ${apartmentData.images.length} images (max 10). First image is primary.`}
           </p>
 
           {/* Next Button */}
           <div className="mt-[40px]">
-            <Button text="Next" type="submit" />
+            <Button
+              text={loading ? "Saving..." : "Next"}
+              type="submit"
+              disabled={loading || apartmentData.images.length < 7}
+            />
           </div>
         </form>
       </div>

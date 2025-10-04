@@ -1,12 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
+import { useUser } from "../../hooks/useUser"; // Adjust path as needed
 
 export default function Navigation() {
   const location = useLocation();
+  const user = useUser(); // Get user data from localStorage
 
   const navItems = [
     {
       name: "Home",
-      paths: ["/guest-dashboard", "/host-home"], // supports both
+      paths: ["/guest-homepage", "/host-homepage"],
       icon: "/icons/home.svg",
       activeIcon: "/icons/home-purple.svg",
     },
@@ -36,6 +38,25 @@ export default function Navigation() {
     },
   ];
 
+  // Function to determine the correct home path based on user role
+  const getHomePath = () => {
+    // Use user role from localStorage if available
+    if (user?.role === "HOST") {
+      return "/host-homepage";
+    }
+
+    // Fallback: check current URL path
+    if (
+      location.pathname.includes("/host-") ||
+      location.pathname === "/host-dashboard"
+    ) {
+      return "/host-homepage";
+    }
+
+    // Default to guest homepage
+    return "/guest-homepage";
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-md z-50">
       <div className="flex justify-around items-center h-[60px]">
@@ -44,8 +65,10 @@ export default function Navigation() {
             location.pathname.startsWith(p)
           );
 
-          // Always use the first path in the list as the navigation target
-          const targetPath = item.paths[0];
+          // For Home item, use dynamic path based on user role
+          // For other items, use the first path in the list
+          const targetPath =
+            item.name === "Home" ? getHomePath() : item.paths[0];
 
           return (
             <Link

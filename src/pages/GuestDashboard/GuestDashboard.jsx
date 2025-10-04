@@ -8,10 +8,7 @@ import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
 
 export default function Dashboard() {
-  const [showBalance, setShowBalance] = useState(true);
-  const [showWithdraw, setShowWithdraw] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const balance = "569,098.879";
 
   const lodge = {
     id: 1,
@@ -72,98 +69,62 @@ export default function Dashboard() {
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] overflow-x-hidden pb-[80px]">
       {/* Header */}
-      <div className="relative bg-[#8C068C] h-[252px] text-white px-[20px] pt-[14px]">
-        {/* Header Row */}
-        <div className="flex flex-row justify-between items-center">
-          <div className="flex items-center gap-3">
-            <img
-              src="/images/guest.jpg"
-              alt="Guest"
-              className="w-[40px] h-[40px] rounded-full object-cover"
-            />
-            <div>
-              <h2 className="text-[16px] font-semibold">Paul Ayodamola</h2>
-              <p className="text-[12px] text-[#FBD0F8]">Good morning</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link to="/search">
+      <div
+        className="relative h-[270px] text-white px-[21.5px] pt-[60px] bg-cover bg-center"
+        style={{
+          backgroundImage: "url(/images/background/guest-bg-homepage.png)",
+        }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black opacity-65"></div>
+
+        {/* Top row: Image + Notification */}
+        <div className="relative flex flex-row justify-between items-center z-10">
+          <img
+            src="/images/guest-image.png"
+            alt="Guest"
+            className="w-[43.77px] h-[43.77px] rounded-full object-cover border-2 border-white"
+          />
+
+          <Link to="/guest-notifications">
+            <div className="relative w-[30px] h-[30px] bg-[#1A1A1A] rounded-full flex items-center justify-center">
               <img
-                src="/icons/search.svg"
-                alt="Search"
-                className="w-[18.67px] h-[18.67px] cursor-pointer"
+                src="/icons/notification.svg"
+                alt="Notifications"
+                className="w-[17px] h-[17px] cursor-pointer"
               />
-            </Link>
-            <Link to="/guest-notifications">
-              <div className="relative">
-                <img
-                  src="/icons/notification.svg"
-                  alt="Notifications"
-                  className="w-[18.65px] h-[18.65px] cursor-pointer"
-                />
-                <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[16px] h-[16px] flex items-center justify-center shadow">
-                  5
-                </span>
-              </div>
-            </Link>
-          </div>
+              <span className="absolute -top-1 -right-2 bg-[#1A1A1A] text-white text-[9px] font-medium rounded-full w-[18px] h-[18px] flex items-center justify-center border">
+                5
+              </span>
+            </div>
+          </Link>
         </div>
 
-        {/* Balance Section */}
-        <div className="mt-[26px] flex flex-col items-center">
-          <div className="flex items-center gap-2">
-            <p className="text-[14px] font-medium text-[#FBD0FB]">
-              Current Balance
-            </p>
+        {/* Guest name + Discover text */}
+        <div className="relative mt-[20px] z-10">
+          <h2 className="text-[16px] font-semibold">Paul Ayodamola</h2>
+          <p className="text-[12.02px]">Discover wonderful Apartments</p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[32px] w-[90%] h-[42.91px] z-10">
+          <div className="bg-white rounded-full flex items-center px-[17px] py-[13px] shadow">
             <img
-              src={showBalance ? "/icons/eye-open.svg" : "/icons/eye-close.svg"}
-              alt="Toggle Balance"
-              className="w-[18.58px] h-[18.58px] cursor-pointer z-10" // Added z-10 here
-              onClick={() => {
-                setShowBalance(!showBalance);
-              }}
+              src="/icons/search.svg"
+              alt="Search"
+              className="w-[14px] h-[14px] mr-[14.3px]"
+            />
+            <input
+              type="text"
+              placeholder="Search Apartments, Apartment type, Location..."
+              className="flex-1 text-[11px] text-[#666666] outline-none"
             />
           </div>
-          <h1 className="text-[38px] font-semibold mt-[1px]">
-            <span className="text-[28.43px]">₦</span>
-            {showBalance ? (
-              <>
-                569,098.
-                <span className="text-[#FBD0FB] text-[20px] font-medium">
-                  879
-                </span>
-              </>
-            ) : (
-              <>
-                ******.
-                <span className="text-[#FBD0FB] text-[18px] font-medium">
-                  ***
-                </span>
-              </>
-            )}
-          </h1>
-          <button
-            onClick={() => setShowWithdraw(true)}
-            className="mt-[18px] bg-white text-[#8C167E] text-[14px] rounded-[5px] font-semibold flex items-center justify-center gap-2 w-[197.03px] h-[41.53px]"
-          >
-            <img
-              src="/icons/arrow-slant.svg"
-              alt="arrow-slant"
-              className="w-[14px] h-[12px] object-cover"
-            />
-            <span>Withdraw</span>
-          </button>
-
-          <img
-            src="/icons/logo.svg"
-            alt="Logo"
-            className="absolute -bottom-5 -right-10 opacity-10 w-[196px] h-[189.88px]"
-          />
         </div>
       </div>
 
       {/* My Booking Section */}
-      <div className="px-[21px] mt-[25px]">
+      <div className="px-[21px] mt-[27px]">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
           <Link to="/bookings">
@@ -245,17 +206,6 @@ export default function Dashboard() {
       {/* Bottom Navigation */}
       <Navigation />
 
-      {/* Withdraw Popup */}
-      {showWithdraw && (
-        <WithdrawPopup
-          balance={balance}
-          onClose={() => setShowWithdraw(false)}
-          onSuccess={() => {
-            setShowWithdraw(false);
-            setShowSuccess(true);
-          }}
-        />
-      )}
       {/* Show Success Popup */}
       {showSuccess && (
         <ShowSuccess

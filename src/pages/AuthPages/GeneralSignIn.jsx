@@ -3,24 +3,58 @@ import Button from "../../components/Button";
 import Header from "../../components/Header";
 import PasswordInput from "../../components/auth/PasswordInput";
 import { Link, useNavigate } from "react-router-dom";
+import { loginAPI } from "../../services/authApi";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    // For now, just check rememberMe and navigate
-    if (rememberMe) {
-      navigate("/host-home");
-    } else {
-      navigate("/guest-dashboard");
+    try {
+      const result = await loginAPI(email, password);
+
+      // Store token and user data
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+      }
+      if (result.user) {
+        localStorage.setItem("user", JSON.stringify(result.user));
+
+        if (rememberMe) {
+          localStorage.setItem("rememberMe", "true");
+        } else {
+          localStorage.removeItem("rememberMe");
+        }
+
+        // Store verification info for identity-id page if needed
+        if (result.requiresIdentityVerification) {
+          localStorage.setItem("requiresIdentityVerification", "true");
+          localStorage.setItem(
+            "documentStatus",
+            JSON.stringify(result.documentStatus)
+          );
+        }
+      }
+
+      console.log("Login successful, redirecting to:", result.redirectPath);
+
+      // Use the redirect path from backend
+      navigate(result.redirectPath);
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message || "Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
     }
   };
-
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
       <Header />
@@ -31,6 +65,13 @@ export default function SignIn() {
           Sign in if you already have an account
         </p>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div>
@@ -40,8 +81,13 @@ export default function SignIn() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError(""); // Clear error when user types
+              }}
+              className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none disabled:opacity-50"
+              required
+              disabled={loading}
             />
           </div>
 
@@ -49,7 +95,11 @@ export default function SignIn() {
           <PasswordInput
             label="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError(""); // Clear error when user types
+            }}
+            disabled={loading}
           />
 
           {/* Remember / Forgot */}
@@ -59,8 +109,9 @@ export default function SignIn() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
+                disabled={loading}
                 className="peer appearance-none [-webkit-appearance:none] border border-[#CCC] w-[18px] h-[18px] rounded-[5px]
-             checked:bg-[#A20BA2] checked:border-[#A20BA2]"
+             checked:bg-[#A20BA2] checked:border-[#A20BA2] disabled:opacity-50"
               />
               <span className="absolute left-4 text-white text-xs hidden peer-checked:block">
                 ✔
@@ -68,13 +119,20 @@ export default function SignIn() {
 
               <span className="text-[#999999]">Remember me</span>
             </label>
-            <Link to="/forgot-password" className="text-[#4D4D4D]">
+            <Link
+              to="/forgot-password"
+              className="text-[#4D4D4D] hover:underline"
+            >
               Forgot Password?
             </Link>
           </div>
 
           {/* Sign in button */}
-          <Button text="Sign in" type="submit" />
+          <Button
+            text={loading ? "Signing in..." : "Sign in"}
+            type="submit"
+            disabled={loading}
+          />
         </form>
 
         {/* OR divider */}
@@ -86,7 +144,10 @@ export default function SignIn() {
 
         {/* Sign up button */}
         <Link to="/choose-type">
-          <button className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] mb-[140px] h-[56px] text-[16px] font-regular">
+          <button
+            className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] mb-[140px] h-[56px] text-[16px] font-regular disabled:opacity-50"
+            disabled={loading}
+          >
             Sign up
           </button>
         </Link>

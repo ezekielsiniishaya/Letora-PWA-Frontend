@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 
-export default function PasswordInput({ label, value, onChange }) {
+export default function PasswordInput({
+  label,
+  value,
+  onChange,
+  disabled = false,
+}) {
   const [showPassword, setShowPassword] = useState(false);
 
-  const isValid = value.length >= 8;
+  const isValid = value.length >= 6; // Changed to 6 characters to match your backend requirement
 
   return (
     <div className="relative w-full mt-2">
@@ -11,17 +16,26 @@ export default function PasswordInput({ label, value, onChange }) {
         {label}
       </label>
 
-      <div className="flex items-center border rounded-md bg-white h-[48px] px-3">
+      <div
+        className={`flex items-center border rounded-md bg-white h-[48px] px-3 ${
+          disabled ? "opacity-50" : ""
+        }`}
+      >
         <input
           type={showPassword ? "text" : "password"}
           value={value}
           onChange={onChange}
-          className="flex-1 h-full outline-none text-sm"
+          disabled={disabled}
+          className="flex-1 h-full outline-none text-sm bg-transparent disabled:cursor-not-allowed"
+          placeholder="Enter your password"
         />
         <button
           type="button"
-          className="ml-2 text-gray-500 hover:text-gray-700"
-          onClick={() => setShowPassword((prev) => !prev)}
+          className={`ml-2 text-gray-500 hover:text-gray-700 ${
+            disabled ? "cursor-not-allowed opacity-50" : ""
+          }`}
+          onClick={() => !disabled && setShowPassword((prev) => !prev)}
+          disabled={disabled}
         >
           {showPassword ? (
             <svg
@@ -65,7 +79,7 @@ export default function PasswordInput({ label, value, onChange }) {
 
       {!isValid && value.length > 0 && (
         <p className="mt-2 text-[12px] text-[#999999]">
-          - minimum 8 characters
+          - minimum 6 characters
         </p>
       )}
     </div>

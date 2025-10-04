@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 
 export default function StateDropdown({
-  label = "State of Origin", // default label
-  placeholder = "Select state", // default placeholder
+  label = "State of Origin",
+  placeholder = "Select state",
   required = true,
   onChange,
-  color = "#686464", // optional callback to send value to parent
+  value = "", // Add value prop to receive selected value from parent
+  color = "#686464",
 }) {
-  const [selected, setSelected] = useState("");
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -63,9 +63,8 @@ export default function StateDropdown({
   }, []);
 
   const handleSelect = (state) => {
-    setSelected(state);
     setOpen(false);
-    if (onChange) onChange(state); // pass selection back to parent if needed
+    if (onChange) onChange(state); // pass selection back to parent
   };
 
   return (
@@ -74,7 +73,7 @@ export default function StateDropdown({
         className="block text-[14px] font-medium mb-2"
         style={{ color: color }}
       >
-       {label} {required && <span className="text-red-500 mr-1">*</span>}
+        {label} {required && <span className="text-red-500 mr-1">*</span>}
       </label>
 
       <button
@@ -82,7 +81,7 @@ export default function StateDropdown({
         className="w-full h-[48px] border rounded-md px-4 bg-white flex items-center justify-between text-sm text-[#666666]"
         onClick={() => setOpen(!open)}
       >
-        {selected || placeholder}
+        {value || placeholder} {/* Use value prop instead of internal state */}
         <span className="ml-2">&#9662;</span> {/* Down arrow */}
       </button>
 

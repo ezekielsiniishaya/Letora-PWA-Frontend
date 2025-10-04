@@ -1,20 +1,37 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
-import { Link } from "react-router-dom";
+import { uploadIdPhotographAPI } from "../../services/documentsApi"; 
 
 export default function IdentitySelfie() {
   const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (file) {
-      navigate("/next-step"); // replace with your actual next route
+    if (!file) return;
+
+    setUploading(true);
+
+    try {
+      // Upload using the API function
+      const result = await uploadIdPhotographAPI(file);
+
+      if (result.success) {
+        navigate("/add-bank-details");
+      } else {
+        throw new Error(result.message || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert(error.message || "Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -29,7 +46,7 @@ export default function IdentitySelfie() {
           onClick={() => navigate(-1)}
         />
         <span className="text-[13.2px] font-medium bg-[#A20BA2] text-white px-[6.6px] w-[33px] h-[18.43px] rounded-[7.92px]">
-          2/2    
+          2/2
         </span>
       </div>
 
@@ -61,6 +78,7 @@ export default function IdentitySelfie() {
                 accept="image/*,.pdf"
                 className="hidden"
                 onChange={handleFileChange}
+                disabled={uploading}
               />
 
               {/* If file selected, show preview, else show JPG icon */}
@@ -96,11 +114,13 @@ export default function IdentitySelfie() {
           </span>
 
           {/* Next Button */}
-          <Link to="/add-bank-details">
-            <div className="mt-[196px]">
-              <Button text="Next" type="submit" />
-            </div>
-          </Link>
+          <div className="mt-[196px]">
+            <Button
+              text={uploading ? "Uploading..." : "Next"}
+              type="submit"
+              disabled={!file || uploading}
+            />
+          </div>
         </form>
       </div>
     </div>

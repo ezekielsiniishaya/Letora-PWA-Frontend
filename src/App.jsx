@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ApartmentCreationProvider from "./contexts/ApartmentCreationProvider";
+
 import SplashWithOnboarding from "./pages/OnboardingPage/SplashWithOnboarding";
 import ChooseType from "./pages/OnboardingPage/ChooseType";
 import GeneralSignIn from "./pages/AuthPages/GeneralSignIn";
@@ -41,11 +43,11 @@ import GuestIdPage from "./pages/GuestDashboard/GuestIdPage";
 import GuestIdLast from "./pages/GuestDashboard/GuestIdLast";
 import GuestIdSelfie from "./pages/GuestDashboard/GuestIdSelfie";
 import ShortletReview from "./pages/GuestDashboard/ShortletReview";
-import HostDashboardPage from "./pages/HostDashboard/HostDashboardPage";
+import HostHomepage from "./pages/HostDashboard/HostHomepage";
+import HostDashboard from "./pages/HostDashboard/HostDashboard";
 import ConfirmEdit from "./pages/HostDashboard/ConfirmEdit";
 import ViewListing from "./pages/HostDashboard/ViewListing";
 import HostBookingDetails from "./pages/GuestDashboard/BookingDetailsPage";
-import HostHome from "./pages/HostDashboard/HostHome";
 import ProfilePage from "./pages/HostDashboard/ProfilePage";
 import EditProfile from "./pages/HostDashboard/EditProfile";
 import RevenuePage from "./pages/HostDashboard/RevenuePage";
@@ -56,83 +58,124 @@ import GuestNotificationsPage from "./pages/GuestDashboard/GuestNotificationsPag
 import HostNotificationsPage from "./pages/HostDashboard/HostNotificationsPage";
 import GuestEmptyState from "./components/dashboard/GuestEmptyState";
 import HostEmptyState from "./components/dashboard/HostEmptyState";
+import GuestHomepage from "./components/dashboard/GuestHomepage";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Combined splash + onboarding route */}
-        <Route path="/" element={<SplashWithOnboarding />} />
-        <Route path="/choose-type" element={<ChooseType />} />
-        <Route path="/sign-in" element={<GeneralSignIn />} />
-        <Route path="/sign-up" element={<SignUpForm />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="create-password" element={<CreatePassword />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/identity-id" element={<IdentityId />} />
-        <Route
-          path="/identity-with-picture-info"
-          element={<IdentityWithPictureInfo />}
-        />
-        <Route path="/identity-selfie" element={<IdentitySelfie />} />
-        <Route path="/add-bank-details" element={<AddBankDetails />} />
-        <Route path="/guest-dashboard" element={<GuestDashboard />} />
-        <Route path="/apartments" element={<ApartmentsPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/privacy-policy" element={<PrivacyPage />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/filter" element={<FilterPage />} />
-        <Route path="/filtered-search" element={<FilteredSearchPage />} />
-        <Route path="/bookings" element={<BookingsPage />} />
-        <Route path="/bookings/:id" element={<BookingDetails />} />
-        <Route path="/favorites" element={<FavoritesPage />} />
-        <Route path="/hot-apartments" element={<HotApartmentsPage />} />
-        <Route path="/guest-listing" element={<GuestLIsting />} />
-        <Route path="/basic-info" element={<BasicInfoPage />} />
-        <Route
-          path="/listing-apartment-details"
-          element={<ListingApartmentDetails />}
-        />
-        <Route path="/facilities" element={<ListingFacilitiesPage />} />
-        <Route path="/media-upload" element={<MediaUploadPage />} />
-        <Route path="/booking-pricing" element={<BookingPricingPage />} />
-        <Route path="/security-deposit" element={<SecurityDepositPage />} />
-        <Route path="/house-rules" element={<HouseRulesPage />} />
-        <Route path="/upload-legals" element={<UploadLegalsPage />} />
-        <Route path="/listing-overview" element={<ListingOverviewPage />} />
-        <Route path="/shortlet-overview" element={<ShortletOverviewPage />} />
-        <Route path="/reviews" element={<ReviewsPage />} />
-        <Route path="/booking-dates" element={<BookingDatePage />} />
-        <Route path="/booking-overview" element={<BookingOverviewPage />} />
-        <Route path="/id-check" element={<IdCheckPage />} />
-        <Route path="/guest-id" element={<GuestIdPage />} />
-        <Route path="/guest-id-last" element={<GuestIdLast />} />
-        <Route path="/guest-id-selfie" element={<GuestIdSelfie />} />
-        <Route path="/shortlet-review" element={<ShortletReview />} />
-        <Route path="/host-dashboard" element={<HostDashboardPage />} />
-        <Route path="/confirm-edit" element={<ConfirmEdit />} />
-        <Route path="/view-listing" element={<ViewListing />} />
-        <Route
-          path="/host-booking-details/:id"
-          element={<HostBookingDetails />}
-        />
-        <Route path="/host-home" element={<HostHome />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/edit-profile" element={<EditProfile />} />
-        <Route path="/revenue" element={<RevenuePage />} />
-        <Route path="/change-bank-details" element={<ChangeBankPage />} />
-        <Route path="/host-reviews" element={<HostReviews />} />
-        <Route path="/faq" element={<FaqPage />} />
-        <Route
-          path="/guest-notifications"
-          element={<GuestNotificationsPage />}
-        />
-        <Route path="/host-notifications" element={<HostNotificationsPage />} />
-        <Route path="/guest" element={<GuestEmptyState />} />
-        <Route path="/host" element={<HostEmptyState />} />
-      </Routes>
-    </Router>
+    <ApartmentCreationProvider>
+      <Router>
+        <Routes>
+          {/* ===== PUBLIC ROUTES ===== */}
+
+          {/* Onboarding & Authentication */}
+          <Route path="/" element={<SplashWithOnboarding />} />
+          <Route path="/choose-type" element={<ChooseType />} />
+          <Route path="/sign-in" element={<GeneralSignIn />} />
+          <Route path="/sign-up" element={<SignUpForm />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/create-password" element={<CreatePassword />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* Static Pages */}
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPage />} />
+
+          {/* ===== HOST-SPECIFIC ROUTES ===== */}
+
+          {/* Host Onboarding & Verification */}
+          <Route path="/identity-id" element={<IdentityId />} />
+          <Route
+            path="/identity-with-picture-info"
+            element={<IdentityWithPictureInfo />}
+          />
+          <Route path="/identity-selfie" element={<IdentitySelfie />} />
+          <Route path="/add-bank-details" element={<AddBankDetails />} />
+
+          {/* Host Dashboard & Management */}
+          <Route path="/host-homepage" element={<HostHomepage />} />
+          <Route path="/host-dashboard" element={<HostDashboard />} />
+          <Route path="/confirm-edit" element={<ConfirmEdit />} />
+          <Route path="/view-listing" element={<ViewListing />} />
+          <Route
+            path="/host-booking-details/:id"
+            element={<HostBookingDetails />}
+          />
+
+          {/* Host Profile & Settings */}
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="/revenue" element={<RevenuePage />} />
+          <Route path="/change-bank-details" element={<ChangeBankPage />} />
+          <Route path="/host-reviews" element={<HostReviews />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route
+            path="/host-notifications"
+            element={<HostNotificationsPage />}
+          />
+          <Route path="/host" element={<HostEmptyState />} />
+
+          {/* ===== GUEST-SPECIFIC ROUTES ===== */}
+
+          {/* Guest Dashboard & Navigation */}
+          <Route path="/guest-homepage" element={<GuestHomepage />} />
+          <Route path="/guest-dashboard" element={<GuestDashboard />} />
+          <Route path="/guest" element={<GuestEmptyState />} />
+          <Route
+            path="/guest-notifications"
+            element={<GuestNotificationsPage />}
+          />
+
+          {/* Guest Search & Listings */}
+          <Route path="/apartments" element={<ApartmentsPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/filter" element={<FilterPage />} />
+          <Route path="/filtered-search" element={<FilteredSearchPage />} />
+          <Route path="/hot-apartments" element={<HotApartmentsPage />} />
+          <Route path="/guest-listing" element={<GuestLIsting />} />
+
+          {/* Guest Bookings & Favorites */}
+          <Route path="/bookings" element={<BookingsPage />} />
+          <Route path="/bookings/:id" element={<BookingDetails />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+
+          {/* Guest Identity Verification */}
+          <Route path="/id-check" element={<IdCheckPage />} />
+          <Route path="/guest-id" element={<GuestIdPage />} />
+          <Route path="/guest-id-last" element={<GuestIdLast />} />
+          <Route path="/guest-id-selfie" element={<GuestIdSelfie />} />
+
+          {/* ===== LISTING CREATION FLOW (Shared) ===== */}
+
+          {/* Listing Creation Steps */}
+          <Route path="/basic-info" element={<BasicInfoPage />} />
+          <Route
+            path="/listing-apartment-details"
+            element={<ListingApartmentDetails />}
+          />
+          <Route path="/facilities" element={<ListingFacilitiesPage />} />
+          <Route path="/media-upload" element={<MediaUploadPage />} />
+          <Route path="/booking-pricing" element={<BookingPricingPage />} />
+          <Route path="/security-deposit" element={<SecurityDepositPage />} />
+          <Route path="/house-rules" element={<HouseRulesPage />} />
+          <Route path="/upload-legals" element={<UploadLegalsPage />} />
+          <Route path="/listing-overview" element={<ListingOverviewPage />} />
+
+          {/* ===== BOOKING FLOW (Shared) ===== */}
+
+          {/* Booking Process */}
+          <Route path="/booking-dates" element={<BookingDatePage />} />
+          <Route path="/booking-overview" element={<BookingOverviewPage />} />
+          <Route path="/shortlet-review" element={<ShortletReview />} />
+          <Route path="/shortlet-overview" element={<ShortletOverviewPage />} />
+
+          {/* ===== SHARED ROUTES ===== */}
+
+          {/* Reviews & Social Features */}
+          <Route path="/reviews" element={<ReviewsPage />} />
+        </Routes>
+      </Router>
+    </ApartmentCreationProvider>
   );
 }
 
