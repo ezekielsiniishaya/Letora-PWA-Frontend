@@ -78,7 +78,6 @@ export default function MediaUploadPage() {
     e.preventDefault();
 
     if (apartmentData.images.length < 7) {
-      setError("Please upload at least 7 images before proceeding.");
       return;
     }
 
