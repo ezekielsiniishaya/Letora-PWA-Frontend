@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Button from "../../components/Button";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ShowSuccess from "../../components/ShowSuccess";
 import Dropdown from "../../components/dashboard/Dropdown";
-import { uploadBankDetailsAPI } from "../../services/hostApi.js";
+import { useHostProfile } from "../../contexts/HostProfileContext";
+import { createHostProfileAPI } from "../../services/hostApi.js";
 
 export default function BankAccount() {
   const [selectedBank, setSelectedBank] = useState(null);
@@ -14,128 +15,152 @@ export default function BankAccount() {
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const bankOptions = [
-    {
-      label: "Access Bank",
-      value: "access_bank",
-      code: "044",
-      icon: "/icons/access.svg",
-    },
-    {
-      label: "Citibank Nigeria",
-      value: "citibank_nigeria",
-      code: "023",
-      icon: "/icons/citibank.svg",
-    },
-    {
-      label: "Ecobank Nigeria",
-      value: "ecobank_nigeria",
-      code: "050",
-      icon: "/icons/eco.svg",
-    },
-    {
-      label: "Fidelity Bank",
-      value: "fidelity_bank",
-      code: "070",
-      icon: "/icons/fidelity.svg",
-    },
-    {
-      label: "First Bank of Nigeria",
-      value: "first_bank_nigeria",
-      code: "011",
-      icon: "/icons/firstbank.svg",
-    },
-    {
-      label: "First City Monument Bank",
-      value: "first_city_monument_bank",
-      code: "214",
-      icon: "/icons/fcmb.svg",
-    },
-    {
-      label: "Globus Bank",
-      value: "globus_bank",
-      code: "00103",
-      icon: "/icons/globus.svg",
-    },
-    {
-      label: "Guaranty Trust Bank",
-      value: "guaranty_trust_bank",
-      code: "058",
-      icon: "/icons/gt.svg",
-    },
-    {
-      label: "Keystone Bank",
-      value: "keystone_bank",
-      code: "082",
-      icon: "/icons/keystone.svg",
-    },
-    {
-      label: "Polaris Bank",
-      value: "polaris_bank",
-      code: "076",
-      icon: "/icons/polaris.svg",
-    },
-    {
-      label: "Providos Bank",
-      value: "providos_bank",
-      code: "101",
-      icon: "/icons/providos.svg",
-    },
-    {
-      label: "Stanbic IBTC Bank",
-      value: "stanbic_ibtc_bank",
-      code: "221",
-      icon: "/icons/stanbic.svg",
-    },
-    {
-      label: "Standard Chartered Bank Nigeria",
-      value: "standard_chartered_nigeria",
-      code: "068",
-      icon: "/icons/standard.svg",
-    },
-    {
-      label: "Sterling Bank",
-      value: "sterling_bank",
-      code: "232",
-      icon: "/icons/sterling.svg",
-    },
-    {
-      label: "SunTrust Bank Nigeria",
-      value: "suntrust_bank_nigeria",
-      code: "100",
-      icon: "/icons/suntrust.svg",
-    },
-    {
-      label: "Union Bank of Nigeria",
-      value: "union_bank_nigeria",
-      code: "032",
-      icon: "/icons/union.svg",
-    },
-    {
-      label: "United Bank for Africa (UBA)",
-      value: "uba",
-      code: "033",
-      icon: "/icons/uba.svg",
-    },
-    {
-      label: "Unity Bank",
-      value: "unity_bank",
-      code: "215",
-      icon: "/icons/unity.svg",
-    },
-    {
-      label: "Wema Bank",
-      value: "wema_bank",
-      code: "035",
-      icon: "/icons/wema.svg",
-    },
-    {
-      label: "Zenith Bank",
-      value: "zenith_bank",
-      code: "057",
-      icon: "/icons/zenith.svg",
-    },
-  ];
+  // Use the host profile context to access collected data
+  const { hostProfileData, updateBankingInfo, clearHostProfileData } =
+    useHostProfile();
+
+  const bankOptions = useMemo(
+    () => [
+      {
+        label: "Access Bank",
+        value: "access_bank",
+        code: "044",
+        icon: "/icons/access.svg",
+      },
+      {
+        label: "Citibank Nigeria",
+        value: "citibank_nigeria",
+        code: "023",
+        icon: "/icons/citibank.svg",
+      },
+      {
+        label: "Ecobank Nigeria",
+        value: "ecobank_nigeria",
+        code: "050",
+        icon: "/icons/eco.svg",
+      },
+      {
+        label: "Fidelity Bank",
+        value: "fidelity_bank",
+        code: "070",
+        icon: "/icons/fidelity.svg",
+      },
+      {
+        label: "First Bank of Nigeria",
+        value: "first_bank_nigeria",
+        code: "011",
+        icon: "/icons/firstbank.svg",
+      },
+      {
+        label: "First City Monument Bank",
+        value: "first_city_monument_bank",
+        code: "214",
+        icon: "/icons/fcmb.svg",
+      },
+      {
+        label: "Globus Bank",
+        value: "globus_bank",
+        code: "00103",
+        icon: "/icons/globus.svg",
+      },
+      {
+        label: "Guaranty Trust Bank",
+        value: "guaranty_trust_bank",
+        code: "058",
+        icon: "/icons/gt.svg",
+      },
+      {
+        label: "Keystone Bank",
+        value: "keystone_bank",
+        code: "082",
+        icon: "/icons/keystone.svg",
+      },
+      {
+        label: "Polaris Bank",
+        value: "polaris_bank",
+        code: "076",
+        icon: "/icons/polaris.svg",
+      },
+      {
+        label: "Providos Bank",
+        value: "providos_bank",
+        code: "101",
+        icon: "/icons/providos.svg",
+      },
+      {
+        label: "Stanbic IBTC Bank",
+        value: "stanbic_ibtc_bank",
+        code: "221",
+        icon: "/icons/stanbic.svg",
+      },
+      {
+        label: "Standard Chartered Bank Nigeria",
+        value: "standard_chartered_nigeria",
+        code: "068",
+        icon: "/icons/standard.svg",
+      },
+      {
+        label: "Sterling Bank",
+        value: "sterling_bank",
+        code: "232",
+        icon: "/icons/sterling.svg",
+      },
+      {
+        label: "SunTrust Bank Nigeria",
+        value: "suntrust_bank_nigeria",
+        code: "100",
+        icon: "/icons/suntrust.svg",
+      },
+      {
+        label: "Union Bank of Nigeria",
+        value: "union_bank_nigeria",
+        code: "032",
+        icon: "/icons/union.svg",
+      },
+      {
+        label: "United Bank for Africa (UBA)",
+        value: "uba",
+        code: "033",
+        icon: "/icons/uba.svg",
+      },
+      {
+        label: "Unity Bank",
+        value: "unity_bank",
+        code: "215",
+        icon: "/icons/unity.svg",
+      },
+      {
+        label: "Wema Bank",
+        value: "wema_bank",
+        code: "035",
+        icon: "/icons/wema.svg",
+      },
+      {
+        label: "Zenith Bank",
+        value: "zenith_bank",
+        code: "057",
+        icon: "/icons/zenith.svg",
+      },
+    ],
+    []
+  );
+
+  // Load existing banking info from context
+  useEffect(() => {
+    if (
+      hostProfileData.bankingInfo.bankName &&
+      hostProfileData.bankingInfo.accountNo
+    ) {
+      // Find the bank in our options
+      const existingBank = bankOptions.find(
+        (bank) => bank.label === hostProfileData.bankingInfo.bankName
+      );
+      if (existingBank) {
+        setSelectedBank(existingBank);
+      }
+      setAccountNumber(hostProfileData.bankingInfo.accountNo);
+    }
+  }, [bankOptions, hostProfileData.bankingInfo]);
 
   const handleCreateAccount = async (e) => {
     e.preventDefault();
@@ -152,32 +177,85 @@ export default function BankAccount() {
       return;
     }
 
+    // Check if we have the required documents WITH DATA
+    const idCardWithData = hostProfileData.verificationDocuments.find(
+      (doc) => doc.type === "ID_CARD" && doc.data
+    );
+    const idPhotographWithData = hostProfileData.verificationDocuments.find(
+      (doc) => doc.type === "ID_PHOTOGRAPH" && doc.data
+    );
+
+    if (!idCardWithData || !idPhotographWithData) {
+      setError(
+        "Please complete all identity verification steps first. Documents are missing file data."
+      );
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
     try {
-      // Prepare bank details - only bankName and accountNo needed
-      const bankDetails = {
+      // First save banking info to context
+      updateBankingInfo({
         bankName: selectedBank.label,
         accountNo: accountNumber,
-        // accountName is no longer needed - backend will derive it from user profile
-      };
+        accountBalance: 0,
+      });
 
-      // Upload bank details to backend
-      const response = await uploadBankDetailsAPI(bankDetails);
+      // Create FormData
+      const formData = new FormData();
 
-      console.log("Bank details uploaded successfully:", response);
+      // Append banking info as JSON string
+      formData.append(
+        "bankingInfo",
+        JSON.stringify({
+          bankName: selectedBank.label,
+          accountNo: accountNumber,
+          accountBalance: 0,
+        })
+      );
+
+      // Convert base64 back to File objects and append to FormData
+      for (const doc of hostProfileData.verificationDocuments) {
+        if (doc.data) {
+          // Convert base64 to blob
+          const response = await fetch(doc.data);
+          const blob = await response.blob();
+
+          // Create file from blob
+          const file = new File([blob], doc.name, {
+            type: doc.fileType || "application/octet-stream",
+          });
+
+          formData.append("documents", file);
+          formData.append("documentTypes", doc.type);
+        }
+      }
+
+      console.log("FormData entries:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ":", pair[1]);
+      }
+
+      // Use FormData with your API
+      const response = await createHostProfileAPI(formData);
+
+      console.log("Host profile created successfully:", response);
+
+      // Clear the local storage draft after successful submission
+      clearHostProfileData();
+
       setIsSuccessOpen(true);
     } catch (err) {
-      console.error("Error uploading bank details:", err);
+      console.error("Error creating host profile:", err);
       setError(
-        err.message || "Failed to upload bank details. Please try again."
+        err.message || "Failed to create host profile. Please try again."
       );
     } finally {
       setIsLoading(false);
     }
   };
-
   const handleOkay = () => {
     console.log("Closing success modal");
     setIsSuccessOpen(false);
@@ -195,6 +273,12 @@ export default function BankAccount() {
     setError(""); // Clear error when typing
   };
 
+  // Handle bank selection
+  const handleBankSelect = (bank) => {
+    setSelectedBank(bank);
+    setError(""); // Clear error when selecting bank
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
       {/* Header */}
@@ -206,7 +290,7 @@ export default function BankAccount() {
           onClick={() => navigate(-1)}
         />
         <span className="text-[13.2px] font-medium bg-[#A20BA2] text-white px-[6.6px] w-[33px] h-[18.43px] rounded-[7.92px]">
-          3/2
+          3/3
         </span>
       </div>
 
@@ -240,7 +324,7 @@ export default function BankAccount() {
               onToggle={toggleDropdown}
               multiple={false}
               selected={selectedBank}
-              setSelected={setSelectedBank}
+              setSelected={handleBankSelect}
             />
           </div>
 
@@ -285,7 +369,7 @@ export default function BankAccount() {
           </p>
 
           <Button
-            text={isLoading ? "Processing..." : "Create Account"}
+            text={isLoading ? "Please wait..." : "Submit"}
             className="mt-[20px] w-full"
             onClick={handleCreateAccount}
             type="submit"

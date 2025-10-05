@@ -1,23 +1,23 @@
-import BASE_URL from "../config/config";
+import { apiRequest } from "./apiRequest";
 
-// Add or update bank details
-export const uploadBankDetailsAPI = async (bankDetails) => {
-  const token = localStorage.getItem("token");
-
-  const response = await fetch(`${BASE_URL}/api/users/bank-details`, {
+// Create host profile (documents + banking info)
+export const createHostProfileAPI = async (hostProfileData) => {
+  return await apiRequest("/api/users/profile", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify(bankDetails),
-    credentials: "include",
+    body: hostProfileData,
   });
+};
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Failed to upload bank details");
-  }
+// Get host profile
+export const getHostProfileAPI = async () => {
+  return await apiRequest("/api/users/profile", {
+    method: "GET",
+  });
+};
 
-  return response.json();
+// Get account name
+export const getAccountNameAPI = async () => {
+  return await apiRequest("/api/users/account-name", {
+    method: "GET",
+  });
 };

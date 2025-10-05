@@ -1,38 +1,191 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useHostProfile } from "../../contexts/HostProfileContext";
 import Button from "../../components/Button";
-import { uploadIdPhotographAPI } from "../../services/documentsApi"; 
 
 export default function IdentitySelfie() {
   const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  const {
+    hostProfileData,
+    addVerificationDocument,
+    updateVerificationDocument,
+    setCurrentStep,
+  } = useHostProfile();
+
+  // Retrieve existing selfie from context/localStorage
+  const existingSelfie = hostProfileData.verificationDocuments.find(
+    (doc) => doc.type === "ID_PHOTOGRAPH"
+  );
+
+  // Set initial preview from existing selfie
+  useEffect(() => {
+    if (existingSelfie && !file) {
+      setPreviewUrl(existingSelfie.data || existingSelfie.url);
+    }
+  }, [existingSelfie, file]);
+
+  // Clean up object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  // Convert selected file to base64 string
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          data: reader.result,
+        });
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = async (e) => {
+    const selectedFile = e.target.files[0];
+
+    // Clean up previous preview URL if it was a blob
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    if (!selectedFile) {
+      setFile(null);
+      setPreviewUrl("");
+      return;
+    }
+
+    if (!selectedFile.type.startsWith("image/")) {
+      setError("Invalid file type. Please upload image files only.");
+      e.target.value = "";
+      setFile(null);
+      setPreviewUrl("");
+      return;
+    }
+
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setError("File too large. Please upload images under 5MB.");
+      e.target.value = "";
+      setFile(null);
+      setPreviewUrl("");
+      return;
+    }
+
+    setFile(selectedFile);
+    setPreviewUrl(URL.createObjectURL(selectedFile));
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return;
+
+    if (!file && !existingSelfie) {
+      setError("Please select an image file to continue.");
+      return;
+    }
 
     setUploading(true);
+    setError("");
 
     try {
-      // Upload using the API function
-      const result = await uploadIdPhotographAPI(file);
+      if (file) {
+        const base64Image = await fileToBase64(file);
 
-      if (result.success) {
-        navigate("/add-bank-details");
-      } else {
-        throw new Error(result.message || "Upload failed");
+        // Create document data
+        const documentData = {
+          id: existingSelfie?.id || `draft-${Date.now()}`,
+          type: "ID_PHOTOGRAPH",
+          name: base64Image.name,
+          data: base64Image.data,
+          size: base64Image.size,
+          fileType: base64Image.type,
+          status: "PENDING",
+          uploadedAt: new Date().toISOString(),
+        };
+
+        // Use update if document exists, otherwise add new
+        if (existingSelfie) {
+          updateVerificationDocument(existingSelfie.id, documentData);
+        } else {
+          addVerificationDocument(documentData);
+        }
       }
-    } catch (error) {
-      console.error("Upload error:", error);
-      alert(error.message || "Failed to upload image. Please try again.");
+
+      setCurrentStep(3);
+      navigate("/add-bank-details");
+    } catch (err) {
+      console.error("Error saving selfie:", err);
+      setError("Failed to save selfie. Please try again.");
     } finally {
       setUploading(false);
     }
+  };
+
+  const getButtonText = () => (uploading ? "Please wait..." : "Next");
+
+  const isButtonDisabled = () => {
+    if (uploading) return true;
+    if (existingSelfie) return false;
+    return !file;
+  };
+
+  const getUploadBoxContent = () => {
+    if (previewUrl) {
+      return (
+        <>
+          <img
+            src={previewUrl}
+            alt="Preview"
+            className="w-[90%] h-[70%] object-contain mb-1"
+          />
+          <span className="text-[12px] text-[#333333] truncate max-w-[180px]">
+            {file?.name || existingSelfie?.name}
+          </span>
+        </>
+      );
+    } else {
+      return (
+        <>
+          <img
+            src="/icons/camera.svg"
+            alt="Upload"
+            className="w-[28px] h-[26px] mb-2"
+          />
+          <span className="text-center font-medium text-[12px] text-[#505050] w-[187px]">
+            Upload image
+          </span>
+          <p className="w-[187px] text-center text-[12px] font-thin">
+            Area should be well lit to capture clear image
+          </p>
+        </>
+      );
+    }
+  };
+
+  const handleRemoveFile = () => {
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setFile(null);
+    setPreviewUrl(existingSelfie?.data || existingSelfie?.url || "");
+
+    // Clear the file input
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = "";
   };
 
   return (
@@ -59,66 +212,45 @@ export default function IdentitySelfie() {
           We need to verify you
         </p>
 
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+
         <form className="mt-[45px] flex flex-col" onSubmit={handleSubmit}>
           <label className="block text-[14px] font-medium text-[#333333]">
             Upload Selfie with ID <span className="text-red-500">*</span>
           </label>
 
-          {/* Upload Box */}
-          <span className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9]">
-            <label
-              className="w-full h-[200px] 
-      bg-[#CCCCCC42] 
-      rounded-lg 
-      flex flex-col items-center justify-center 
-      cursor-pointer text-[#505050] font-medium text-[12px]"
-            >
+          <div className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9] relative">
+            <label className="w-full h-[200px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
               <input
                 type="file"
-                accept="image/*,.pdf"
+                accept="image/*"
                 className="hidden"
                 onChange={handleFileChange}
-                disabled={uploading}
               />
-
-              {/* If file selected, show preview, else show JPG icon */}
-              {file ? (
-                <>
-                  {/* Image preview */}
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt="Preview"
-                    className="w-[90%] h-[70%] object-contain mb-1"
-                  />
-                  <span className="text-[12px] text-[#333333] truncate max-w-[180px]">
-                    {file.name}
-                  </span>
-                </>
-              ) : (
-                <>
-                  {/* Default JPG placeholder icon */}
-                  <img
-                    src="/icons/camera.svg"
-                    alt="Upload"
-                    className="w-[28px] h-[26px] mb-2"
-                  />
-                  <span className="text-center font-medium text-[12px] text-[#505050] w-[187px]">
-                    Upload image
-                  </span>
-                  <p className="w-[187px] text-center text-[12px] font-thin">
-                    Area should be well lit to capture clear image
-                  </p>
-                </>
-              )}
+              {getUploadBoxContent()}
             </label>
-          </span>
 
-          {/* Next Button */}
+            {/* Remove button when new file is selected */}
+            {file && previewUrl && (
+              <button
+                type="button"
+                onClick={handleRemoveFile}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
           <div className="mt-[196px]">
             <Button
-              text={uploading ? "Uploading..." : "Next"}
+              text={getButtonText()}
               type="submit"
-              disabled={!file || uploading}
+              disabled={isButtonDisabled()}
             />
           </div>
         </form>
