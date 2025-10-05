@@ -39,7 +39,7 @@ export default function SecurityDeposit() {
     setDeposit(number.toLocaleString());
 
     if (number > MAX_DEPOSIT) {
-      setError(`Amount cannot exceed ₦${MAX_DEPOSIT.toLocaleString()}`);
+      return;
     } else {
       setError("");
     }

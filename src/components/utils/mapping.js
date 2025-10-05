@@ -30,6 +30,7 @@ export const kitchenSizeMap = {
 };
 
 export const apartmentTypeMap = {
+  ENTIRE_APARTMENT: "Entire Apartment",
   MINI_FLAT: "Mini Flat",
   SELF_CON: "Self Contain",
   ONE_BEDROOM: "1 Bedroom",
@@ -100,7 +101,7 @@ export const transformForBackend = (apartmentData) => {
     basicInfo: {
       title: basicInfo.title,
       description: basicInfo.description,
-      apartmentType: basicInfo.apartmentType, // Send raw enum value
+      apartmentType: basicInfo.apartmentType,
       town: basicInfo.town,
       state: basicInfo.state,
       address: basicInfo.address,
