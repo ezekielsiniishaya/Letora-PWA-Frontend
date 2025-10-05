@@ -63,9 +63,9 @@ import GuestHomepage from "./components/dashboard/GuestHomepage";
 
 function App() {
   return (
-    <HostProfileProvider>
-      <ApartmentCreationProvider>
-        <Router>
+    <Router>
+      <HostProfileProvider>
+        <ApartmentCreationProvider>
           <Routes>
             {/* ===== PUBLIC ROUTES ===== */}
 
@@ -179,9 +179,9 @@ function App() {
             {/* Reviews & Social Features */}
             <Route path="/reviews" element={<ReviewsPage />} />
           </Routes>
-        </Router>
-      </ApartmentCreationProvider>
-    </HostProfileProvider>
+        </ApartmentCreationProvider>
+      </HostProfileProvider>
+    </Router>
   );
 }
 
