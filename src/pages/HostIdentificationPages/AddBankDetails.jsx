@@ -259,7 +259,7 @@ export default function BankAccount() {
   const handleOkay = () => {
     console.log("Closing success modal");
     setIsSuccessOpen(false);
-    navigate("/guest-dashboard");
+    navigate("/guest-homepage");
   };
 
   const toggleDropdown = () => {

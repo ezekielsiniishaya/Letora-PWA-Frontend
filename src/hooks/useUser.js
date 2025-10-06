@@ -1,21 +1,13 @@
 // hooks/useUser.js
-import { useState, useEffect } from "react";
+import { useContext } from "react";
+import { UserContext } from "../contexts/UserContext";
 
 export const useUser = () => {
-  const [user, setUser] = useState(null);
+  const context = useContext(UserContext);
 
-  useEffect(() => {
-    // Get user data from localStorage
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        localStorage.removeItem("user");
-      }
-    }
-  }, []);
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
 
-  return user;
+  return context;
 };

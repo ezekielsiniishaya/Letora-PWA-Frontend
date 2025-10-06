@@ -50,7 +50,7 @@ export default function ApartmentSlider() {
               <img
                 src={apartment.image}
                 alt={apartment.title}
-                className="w-full h-[187px] object-cover group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-[229px] object-cover group-hover:scale-105 transition-transform duration-300"
               />
 
               <div className="absolute bottom-0 left-0 mx-1 mb-1 w-[calc(100%-.5rem)] p-3 text-white text-[14px] bg-black/60 rounded-[5px]">

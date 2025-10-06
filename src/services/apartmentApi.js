@@ -1,13 +1,56 @@
 // services/apartmentApi.js
 import { apiRequest } from "./apiRequest";
 
+// GET endpoints for fetching apartments
+export const getApprovedApartments = async () => {
+  return apiRequest("/apartments/approved", {
+    method: "GET",
+  });
+};
+
+export const getHotApartments = async () => {
+  return apiRequest("/apartments/hot", {
+    method: "GET",
+  });
+};
+
+export const getNearbyApartments = async (state, town) => {
+  const params = new URLSearchParams();
+  if (state) params.append("state", state);
+  if (town) params.append("town", town);
+
+  return apiRequest(`/apartments/nearby?${params.toString()}`, {
+    method: "GET",
+  });
+};
+
+// Search apartments with filters
+export const searchApartments = async (filters = {}) => {
+  const params = new URLSearchParams();
+
+  // Add filter parameters if provided
+  Object.keys(filters).forEach((key) => {
+    if (
+      filters[key] !== undefined &&
+      filters[key] !== null &&
+      filters[key] !== ""
+    ) {
+      params.append(key, filters[key]);
+    }
+  });
+
+  return apiRequest(`/apartments/search?${params.toString()}`, {
+    method: "GET",
+  });
+};
+
+// Keep your existing endpoints below...
+
 // Single endpoint to create complete apartment
 export const createCompleteApartment = async (formData) => {
   return apiRequest("/apartments/create", {
     method: "POST",
-    body: formData, // FormData with images and JSON data
-    // Note: Don't set Content-Type header when sending FormData
-    // Let the browser set it automatically with boundary
+    body: formData,
   });
 };
 
@@ -35,25 +78,20 @@ export const updateApartmentStatus = async (apartmentId, status) => {
 };
 
 // Helper function to prepare FormData for final submission
-
 export const prepareApartmentSubmission = (
-  apartmentData, // This should already be transformed
+  apartmentData,
   imageFiles,
   documentFiles
 ) => {
   const formData = new FormData();
-
-  // Just use the data as-is (it should already be transformed)
   formData.append("apartmentData", JSON.stringify(apartmentData));
 
-  // Add image files
   if (imageFiles && imageFiles.length > 0) {
     imageFiles.forEach((file) => {
       formData.append("images", file);
     });
   }
 
-  // Add document files
   if (documentFiles && documentFiles.length > 0) {
     documentFiles.forEach((file) => {
       formData.append("documents", file);
@@ -91,7 +129,6 @@ export const createCompleteApartmentWithProgress = async (
     });
 
     xhr.open("POST", "/api/apartments/create");
-    // Add your auth token method if needed
     const token = localStorage.getItem("authToken");
     if (token) {
       xhr.setRequestHeader("Authorization", `Bearer ${token}`);

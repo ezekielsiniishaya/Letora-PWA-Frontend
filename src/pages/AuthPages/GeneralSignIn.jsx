@@ -4,6 +4,7 @@ import Header from "../../components/Header";
 import PasswordInput from "../../components/auth/PasswordInput";
 import { Link, useNavigate } from "react-router-dom";
 import { loginAPI } from "../../services/authApi";
+import { useUser } from "../../hooks/useUser"; // Import the useUser hook
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,7 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useUser(); // Get the login function from user context
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,27 +23,25 @@ export default function SignIn() {
     try {
       const result = await loginAPI(email, password);
 
-      // Store token and user data
-      if (result.token) {
-        localStorage.setItem("token", result.token);
+      // ✅ Use the user context login function instead of localStorage
+      login(result.user, result.accessToken);
+
+      // Store token for API requests
+      localStorage.setItem("authToken", result.accessToken);
+
+      if (rememberMe) {
+        localStorage.setItem("rememberMe", "true");
+      } else {
+        localStorage.removeItem("rememberMe");
       }
-      if (result.user) {
-        localStorage.setItem("user", JSON.stringify(result.user));
 
-        if (rememberMe) {
-          localStorage.setItem("rememberMe", "true");
-        } else {
-          localStorage.removeItem("rememberMe");
-        }
-
-        // Store verification info for identity-id page if needed
-        if (result.requiresIdentityVerification) {
-          localStorage.setItem("requiresIdentityVerification", "true");
-          localStorage.setItem(
-            "documentStatus",
-            JSON.stringify(result.documentStatus)
-          );
-        }
+      // Store verification info for identity-id page if needed
+      if (result.requiresIdentityVerification) {
+        localStorage.setItem("requiresIdentityVerification", "true");
+        localStorage.setItem(
+          "documentStatus",
+          JSON.stringify(result.documentStatus)
+        );
       }
 
       console.log("Login successful, redirecting to:", result.redirectPath);
@@ -55,6 +55,7 @@ export default function SignIn() {
       setLoading(false);
     }
   };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
       <Header />
@@ -113,7 +114,7 @@ export default function SignIn() {
                 className="peer appearance-none [-webkit-appearance:none] border border-[#CCC] w-[18px] h-[18px] rounded-[5px]
              checked:bg-[#A20BA2] checked:border-[#A20BA2] disabled:opacity-50"
               />
-              <span className="absolute left-4 text-white text-xs hidden peer-checked:block">
+              <span className="absolute left-5 text-white text-xs hidden peer-checked:block">
                 ✔
               </span>
 

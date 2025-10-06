@@ -6,68 +6,76 @@ import ShowSuccess from "../../components/ShowSuccess";
 import { Link } from "react-router-dom";
 import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
+import { useApartmentListing } from "../../hooks/useApartmentListing";
+import { useUser } from "../../hooks/useUser";
 
 export default function Dashboard() {
   const [showBalance, setShowBalance] = useState(true);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const balance = "569,098.879";
+  // Get time-based greeting
+  const getTimeBasedGreeting = () => {
+    const currentHour = new Date().getHours();
 
-  const lodge = {
-    id: 1,
-    title: "3-Bedroom Apartment",
-    location: "Maryland, Lagos",
-    image: "/images/apartment.png",
-    price: "₦150,000/Night",
-    status: "ongoing",
-    bookingDate: "30-Nov-2025 | 10:00 AM",
-    checkIn: "30-Nov-2025",
-    checkOut: "30-Dec-2025",
-    duration: "30 Days",
-    feePaid: "₦1,500,000",
-    deposit: "₦100,000",
-    convenience: "₦2,500",
-    total: "₦1,602,500",
-    hostPhone: "09876543221",
-    hostEmail: "host@mail.com",
-    cancellationDate: "15-Dec-2025",
-    cancellationReason:
-      "HedamagedksckhkhcajadsakjhdbsjbkabkSKkjbxcjsakssdkhkdhkdfewdhwekdkdddkjhkjdhjashhadagasgdbcsdadghgdhaghagdh",
+    if (currentHour >= 5 && currentHour < 12) {
+      return "Good morning";
+    } else if (currentHour >= 12 && currentHour < 17) {
+      return "Good afternoon";
+    } else {
+      return "Good evening";
+    }
   };
+  // Use the apartment listing context
+  const {
+    hotApartments,
+    nearbyApartments,
+    hotApartmentsLoading,
+    nearbyApartmentsLoading,
+  } = useApartmentListing();
 
-  const apartment = {
-    id: 1,
-    title: "3-Bedroom Apartment",
-    location: "Maryland, Lagos",
-    image: "/images/apartment.png",
-    price: "₦150,000",
-    verified: "true",
-    rating: "4.0",
-    status: "ongoing",
-    bookingDate: "30-Nov-2025 | 10:00 AM",
-    checkIn: "30-Nov-2025",
-    checkOut: "30-Dec-2025",
-    duration: "30 Days",
-    feePaid: "₦1,500,000",
-    deposit: "₦100,000",
-    convenience: "₦2,500",
-    likes: "15",
-    total: "₦1,602,500",
-    hostPhone: "09876543221",
-    hostEmail: "host@mail.com",
-    cancellationDate: "15-Dec-2025",
-    cancellationReason:
-      "HedamagedksckhkhcajadsakjhdbsjbkabkSKkjbxcjsakssdkhkdhkdfewdhwekdkdddkjhkjdhjashhadagasgdbcsdadghgdhaghagdh",
-  };
+  // Use the user context
+  const {
+    user,
+    loading: userLoading,
+    isAuthenticated,
+    getUserBookings,
+    // getUserApartments,
+  } = useUser();
 
-  const apartments = Array.from({ length: 6 }, (_, i) => ({
-    ...apartment,
-    id: i + 1,
-    verified: i % 2 === 0,
-    rating: i % 2 === 0 ? "4.0" : "0.0",
-    title: i % 2 === 0 ? "2-Bedroom Apartment" : "Self-Con/Studio",
-    location: i % 2 === 0 ? "Ikoyi, Lagos" : "Surulere, Lagos",
-  }));
+  // Get user's actual bookings and apartments
+  const userBookings = getUserBookings();
+  // const userApartments = getUserApartments();
+
+  // Use first booking or fallback
+  const currentBooking = userBookings.length > 0 ? userBookings[0] : null;
+
+  // Get account balance from host profile
+  const accountBalance = user?.hostProfile?.accountBalance || 0;
+  const formattedBalance =
+    accountBalance === 0
+      ? "0.0"
+      : accountBalance.toLocaleString("en-NG", {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 2,
+        });
+
+  // Show loading state for user data
+  if (userLoading) {
+    return (
+      <div className="w-full min-h-screen bg-[#F9F9F9] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A20BA2]"></div>
+      </div>
+    );
+  }
+
+  // If user is not authenticated, show login prompt
+  if (!isAuthenticated) {
+    return (
+      <div className="w-full min-h-screen bg-[#F9F9F9] flex items-center justify-center">
+        <div>Please login to view dashboard</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] overflow-x-hidden pb-[80px]">
@@ -77,19 +85,23 @@ export default function Dashboard() {
         <div className="flex flex-row justify-between items-center">
           <div className="flex items-center gap-3">
             <img
-              src="/images/guest.jpg"
-              alt="Guest"
+              src={user?.profilePic || "/images/profile-image.png"}
+              alt={user?.firstName || "Host"}
               className="w-[40px] h-[40px] rounded-full object-cover"
             />
             <div>
-              <h2 className="text-[16px] font-semibold">Paul Ayodamola</h2>
-              <p className="text-[12px] text-[#FBD0F8]">Good morning</p>
+              <h2 className="text-[16px] font-semibold">
+                {user ? `${user.firstName} ${user.lastName}` : "Host"}
+              </h2>
+              <p className="text-[12px] text-[#FBD0F8]">
+                {getTimeBasedGreeting()}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-5">
             <Link to="/search">
               <img
-                src="/icons/search.svg"
+                src="/icons/search-white.svg"
                 alt="Search"
                 className="w-[18.67px] h-[18.67px] cursor-pointer"
               />
@@ -118,19 +130,17 @@ export default function Dashboard() {
             <img
               src={showBalance ? "/icons/eye-open.svg" : "/icons/eye-close.svg"}
               alt="Toggle Balance"
-              className="w-[18.58px] h-[18.58px] cursor-pointer z-10" // Added z-10 here
-              onClick={() => {
-                setShowBalance(!showBalance);
-              }}
+              className="w-[18.58px] h-[18.58px] cursor-pointer z-10"
+              onClick={() => setShowBalance(!showBalance)}
             />
           </div>
           <h1 className="text-[38px] font-semibold mt-[1px]">
             <span className="text-[28.43px]">₦</span>
             {showBalance ? (
               <>
-                569,098.
-                <span className="text-[#FBD0FB] text-[20px] font-medium">
-                  879
+                {formattedBalance.split(".")[0]}.
+                <span className="text-[#FBD0FB] text-[25px] font-medium">
+                  {formattedBalance.split(".")[2] || "00"}
                 </span>
               </>
             ) : (
@@ -162,18 +172,23 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* My Booking Section */}
-      <div className="px-[21px] mt-[25px]">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
-          <Link to="/bookings">
-            <button className="text-[12px] font-medium text-[#A20BA2]">
-              See all
-            </button>
-          </Link>
+      {/* My Booking Section - Only show if there's a current booking */}
+      {currentBooking && (
+        <div className="px-[21px] mt-[25px]">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
+            <Link to="/bookings">
+              <button className="text-[12px] font-medium text-[#A20BA2]">
+                See all
+              </button>
+            </Link>
+          </div>
+          <Bookings
+            booking={currentBooking}
+            status={currentBooking.status?.toLowerCase() || "ongoing"}
+          />
         </div>
-        <Bookings lodge={lodge} status={"ongoing"} />
-      </div>
+      )}
 
       {/* Hot Apartments */}
       <div className="px-[22px] mt-1">
@@ -187,41 +202,35 @@ export default function Dashboard() {
         </div>
       </div>
       <div className="pl-[22px] pb-3">
-        <ApartmentSlider />
+        {hotApartmentsLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A20BA2]"></div>
+          </div>
+        ) : (
+          <ApartmentSlider apartments={hotApartments} />
+        )}
       </div>
 
-      {/* Become a Host */}
-      <Link to="/identity-id">
+      {/* My Listed Apartments - Commented out as requested */}
+      {/* {userApartments.length > 0 && (
         <div className="px-[22px]">
-          <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-[8px] px-[12px] flex items-center justify-between overflow-hidden h-[106.04px]">
-            <div className="text-white max-w-[70%] z-10">
-              <h3 className="font-semibold text-[16px] mb-1">Become a Host</h3>
-              <p className="text-[12px] leading-snug">
-                Ready to cash in on your space? <br />
-                Verify your identity and list today.
-              </p>
-              <button className="mt-2 text-[10px]">Click here to begin</button>
-            </div>
-            <div className="absolute right-[-10px] bottom-0 h-full flex items-end justify-end">
-              <img
-                src="/images/background/become-host.png"
-                alt="Become a Host"
-                className="h-[117px] object-contain transform scale-x-[-1] relative z-10"
-              />
-              <img
-                src="/icons/star.svg"
-                alt="star"
-                className="absolute top-[15px] right-[114.3px] w-[9px] h-[9px] z-20"
-              />
-              <img
-                src="/icons/doodle.svg"
-                alt="doodle"
-                className="absolute bottom-[12.27px] right-[121.73px] w-[6.3px] h-[5.4px] z-20"
-              />
-            </div>
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium my-4 text-[14px]">
+              My Listed Apartments 🏠
+            </h3>
+            <Link to="/host-apartments">
+              <button className="text-[12px] font-medium text-[#A20BA2]">
+                Manage
+              </button>
+            </Link>
+          </div>
+          <div className="space-y-1">
+            {userApartments.slice(0, 3).map((apt) => (
+              <ApartmentCard key={apt.id} apt={apt} role="host" />
+            ))}
           </div>
         </div>
-      </Link>
+      )} */}
 
       {/* Available Apartments */}
       <div className="px-[22px]">
@@ -236,9 +245,19 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="space-y-1">
-          {apartments.map((apt) => (
-            <ApartmentCard key={apt.id} apt={apt} />
-          ))}
+          {nearbyApartmentsLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A20BA2]"></div>
+            </div>
+          ) : nearbyApartments.length > 0 ? (
+            nearbyApartments.map((apt) => (
+              <ApartmentCard key={apt.id} apt={apt} />
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No apartments available in your location
+            </div>
+          )}
         </div>
       </div>
 
@@ -248,7 +267,7 @@ export default function Dashboard() {
       {/* Withdraw Popup */}
       {showWithdraw && (
         <WithdrawPopup
-          balance={balance}
+          balance={formattedBalance}
           onClose={() => setShowWithdraw(false)}
           onSuccess={() => {
             setShowWithdraw(false);
@@ -256,6 +275,7 @@ export default function Dashboard() {
           }}
         />
       )}
+
       {/* Show Success Popup */}
       {showSuccess && (
         <ShowSuccess
