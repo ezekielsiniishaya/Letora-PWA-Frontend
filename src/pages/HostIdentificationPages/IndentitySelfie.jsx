@@ -17,15 +17,15 @@ export default function IdentitySelfie() {
     setCurrentStep,
   } = useHostProfile();
 
-  // Retrieve existing selfie from context/localStorage
+  // Get existing selfie if already uploaded
   const existingSelfie = hostProfileData.verificationDocuments.find(
     (doc) => doc.type === "ID_PHOTOGRAPH"
   );
 
-  // Set initial preview from existing selfie
+  // Show existing preview on mount
   useEffect(() => {
     if (existingSelfie && !file) {
-      setPreviewUrl(existingSelfie.data || existingSelfie.url);
+      setPreviewUrl(existingSelfie.url);
     }
   }, [existingSelfie, file]);
 
@@ -38,27 +38,11 @@ export default function IdentitySelfie() {
     };
   }, [previewUrl]);
 
-  // Convert selected file to base64 string
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        resolve({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          data: reader.result,
-        });
-      };
-      reader.onerror = () => reject(new Error("Failed to read file"));
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleFileChange = async (e) => {
+  // Handle file selection
+  const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
-    // Clean up previous preview URL if it was a blob
+    // Revoke old blob URLs
     if (previewUrl && previewUrl.startsWith("blob:")) {
       URL.revokeObjectURL(previewUrl);
     }
@@ -90,7 +74,8 @@ export default function IdentitySelfie() {
     setError("");
   };
 
-  const handleSubmit = async (e) => {
+  // Handle form submission
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!file && !existingSelfie) {
@@ -102,22 +87,20 @@ export default function IdentitySelfie() {
     setError("");
 
     try {
+     
       if (file) {
-        const base64Image = await fileToBase64(file);
-
-        // Create document data
         const documentData = {
           id: existingSelfie?.id || `draft-${Date.now()}`,
           type: "ID_PHOTOGRAPH",
-          name: base64Image.name,
-          data: base64Image.data,
-          size: base64Image.size,
-          fileType: base64Image.type,
+          name: file.name,
+          size: file.size,
+          fileType: file.type,
+          url: URL.createObjectURL(file),
+          file: file, // ← CRITICAL: Store the actual file object
           status: "PENDING",
           uploadedAt: new Date().toISOString(),
         };
 
-        // Use update if document exists, otherwise add new
         if (existingSelfie) {
           updateVerificationDocument(existingSelfie.id, documentData);
         } else {
@@ -134,7 +117,6 @@ export default function IdentitySelfie() {
       setUploading(false);
     }
   };
-
   const getButtonText = () => (uploading ? "Please wait..." : "Next");
 
   const isButtonDisabled = () => {

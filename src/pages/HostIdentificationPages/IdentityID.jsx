@@ -18,24 +18,6 @@ export default function IdentityVerification() {
     (doc) => doc.type === "ID_CARD"
   );
 
-  // Convert file to base64 - FIXED VERSION
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        resolve({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          data: reader.result, // This is the base64 data URL
-        });
-      };
-      reader.onerror = (error) =>
-        reject(new Error("Failed to read file: " + error));
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleFileChange = (e) => {
     const selectedFiles = e.target.files;
 
@@ -81,7 +63,6 @@ export default function IdentityVerification() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // If no file selected and no existing ID card
     if (!file && !existingIdCard) {
       setError("Please select a PDF file to upload");
       return;
@@ -91,47 +72,26 @@ export default function IdentityVerification() {
     setError("");
 
     try {
-      // If there's a new file selected, save it to context (no API upload)
       if (file) {
-        console.log("Converting file to base64:", file.name);
+        console.log("Storing file in context:", file.name);
 
-        // Convert file to base64
-        const base64File = await fileToBase64(file);
-        console.log(
-          "Base64 conversion successful, data length:",
-          base64File.data.length
-        );
-
-        // Create a temporary URL for the file preview
-        const fileUrl = URL.createObjectURL(file);
-
-        // Add to our host profile context WITH BASE64 DATA
         const documentData = {
           id: `draft-${Date.now()}`,
           type: "ID_CARD",
-          name: base64File.name,
-          data: base64File.data, // ✅ This is the crucial missing field!
-          size: base64File.size,
-          fileType: base64File.type,
-          url: fileUrl, // Keep blob URL for preview
+          name: file.name,
+          size: file.size,
+          fileType: file.type,
+          url: URL.createObjectURL(file),
+          file: file, // ← CRITICAL: Store the actual file object
           status: "PENDING",
           uploadedAt: new Date().toISOString(),
         };
 
-        console.log("Adding document to context:", documentData);
-
         addVerificationDocument(documentData);
-
-        // Reset file input and state
-        const fileInput = document.querySelector('input[type="file"]');
-        if (fileInput) fileInput.value = "";
-        setFile(null);
+        console.log("Added document with file data:", documentData);
       }
 
-      // Update step in context
       setCurrentStep(2);
-
-      // Navigate immediately (no delay needed)
       navigate("/identity-with-picture-info");
     } catch (err) {
       console.error("Error in handleSubmit:", err);

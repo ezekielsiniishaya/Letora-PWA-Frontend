@@ -161,7 +161,21 @@ export default function BankAccount() {
       setAccountNumber(hostProfileData.bankingInfo.accountNo);
     }
   }, [bankOptions, hostProfileData.bankingInfo]);
+  useEffect(() => {
+    console.log(
+      "Current verification documents in context:",
+      hostProfileData.verificationDocuments
+    );
 
+    hostProfileData.verificationDocuments.forEach((doc, index) => {
+      console.log(`Document ${index}:`, {
+        type: doc.type,
+        hasFile: !!doc.file,
+        fileName: doc.name,
+        fileSize: doc.file?.size,
+      });
+    });
+  }, [hostProfileData.verificationDocuments]);
   const handleCreateAccount = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -177,12 +191,12 @@ export default function BankAccount() {
       return;
     }
 
-    // Check if we have the required documents WITH DATA
+    // Check if we have the required documents WITH FILE DATA
     const idCardWithData = hostProfileData.verificationDocuments.find(
-      (doc) => doc.type === "ID_CARD" && doc.data
+      (doc) => doc.type === "ID_CARD" && doc.file
     );
     const idPhotographWithData = hostProfileData.verificationDocuments.find(
-      (doc) => doc.type === "ID_PHOTOGRAPH" && doc.data
+      (doc) => doc.type === "ID_PHOTOGRAPH" && doc.file
     );
 
     if (!idCardWithData || !idPhotographWithData) {
@@ -196,56 +210,48 @@ export default function BankAccount() {
     setError("");
 
     try {
-      // First save banking info to context
-      updateBankingInfo({
+      // Create banking info object
+      const bankingInfo = {
         bankName: selectedBank.label,
         accountNo: accountNumber,
         accountBalance: 0,
-      });
+      };
+
+      // Save banking info to context
+      updateBankingInfo(bankingInfo);
 
       // Create FormData
       const formData = new FormData();
 
-      // Append banking info as JSON string
-      formData.append(
-        "bankingInfo",
-        JSON.stringify({
-          bankName: selectedBank.label,
-          accountNo: accountNumber,
-          accountBalance: 0,
-        })
-      );
+      // Append banking info as JSON string (this is what the backend expects)
+      formData.append("bankingInfo", JSON.stringify(bankingInfo));
 
-      // Convert base64 back to File objects and append to FormData
-      for (const doc of hostProfileData.verificationDocuments) {
-        if (doc.data) {
-          // Convert base64 to blob
-          const response = await fetch(doc.data);
-          const blob = await response.blob();
-
-          // Create file from blob
-          const file = new File([blob], doc.name, {
-            type: doc.fileType || "application/octet-stream",
-          });
-
-          formData.append("documents", file);
+      // Append documents and their types
+      hostProfileData.verificationDocuments.forEach((doc) => {
+        if (doc.file) {
+          formData.append("documents", doc.file);
           formData.append("documentTypes", doc.type);
-        }
-      }
 
-      console.log("FormData entries:");
+          console.log(`Appending document:`, {
+            type: doc.type,
+            name: doc.name,
+            size: doc.file.size,
+          });
+        }
+      });
+
+      // Debug: Log FormData contents
+      console.log("FormData contents:");
       for (let pair of formData.entries()) {
         console.log(pair[0] + ":", pair[1]);
       }
 
-      // Use FormData with your API
+      // Call API
       const response = await createHostProfileAPI(formData);
-
       console.log("Host profile created successfully:", response);
 
       // Clear the local storage draft after successful submission
       clearHostProfileData();
-
       setIsSuccessOpen(true);
     } catch (err) {
       console.error("Error creating host profile:", err);
