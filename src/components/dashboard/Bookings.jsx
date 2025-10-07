@@ -99,13 +99,13 @@ export default function MyBooking({
         {/* Apartment Info */}
         <div className="flex-1  mt-1 ml-1 text-[#333333] flex flex-col">
           {/* Title + Status */}
-          <div className="flex items-center gap-6">
-            <h4 className="font-medium text-[12px] flex-1 truncate max-w-[calc(60%)]">
+          <div className="flex items-center justify-between w-[90%]">
+            <h4 className="font-medium text-[12px] truncate flex-1 max-w-[70%]">
               {getTitle(booking)}
             </h4>
             {status !== "cancelled" && currentStatus && (
               <span
-                className={`text-[10px] px-2 font-medium rounded-full ${currentStatus.bg} ${currentStatus.text}`}
+                className={`text-[10px] px-2 font-medium rounded-full flex-shrink-0 ${currentStatus.bg} ${currentStatus.text}`}
               >
                 {currentStatus.label}
               </span>
