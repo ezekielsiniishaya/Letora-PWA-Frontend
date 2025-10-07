@@ -27,7 +27,6 @@ export default function PasswordInput({
           onChange={onChange}
           disabled={disabled}
           className="flex-1 h-full outline-none text-sm bg-transparent disabled:cursor-not-allowed"
-          placeholder="Enter your password"
         />
         <button
           type="button"

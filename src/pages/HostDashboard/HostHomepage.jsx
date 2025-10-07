@@ -172,23 +172,34 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* My Booking Section - Only show if there's a current booking */}
-      {currentBooking && (
-        <div className="px-[21px] mt-[25px]">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
-            <Link to="/bookings">
-              <button className="text-[12px] font-medium text-[#A20BA2]">
-                See all
-              </button>
-            </Link>
-          </div>
+      {/* My Booking Section - Show empty state when no booking */}
+      <div className="px-[21px] mt-[25px]">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
+          <Link to="/bookings">
+            <button className="text-[12px] font-medium text-[#A20BA2]">
+              See all
+            </button>
+          </Link>
+        </div>
+        {currentBooking ? (
           <Bookings
             booking={currentBooking}
             status={currentBooking.status?.toLowerCase() || "ongoing"}
           />
-        </div>
-      )}
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 rounded-lg">
+            <img
+              src="/icons/no-booking.png"
+              alt="No bookings"
+              className="w-[42px] h-[42px] mb-2 grayscale"
+            />
+            <p className="text-[#505050] mt-2 text-[12px] font-medium w-[125px] text-center">
+              You Are Yet to Have a Booking
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Hot Apartments */}
       <div className="px-[22px] mt-1">
@@ -206,31 +217,21 @@ export default function Dashboard() {
           <div className="flex justify-center items-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A20BA2]"></div>
           </div>
-        ) : (
+        ) : hotApartments.length > 0 ? (
           <ApartmentSlider apartments={hotApartments} />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 rounded-lg">
+            <img
+              src="/icons/no-hot-apartment.png"
+              alt="No bookings"
+              className="w-[42px] h-[42px] mb-2 grayscale"
+            />
+            <p className="text-[#505050] mt-2 text-[12px] font-medium w-[125px] text-center">
+              No Hot Apartments at the moment
+            </p>
+          </div>
         )}
       </div>
-
-      {/* My Listed Apartments - Commented out as requested */}
-      {/* {userApartments.length > 0 && (
-        <div className="px-[22px]">
-          <div className="flex justify-between items-center">
-            <h3 className="font-medium my-4 text-[14px]">
-              My Listed Apartments 🏠
-            </h3>
-            <Link to="/host-apartments">
-              <button className="text-[12px] font-medium text-[#A20BA2]">
-                Manage
-              </button>
-            </Link>
-          </div>
-          <div className="space-y-1">
-            {userApartments.slice(0, 3).map((apt) => (
-              <ApartmentCard key={apt.id} apt={apt} role="host" />
-            ))}
-          </div>
-        </div>
-      )} */}
 
       {/* Available Apartments */}
       <div className="px-[22px]">
@@ -254,8 +255,15 @@ export default function Dashboard() {
               <ApartmentCard key={apt.id} apt={apt} />
             ))
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              No apartments available in your location
+            <div className="flex flex-col items-center justify-center py-8 rounded-lg">
+              <img
+                src="/icons/no-apartment-location.png"
+                alt="No bookings"
+                className="w-[42px] h-[42px] mb-2 grayscale"
+              />
+              <p className="text-[#505050] mt-2 text-[12px] font-medium w-[125px] text-center">
+                No Available Shortlets in your location
+              </p>
             </div>
           )}
         </div>

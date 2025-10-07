@@ -80,7 +80,11 @@ const UserProvider = ({ children }) => {
   };
 
   // Check if user is authenticated
-  const isAuthenticated = !!user;
+
+  const isAuthenticated = () => {
+    const token = localStorage.getItem("authToken");
+    return !!token && !!user; // Both token and user data must be present
+  };
 
   // Check user role
   const isHost = user?.role === "HOST";
@@ -89,7 +93,10 @@ const UserProvider = ({ children }) => {
 
   // Get user's location
   const getUserLocation = () => {
-    return user?.location || { state: user?.stateOrigin };
+    return {
+      state: user?.location?.state || user?.stateOrigin,
+      town: user?.location?.town || user?.townOrigin,
+    };
   };
 
   // Get user's bookings

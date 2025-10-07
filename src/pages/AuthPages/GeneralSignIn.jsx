@@ -146,7 +146,7 @@ export default function SignIn() {
         {/* Sign up button */}
         <Link to="/choose-type">
           <button
-            className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] mb-[140px] h-[56px] text-[16px] font-regular disabled:opacity-50"
+            className="w-full bg-[#E6E6E6 ] py-3 rounded-[10px] text-[#666666] mb-[140px] h-[56px] text-[16px] font-regular disabled:opacity-50"
             disabled={loading}
           >
             Sign up

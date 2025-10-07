@@ -16,11 +16,12 @@ const ApartmentListingProvider = ({ children }) => {
   const [hotApartmentsLoading, setHotApartmentsLoading] = useState(false);
   const [nearbyApartmentsLoading, setNearbyApartmentsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const { isAuthenticated, getUserLocation, user } = useUser();
 
   // Fetch all approved apartments
-  const fetchApartments = async () => {
+  const fetchApartments = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -32,10 +33,10 @@ const ApartmentListingProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Fetch hot apartments
-  const fetchHotApartments = async () => {
+  const fetchHotApartments = useCallback(async () => {
     setHotApartmentsLoading(true);
     try {
       const response = await getHotApartments();
@@ -46,7 +47,7 @@ const ApartmentListingProvider = ({ children }) => {
     } finally {
       setHotApartmentsLoading(false);
     }
-  };
+  }, []);
 
   // Fetch nearby apartments using user's actual location
   const fetchNearbyApartments = useCallback(
@@ -86,27 +87,38 @@ const ApartmentListingProvider = ({ children }) => {
   };
 
   // Refresh all data
-  const refreshApartments = () => {
+  const refreshApartments = useCallback(() => {
+    setHasFetched(false); // Reset to allow fresh fetch
     fetchApartments();
     fetchHotApartments();
     fetchNearbyApartments();
-  };
+  }, [fetchApartments, fetchHotApartments, fetchNearbyApartments]);
 
   // Fetch data on component mount - only when user is available
   useEffect(() => {
     const fetchAllData = async () => {
+      if (hasFetched) return; // Prevent duplicate fetches
+
       await Promise.all([
         fetchApartments(),
         fetchHotApartments(),
         fetchNearbyApartments(),
       ]);
+      setHasFetched(true);
     };
 
     // Only fetch if we have user data or we're not authenticated
-    if (!isAuthenticated || user) {
+    if ((!isAuthenticated || user) && !hasFetched) {
       fetchAllData();
     }
-  }, [fetchNearbyApartments, isAuthenticated, user]);
+  }, [
+    fetchApartments,
+    fetchHotApartments,
+    fetchNearbyApartments,
+    isAuthenticated,
+    user,
+    hasFetched,
+  ]);
 
   const value = {
     apartments,
