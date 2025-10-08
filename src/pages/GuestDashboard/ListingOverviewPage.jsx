@@ -87,7 +87,7 @@ export default function ListingOverviewPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { apartmentData } = useApartmentCreation();
+  const { apartmentData, clearApartmentData } = useApartmentCreation();
   const navigate = useNavigate();
 
   // Destructure from nested objects with proper defaults
@@ -290,7 +290,7 @@ export default function ListingOverviewPage() {
       // 6. Call backend API
       await createCompleteApartment(formData);
       console.log("🟢 Apartment created successfully");
-
+      clearApartmentData();
       setShowSuccess(true);
     } catch (err) {
       console.error("🔴 Submission failed:", err);

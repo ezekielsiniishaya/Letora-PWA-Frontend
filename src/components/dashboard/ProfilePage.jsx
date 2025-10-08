@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Navigation from "../../components/dashboard/Navigation";
-import LogoutConfirmPopup from "../../components/dashboard/LogoutConfirmPopup";
+import Navigation from "./Navigation";
+import LogoutConfirmPopup from "./LogoutConfirmPopup";
+import { useUser } from "../../hooks/useUser";
 
 export default function ProfilePage() {
   const [showBecomeHost, setShowBecomeHost] = useState(true);
   const [showLogout, setShowLogout] = useState(false);
   const navigate = useNavigate();
+  const { user, logout, isHost } = useUser();
   const handleLogout = () => {
-    // Clear your auth (example with localStorage)
-    localStorage.removeItem("token");
+    logout();
 
     // redirect to login (using react-router)
     navigate("/sign-in");
@@ -29,13 +30,13 @@ export default function ProfilePage() {
       <div className="bg-white rounded-[5px] px-4 py-4 mt-4 mx-5 relative">
         <div className="flex items-center gap-2">
           <img
-            src="/images/guest.jpg"
-            alt="Host"
+            src={user?.profilePic || "/images/profile-image.png"}
+            alt={user?.firstName || "User"}
             className="w-[43px] h-[43px] mt-[-25px] rounded-full object-cover"
           />
           <div className="flex-1">
             <h2 className="text-[18px] font-medium text-[#333333]">
-              Paul Ayodamola
+              {user ? `${user.firstName} ${user.lastName}` : "Guest User"}
             </h2>
             <div className="flex items-center text-[12px] gap-1 text-gray-600 mt-1">
               <img
@@ -43,7 +44,7 @@ export default function ProfilePage() {
                 alt="Location"
                 className="w-[12px] h-[13px]"
               />
-              <span>Lagos, Nigeria</span>
+              <span>{user?.location?.state || "Location not set"}</span>
             </div>
             <div className="flex items-center gap-1 text-[#505050] text-[12px] mt-1">
               <img
@@ -51,7 +52,7 @@ export default function ProfilePage() {
                 alt="Email"
                 className="w-[12px] h-[11px]"
               />
-              <span>Paulayodamola@gmail.com</span>
+              <span>{user?.email || "Email not available"}</span>
             </div>
           </div>
           <Link to="/edit-profile">
@@ -66,17 +67,15 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Become a Host Card */}
-      {showBecomeHost && (
+      {/* Become a Host Card - Only show for guests */}
+      {showBecomeHost && !isHost && (
         <div className="relative mx-5 mt-3">
-          {/* Close button - separate from the Link */}
           <button
             onClick={() => setShowBecomeHost(false)}
             className="absolute top-2 right-2 text-white w-5 h-5 flex items-center justify-center text-xs z-20"
           >
             ✕
           </button>
-
           <Link to="/identity-id">
             <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-lg px-3 flex items-center justify-between overflow-hidden h-[106px]">
               <div className="text-white max-w-[70%] z-10">
@@ -115,26 +114,36 @@ export default function ProfilePage() {
 
       {/* Dashboard Options */}
       <div className="bg-white rounded-lg shadow-sm mt-3 mx-5">
-        <OptionItem
-          icon="/icons/my-dashboard.svg"
-          text="My Dashboard"
-          link="/host-dashboard"
-        />
+        {/* Show only for hosts */}
+        {isHost && (
+          <OptionItem
+            icon="/icons/my-dashboard.svg"
+            text="My Dashboard"
+            link="/host-dashboard"
+          />
+        )}
+
         <OptionItem
           icon="/icons/my-revenue.svg"
           text="My Revenue History"
           link="/revenue"
         />
-        <OptionItem
-          icon="/icons/change-bank.svg"
-          text="Change Bank Details"
-          link="/change-bank-details"
-        />
-        <OptionItem
-          icon="/icons/review.svg"
-          text="Reviews"
-          link="/host-reviews"
-        />
+        {/* Show Change Bank Details only for hosts */}
+        {isHost && (
+          <OptionItem
+            icon="/icons/change-bank.svg"
+            text="Change Bank Details"
+            link="/change-bank-details"
+          />
+        )}
+        {/* Show Reviews only for hosts */}
+        {isHost && (
+          <OptionItem
+            icon="/icons/review.svg"
+            text="Reviews"
+            link="/host-reviews"
+          />
+        )}
       </div>
 
       {/* Account Options */}

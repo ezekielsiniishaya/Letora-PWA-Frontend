@@ -1,22 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
-
-const apartment = {
-  id: 1,
-  title: "2-Bedroom Apartment",
-  location: "Ikoyi, Lagos",
-  likes: 15,
-  rating: "4.0",
-  price: "₦100k",
-  image: "/images/apartment.png",
-};
+import { useApartmentListing } from "../../hooks/useApartmentListing";
 
 export default function HotApartmentsPage() {
-  const apartments = Array.from({ length: 6 }, (_, i) => ({
-    ...apartment,
-    id: i + 1,
-  }));
   const navigate = useNavigate();
+
+  // Use the apartment listing context to get actual hot apartments
+  const { hotApartments, hotApartmentsLoading, error } = useApartmentListing();
+
   return (
     <div className="bg-[#F9F9F9] min-h-screen">
       {/* Top Nav */}
@@ -34,9 +25,32 @@ export default function HotApartmentsPage() {
 
       {/* Apartments list */}
       <div className="px-4 py-3 space-y-[5px]">
-        {apartments.map((apt) => (
-          <ApartmentCard key={apt.id} apt={apt} />
-        ))}
+        {hotApartmentsLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A20BA2]"></div>
+          </div>
+        ) : error ? (
+          <div className="flex justify-center items-center py-8">
+            <p className="text-red-500">Error loading apartments: {error}</p>
+          </div>
+        ) : hotApartments.length > 0 ? (
+          hotApartments.map((apt) => <ApartmentCard key={apt.id} apt={apt} />)
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 rounded-lg">
+            <img
+              src="/icons/no-hot-apartment.png"
+              alt="No bookings"
+              className="w-[44px] h-[44px] mb-2 grayscale"
+            />
+            <p className="text-[#505050] mt-2 text-[14px] font-medium w-[250px] text-center">
+              No Hot Apartments at the moment
+            </p>
+            <p className="text-[#807F7F] mt-2 text-[12px] w-[250px] text-center">
+              Check back soon. Top-rated stays and trending listings update
+              regularly!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -80,7 +80,13 @@ const ApartmentListingProvider = ({ children }) => {
     },
     [isAuthenticated, getUserLocation, user]
   );
-
+  // Clear apartments
+  const clearApartments = () => {
+    setApartments([]);
+    setHotApartments([]);
+    setNearbyApartments([]);
+    setHasFetched(false);
+  };
   // Get apartment by ID
   const getApartmentById = (id) => {
     return apartments.find((apt) => apt.id === id);
@@ -133,6 +139,7 @@ const ApartmentListingProvider = ({ children }) => {
     fetchNearbyApartments,
     getApartmentById,
     refreshApartments,
+    clearApartments,
   };
 
   return (

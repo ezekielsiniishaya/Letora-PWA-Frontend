@@ -1,27 +1,35 @@
 import { useNavigate } from "react-router-dom";
 import ApartmentCard from "./ApartmentCard";
 import { Link } from "react-router-dom";
-
-const apartment = {
-  id: 1,
-  title: "2-Bedroom Apartment",
-  location: "Ikoyi, Lagos",
-  likes: 15,
-  rating: "4.0",
-  price: "₦ 100k",
-  image: "/images/apartment.png",
-};
+import { useApartmentListing } from "../../hooks/useApartmentListing";
 
 export default function ApartmentsPage() {
-  const apartments = Array.from({ length: 6 }, (_, i) => ({
-    ...apartment,
-    id: i + 1,
-    verified: i % 2 === 0, // odd → true, even → false
-    rating: i % 2 === 0 ? "4.0" : "0.0", // alternate stars
-    title: i % 2 === 0 ? "2-Bedroom Apartment" : "Self-Con/Studio", // alternate title
-    location: i % 2 === 0 ? "Ikoyi, Lagos" : "Surulere, Lagos", // alternate location
-  }));
   const navigate = useNavigate();
+
+  // Use the apartment listing context to get actual apartments
+  const { nearbyApartments, nearbyApartmentsLoading, error } =
+    useApartmentListing();
+
+  if (nearbyApartmentsLoading) {
+    return (
+      <div className="bg-[#F9F9F9] min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A20BA2]"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-[#F9F9F9] min-h-screen flex items-center justify-center">
+        <p className="text-red-500">Error loading apartments: {error}</p>
+      </div>
+    );
+  }
+
+  // Get location for the header (use first apartment's location or default)
+  const location =
+    nearbyApartments.length > 0 ? nearbyApartments[0]?.state : "Lagos";
+
   return (
     <div className="bg-[#F9F9F9] min-h-screen">
       {/* Top Nav */}
@@ -32,7 +40,7 @@ export default function ApartmentsPage() {
             <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-4" />
           </button>
           <h1 className="text-[14px] font-medium text-[#000000]">
-            24 apartments available in Lagos
+            {nearbyApartments.length} apartments available in {location}
           </h1>
         </div>
 
@@ -50,9 +58,26 @@ export default function ApartmentsPage() {
 
       {/* Apartments list */}
       <div className="px-4 py-3 space-y-[5px]">
-        {apartments.map((apt) => (
-          <ApartmentCard key={apt.id} apt={apt} />
-        ))}
+        {nearbyApartments.length > 0 ? (
+          nearbyApartments.map((apt) => (
+            <ApartmentCard key={apt.id} apt={apt} />
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 rounded-lg">
+            <img
+              src="/icons/no-apartment-location.png"
+              alt="No apartments"
+              className="w-[44px] h-[44px] mb-2 grayscale"
+            />
+            <p className="text-[#505050] mt-2 text-[14px] font-medium w-[250px] text-center">
+              No Available Apartments
+            </p>
+            <p className="text-[#807F7F] mt-2 text-[12px] w-[250px] text-center">
+              Looks like no shortlets are available in this area yet. You can
+              widen your search or come back later
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

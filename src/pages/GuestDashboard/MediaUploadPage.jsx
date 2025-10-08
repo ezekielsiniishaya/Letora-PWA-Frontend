@@ -10,6 +10,9 @@ export default function MediaUploadPage() {
   const { apartmentData, updateImages, setCurrentStep } =
     useApartmentCreation();
 
+  // Ensure images array exists with a default value
+  const images = apartmentData?.images || [];
+
   // Convert files to base64 objects
   const filesToBase64 = (filesArray) => {
     return Promise.all(
@@ -42,7 +45,8 @@ export default function MediaUploadPage() {
 
     if (selectedFiles.length === 0) return;
 
-    const totalFiles = apartmentData.images.length + selectedFiles.length;
+    // Use the safe images variable
+    const totalFiles = images.length + selectedFiles.length;
     if (totalFiles > 10) {
       setError("You can only upload a maximum of 10 images.");
       return;
@@ -65,19 +69,20 @@ export default function MediaUploadPage() {
 
     // Convert to base64
     const newImages = await filesToBase64(validFiles);
-    updateImages([...apartmentData.images, ...newImages]);
+    updateImages([...images, ...newImages]);
     setError("");
   };
 
   const handleRemove = (index) => {
-    const newImages = apartmentData.images.filter((_, i) => i !== index);
+    const newImages = images.filter((_, i) => i !== index);
     updateImages(newImages);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (apartmentData.images.length < 7) {
+    // Use the safe images variable
+    if (images.length < 7) {
       return;
     }
 
@@ -131,7 +136,7 @@ export default function MediaUploadPage() {
 
           {/* Upload Box */}
           <div className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9] p-2">
-            {apartmentData.images.length === 0 ? (
+            {images.length === 0 ? (
               <label className="w-full h-[200px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
                 <input
                   type="file"
@@ -154,7 +159,7 @@ export default function MediaUploadPage() {
               </label>
             ) : (
               <div className="grid grid-cols-3 gap-2">
-                {apartmentData.images.map((img, index) => (
+                {images.map((img, index) => (
                   <div
                     key={`${img.name}-${index}`}
                     className="relative w-full h-[100px] rounded-lg overflow-hidden border"
@@ -179,7 +184,7 @@ export default function MediaUploadPage() {
                   </div>
                 ))}
 
-                {apartmentData.images.length < 10 && (
+                {images.length < 10 && (
                   <label className="w-full h-[100px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer border border-dashed border-gray-400">
                     <input
                       type="file"
@@ -194,7 +199,7 @@ export default function MediaUploadPage() {
                       className="w-[20px] h-[20px] mb-1"
                     />
                     <span className="text-[10px] text-gray-600 text-center">
-                      Add More ({10 - apartmentData.images.length} left)
+                      Add More ({10 - images.length} left)
                     </span>
                   </label>
                 )}
@@ -205,14 +210,12 @@ export default function MediaUploadPage() {
           {/* Status Message */}
           <p
             className={`mt-2 text-[12px] ${
-              apartmentData.images.length < 7
-                ? "text-red-500"
-                : "text-green-600"
+              images.length < 7 ? "text-red-500" : "text-green-600"
             }`}
           >
-            {apartmentData.images.length < 7
-              ? `You need at least 7 images. Currently selected: ${apartmentData.images.length}`
-              : `Selected ${apartmentData.images.length} images (max 10). First image is primary.`}
+            {images.length < 7
+              ? `You need at least 7 images. Currently selected: ${images.length}`
+              : `Selected ${images.length} images (max 10). First image is primary.`}
           </p>
 
           {/* Next Button */}
@@ -220,7 +223,7 @@ export default function MediaUploadPage() {
             <Button
               text={loading ? "Saving..." : "Next"}
               type="submit"
-              disabled={loading || apartmentData.images.length < 7}
+              disabled={loading || images.length < 7}
             />
           </div>
         </form>

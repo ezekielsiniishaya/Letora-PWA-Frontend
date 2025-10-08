@@ -1,4 +1,4 @@
-import ApartmentList from "../../components/dashboard/ApartmentList";
+import FavoriteApartment from "../../components/dashboard/FavoriteApartments";
 import Navigation from "../../components/dashboard/Navigation";
 
 export default function FavoritesPage() {
@@ -8,13 +8,13 @@ export default function FavoritesPage() {
       <header className="px-[21px] pt-4 pb-[20px]">
         <h1 className="text-[24px] font-medium text-[#0D1321]">Favorites</h1>
         <p className="text-[#666666] text-[14px]">
-          You have a good taste of soft life 
+          You have a good taste of soft life
         </p>
       </header>
 
       {/* Main content */}
       <main className="flex-1">
-        <ApartmentList />
+        <FavoriteApartment />
       </main>
 
       {/* Bottom navigation */}

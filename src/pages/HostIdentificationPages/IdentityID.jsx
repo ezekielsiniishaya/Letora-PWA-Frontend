@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHostProfile } from "../../contexts/HostProfileContext";
 import Button from "../../components/Button";
@@ -9,62 +9,59 @@ export default function IdentityVerification() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Use the host profile context
-  const { hostProfileData, addVerificationDocument, setCurrentStep } =
-    useHostProfile();
+  const {
+    hostProfileData,
+    updateVerificationDocument,
+    addVerificationDocument,
+    setCurrentStep,
+  } = useHostProfile();
 
-  // Get the existing ID card from context
   const existingIdCard = hostProfileData.verificationDocuments.find(
     (doc) => doc.type === "ID_CARD"
   );
 
+  useEffect(() => {
+    setFile(null);
+    setError("");
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = "";
+  }, []);
+
   const handleFileChange = (e) => {
-    const selectedFiles = e.target.files;
-
-    // Check if any file is selected
-    if (!selectedFiles || selectedFiles.length === 0) {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) {
       setFile(null);
       return;
     }
 
-    const selectedFile = selectedFiles[0];
-
-    // Validate only single file
-    if (selectedFiles.length > 1) {
+    if (e.target.files.length > 1) {
       setError("Please upload only one PDF file.");
-      // Clear the file input
       e.target.value = "";
-      setFile(null);
       return;
     }
 
-    // Validate file type - ONLY PDF
     if (selectedFile.type !== "application/pdf") {
       setError("Invalid file type. Please upload PDF files only.");
-      // Clear the file input
       e.target.value = "";
-      setFile(null);
       return;
     }
 
-    // Validate file size (5MB)
     if (selectedFile.size > 5 * 1024 * 1024) {
-      setError("File size too large. Please upload files smaller than 5MB.");
-      // Clear the file input
+      setError("File too large. Please upload a file under 5MB.");
       e.target.value = "";
-      setFile(null);
       return;
     }
 
-    setFile(selectedFile);
     setError("");
+    setFile(selectedFile);
   };
 
+  // In your IdentityId component's handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!file && !existingIdCard) {
-      setError("Please select a PDF file to upload");
+      setError("Please select an ID document to continue.");
       return;
     }
 
@@ -73,49 +70,49 @@ export default function IdentityVerification() {
 
     try {
       if (file) {
-        console.log("Storing file in context:", file.name);
+        // Convert file to base64 for storage
+        const fileToBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+          });
+        };
+
+        const base64Data = await fileToBase64(file);
 
         const documentData = {
-          id: `draft-${Date.now()}`,
+          id: existingIdCard?.id || `draft-${Date.now()}`,
           type: "ID_CARD",
           name: file.name,
           size: file.size,
           fileType: file.type,
-          url: URL.createObjectURL(file),
-          file: file, // ← CRITICAL: Store the actual file object
+          url: base64Data, // Store as base64 instead of blob URL
           status: "PENDING",
           uploadedAt: new Date().toISOString(),
         };
 
-        addVerificationDocument(documentData);
-        console.log("Added document with file data:", documentData);
+        if (existingIdCard) {
+          updateVerificationDocument(existingIdCard.id, documentData);
+        } else {
+          addVerificationDocument(documentData);
+        }
       }
 
       setCurrentStep(2);
-      navigate("/identity-with-picture-info");
+      navigate("/identity-selfie");
     } catch (err) {
-      console.error("Error in handleSubmit:", err);
-      setError(err.message || "Failed to save ID card");
+      console.error("Error saving ID card:", err);
+      setError("Failed to save ID card. Please try again.");
     } finally {
       setUploading(false);
     }
   };
 
-  const getButtonText = () => {
-    if (uploading) return "Please wait...";
-    return "Next";
-  };
-
-  const isButtonDisabled = () => {
-    if (uploading) return true;
-    if (existingIdCard) return false; // Allow navigation if already has ID card
-    if (!file) return true; // Disable if no file selected and no existing ID card
-    return false;
-  };
-
-  // Determine what to show in the upload box
   const getUploadBoxContent = () => {
-    if (file) {
+    const activeFile = file || existingIdCard;
+    if (activeFile) {
       return (
         <>
           <img
@@ -124,37 +121,24 @@ export default function IdentityVerification() {
             className="w-[24px] h-[28px] mb-2"
           />
           <span className="text-[12px] text-[#333333] truncate max-w-[180px]">
-            {file.name}
-          </span>
-        </>
-      );
-    } else if (existingIdCard) {
-      return (
-        <>
-          <img
-            src="/icons/pdf.svg"
-            alt="Preview"
-            className="w-[24px] h-[28px] mb-2"
-          />
-          <span className="text-[12px] text-[#333333] truncate max-w-[180px]">
-            {existingIdCard.name}
-          </span>
-        </>
-      );
-    } else {
-      return (
-        <>
-          <img
-            src="/icons/pdf.svg"
-            alt="Upload"
-            className="w-[24px] h-[28px] mb-2"
-          />
-          <span className="text-center w-[187px] leading-tight">
-            NIN Slip / Int. Passport / Driver's License
+            {activeFile.name}
           </span>
         </>
       );
     }
+
+    return (
+      <>
+        <img
+          src="/icons/pdf.svg"
+          alt="Upload"
+          className="w-[24px] h-[28px] mb-2"
+        />
+        <span className="text-center w-[187px] leading-tight">
+          NIN Slip / Int. Passport / Driver's License
+        </span>
+      </>
+    );
   };
 
   return (
@@ -181,20 +165,12 @@ export default function IdentityVerification() {
           Upload your government ID card
         </p>
 
-        {/* Error Message Only */}
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-
         <form className="mt-[45px] flex flex-col" onSubmit={handleSubmit}>
           <label className="block text-[14px] font-medium text-[#333333]">
             Upload Valid Government ID Card{" "}
             <span className="text-red-500">*</span>
           </label>
 
-          {/* Upload Box */}
           <div className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9]">
             <label className="w-full h-[200px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
               <input
@@ -206,13 +182,16 @@ export default function IdentityVerification() {
               {getUploadBoxContent()}
             </label>
           </div>
-
-          {/* Next Button - Single button that handles both upload and navigation */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
           <div className="mt-[173px]">
             <Button
-              text={getButtonText()}
+              text={uploading ? "Please wait..." : "Next"}
               type="submit"
-              disabled={isButtonDisabled()}
+              disabled={uploading || (!file && !existingIdCard)}
             />
           </div>
         </form>

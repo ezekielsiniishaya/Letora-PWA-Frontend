@@ -3,8 +3,9 @@ import { useUser } from "../../hooks/useUser"; // Adjust path as needed
 
 export default function Navigation() {
   const location = useLocation();
-  const user = useUser(); // Get user data from localStorage
+  const { user } = useUser(); // Get user data from context
 
+  // Only show "New Listing" if user is a verified host
   const navItems = [
     {
       name: "Home",
@@ -12,12 +13,17 @@ export default function Navigation() {
       icon: "/icons/home.svg",
       activeIcon: "/icons/home-purple.svg",
     },
-    {
-      name: "New Listing",
-      paths: ["/guest-listing"],
-      icon: "/icons/new-listing.svg",
-      activeIcon: "/icons/new-listing-purple.svg",
-    },
+    // Conditionally include New Listing
+    ...(user?.role === "HOST" && user?.hostProfile?.isVerified
+      ? [
+          {
+            name: "New Listing",
+            paths: ["/guest-listing"],
+            icon: "/icons/new-listing.svg",
+            activeIcon: "/icons/new-listing-purple.svg",
+          },
+        ]
+      : []),
     {
       name: "Bookings",
       paths: ["/bookings"],
@@ -37,7 +43,6 @@ export default function Navigation() {
       activeIcon: "/icons/profile-purple.svg",
     },
   ];
-
   // Function to determine the correct home path based on user role
   const getHomePath = () => {
     // Use user role from localStorage if available

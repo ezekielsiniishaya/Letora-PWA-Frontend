@@ -24,10 +24,30 @@ const ApartmentCreationProvider = ({ children }) => {
   const [apartmentData, setApartmentData] = useState(getInitialApartmentData);
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Save to localStorage whenever apartmentData changes
+  // Save to localStorage whenever apartmentData changes (excluding images)
   useEffect(() => {
-    localStorage.setItem("apartmentDraft", JSON.stringify(apartmentData));
-  }, [apartmentData]);
+    try {
+      // Create a copy without images to prevent localStorage quota issues
+      const { ...dataWithoutImages } = apartmentData;
+      localStorage.setItem("apartmentDraft", JSON.stringify(dataWithoutImages));
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+      // If still failing, try to save only essential data
+      try {
+        const essentialData = {
+          basicInfo: apartmentData.basicInfo,
+          details: apartmentData.details,
+          facilities: apartmentData.facilities,
+          pricing: apartmentData.pricing,
+          securityDeposit: apartmentData.securityDeposit,
+          currentStep: currentStep,
+        };
+        localStorage.setItem("apartmentDraft", JSON.stringify(essentialData));
+      } catch (fallbackError) {
+        console.error("Fallback save also failed:", fallbackError);
+      }
+    }
+  }, [apartmentData, currentStep]);
 
   const updateBasicInfo = (basicInfo) => {
     setApartmentData((prev) => ({

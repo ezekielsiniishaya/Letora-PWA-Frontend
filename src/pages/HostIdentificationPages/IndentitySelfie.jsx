@@ -22,60 +22,60 @@ export default function IdentitySelfie() {
     (doc) => doc.type === "ID_PHOTOGRAPH"
   );
 
-  // Show existing preview on mount
+  // Create preview URL from existing file or stored data
   useEffect(() => {
-    if (existingSelfie && !file) {
-      setPreviewUrl(existingSelfie.url);
+    // Clean up previous blob URL
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
     }
-  }, [existingSelfie, file]);
 
-  // Clean up object URLs on unmount
-  useEffect(() => {
+    let newPreviewUrl = "";
+
+    if (file) {
+      // If we have a new file, create blob URL
+      newPreviewUrl = URL.createObjectURL(file);
+    } else if (existingSelfie?.url) {
+      // Use existing URL (could be blob or permanent URL)
+      newPreviewUrl = existingSelfie.url;
+    }
+
+    setPreviewUrl(newPreviewUrl);
+
+    // Cleanup function
     return () => {
-      if (previewUrl && previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
+      if (newPreviewUrl && newPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(newPreviewUrl);
       }
     };
-  }, [previewUrl]);
+  }, [file, existingSelfie  ]); // Remove previewUrl from dependencies
 
   // Handle file selection
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
-    // Revoke old blob URLs
-    if (previewUrl && previewUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
     if (!selectedFile) {
       setFile(null);
-      setPreviewUrl("");
       return;
     }
 
     if (!selectedFile.type.startsWith("image/")) {
       setError("Invalid file type. Please upload image files only.");
       e.target.value = "";
-      setFile(null);
-      setPreviewUrl("");
       return;
     }
 
     if (selectedFile.size > 5 * 1024 * 1024) {
       setError("File too large. Please upload images under 5MB.");
       e.target.value = "";
-      setFile(null);
-      setPreviewUrl("");
       return;
     }
 
     setFile(selectedFile);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
     setError("");
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!file && !existingSelfie) {
@@ -87,16 +87,26 @@ export default function IdentitySelfie() {
     setError("");
 
     try {
-     
+      // Convert file to base64 for storage in context
       if (file) {
+        const fileToBase64 = (file) => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+          });
+        };
+
+        const base64Data = await fileToBase64(file);
+
         const documentData = {
           id: existingSelfie?.id || `draft-${Date.now()}`,
           type: "ID_PHOTOGRAPH",
           name: file.name,
           size: file.size,
           fileType: file.type,
-          url: URL.createObjectURL(file),
-          file: file, // ← CRITICAL: Store the actual file object
+          url: base64Data, // Store as base64 instead of File object
           status: "PENDING",
           uploadedAt: new Date().toISOString(),
         };
@@ -117,6 +127,7 @@ export default function IdentitySelfie() {
       setUploading(false);
     }
   };
+
   const getButtonText = () => (uploading ? "Please wait..." : "Next");
 
   const isButtonDisabled = () => {
@@ -159,11 +170,8 @@ export default function IdentitySelfie() {
   };
 
   const handleRemoveFile = () => {
-    if (previewUrl && previewUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
     setFile(null);
-    setPreviewUrl(existingSelfie?.data || existingSelfie?.url || "");
+    setPreviewUrl(existingSelfie?.url || "");
 
     // Clear the file input
     const fileInput = document.querySelector('input[type="file"]');
@@ -194,12 +202,6 @@ export default function IdentitySelfie() {
           We need to verify you
         </p>
 
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-
         <form className="mt-[45px] flex flex-col" onSubmit={handleSubmit}>
           <label className="block text-[14px] font-medium text-[#333333]">
             Upload Selfie with ID <span className="text-red-500">*</span>
@@ -227,6 +229,12 @@ export default function IdentitySelfie() {
               </button>
             )}
           </div>
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
 
           <div className="mt-[196px]">
             <Button

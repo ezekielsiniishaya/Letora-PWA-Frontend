@@ -44,8 +44,12 @@ export const apiRequest = async (endpoint, options = {}) => {
   if (!response.ok) {
     const error = await response
       .json()
-      .catch(() => ({ message: "Network error" }));
-    throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      .catch(() => ({
+        message: "Network error. Please check your connection.",
+      }));
+
+    // Just use the backend error message directly
+    throw new Error(error.message);
   }
 
   return response.json();
@@ -59,3 +63,4 @@ export const logout = () => {
   // Redirect to login page
   window.location.href = "/login";
 };
+7

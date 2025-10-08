@@ -50,7 +50,7 @@ import HostDashboard from "./pages/HostDashboard/HostDashboard";
 import ConfirmEdit from "./pages/HostDashboard/ConfirmEdit";
 import ViewListing from "./pages/HostDashboard/ViewListing";
 import HostBookingDetails from "./pages/GuestDashboard/BookingDetailsPage";
-import ProfilePage from "./pages/HostDashboard/ProfilePage";
+import ProfilePage from "./components/dashboard/ProfilePage";
 import EditProfile from "./pages/HostDashboard/EditProfile";
 import RevenuePage from "./pages/HostDashboard/RevenuePage";
 import ChangeBankPage from "./pages/HostDashboard/ChangeBankPage";

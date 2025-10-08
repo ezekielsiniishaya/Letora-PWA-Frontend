@@ -24,7 +24,25 @@ const HostProfileProvider = ({ children }) => {
 
   // Save to localStorage whenever hostProfileData changes
   useEffect(() => {
-    localStorage.setItem("hostProfileDraft", JSON.stringify(hostProfileData));
+    try {
+      const safeData = {
+        ...hostProfileData,
+        verificationDocuments: hostProfileData.verificationDocuments.map(
+          (doc) => {
+            let safeDoc = { ...doc };
+            if (safeDoc.base64) {
+              // Keep base64 in memory, not in localStorage
+              delete safeDoc.base64;
+            }
+            return safeDoc;
+          }
+        ),
+      };
+
+      localStorage.setItem("hostProfileDraft", JSON.stringify(safeData));
+    } catch (err) {
+      console.error("Error saving to localStorage:", err);
+    }
   }, [hostProfileData]);
 
   // Banking Information
@@ -34,6 +52,20 @@ const HostProfileProvider = ({ children }) => {
       bankingInfo: { ...prev.bankingInfo, ...bankingInfo },
     }));
   };
+  useEffect(() => {
+    const saved = localStorage.getItem("hostProfileDraft");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      setHostProfileData((prev) => {
+        // ✅ Only load from storage if there's no verification data yet
+        if (!prev.verificationDocuments?.length) {
+          return parsed;
+        }
+        return prev; // don’t overwrite
+      });
+    }
+  }, []);
 
   // Verification Documents
   const updateVerificationDocuments = (documents) => {
@@ -43,11 +75,26 @@ const HostProfileProvider = ({ children }) => {
     }));
   };
 
-  const addVerificationDocument = (document) => {
-    setHostProfileData((prev) => ({
-      ...prev,
-      verificationDocuments: [...prev.verificationDocuments, document],
-    }));
+  const addVerificationDocument = (document, { replace = false } = {}) => {
+    setHostProfileData((prev) => {
+      let updatedDocs = [...prev.verificationDocuments];
+
+      if (replace) {
+        // Normalize both sides to be safe against case or spacing mismatches
+        const normalizedType = document.type?.toUpperCase().trim();
+        updatedDocs = updatedDocs.filter(
+          (doc) => doc.type?.toUpperCase().trim() !== normalizedType
+        );
+      }
+
+      // Add (or replace) document
+      updatedDocs.push(document);
+
+      return {
+        ...prev,
+        verificationDocuments: updatedDocs,
+      };
+    });
   };
 
   const removeVerificationDocument = (documentId) => {

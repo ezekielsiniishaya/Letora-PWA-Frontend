@@ -1,73 +1,18 @@
 import { useState } from "react";
-import MyBooking from "../../components/dashboard/Bookings";
+import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
+import { useUser } from "../../hooks/useUser";
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState("ongoing");
 
-  // Mock multiple bookings
-  const bookings = [
-    {
-      id: 1,
-      title: "3-Bedroom Apartment",
-      location: "Maryland, Lagos",
-      image: "/images/apartment.png",
-      price: "₦150,000/Night",
-      status: "ongoing",
-      bookingDate: "30-Nov-2025 | 10:00 AM",
-      checkIn: "30-Nov-2025",
-      checkOut: "30-Dec-2025",
-      duration: "30 Days",
-      feePaid: "₦1,500,000",
-      deposit: "₦100,000",
-      convenience: "₦2,500",
-      total: "₦1,602,500",
-      hostPhone: "09876543221",
-      hostEmail: "host@mail.com",
-      cancellationDate: "15-Dec-2025",
-      cancellationReason:
-        "HedamagedksckhkhcajadsakjhdbsjbkabkSKkjbxcjsakssdkhkdhkdfewdhwekdkdddkjhkjdhjashhadagasgdbcsdadghgdhaghagdh",
-    },
-    {
-      id: 2,
-      title: "Luxury Studio Apartment",
-      location: "Lekki, Lagos",
-      image: "/images/apartment.png",
-      price: "₦90,000/Night",
-      status: "completed",
-      bookingDate: "15-Sep-2025 | 3:00 PM",
-      checkIn: "15-Sep-2025",
-      checkOut: "20-Sep-2025",
-      duration: "5 Days",
-      feePaid: "₦450,000",
-      deposit: "₦50,000",
-      convenience: "₦1,500",
-      total: "₦501,500",
-      hostPhone: "08123456789",
-      hostEmail: "studiohost@mail.com",
-    },
-    {
-      id: 3,
-      title: "2-Bedroom Shortlet",
-      location: "Ikeja, Lagos",
-      image: "/images/apartment.png",
-      price: "₦120,000/Night",
-      status: "cancelled",
-      bookingDate: "01-Aug-2025 | 1:00 PM",
-      checkIn: "01-Aug-2025",
-      checkOut: "05-Aug-2025",
-      duration: "4 Days",
-      feePaid: "₦480,000",
-      deposit: "₦80,000",
-      convenience: "₦1,200",
-      total: "₦561,200",
-      hostPhone: "08099887766",
-      hostEmail: "ikejahost@mail.com",
-      cancellationDate: "03-Aug-2025",
-      cancellationReason:
-        "HedamagedksckhkhcajadsakjhdbsjbkabkSKkjbxcjsakssdkhkdhkdfewdhwekdkdddkjhkjdhjashhadagasgdbcsdadghgdhaghagdh",
-    },
-  ];
+  // Use the user context to get actual bookings data
+  const {
+    loading: userLoading,
+    isAuthenticated,
+    user,
+    getUserBookings,
+  } = useUser();
 
   const tabs = [
     { key: "ongoing", label: "Ongoing" },
@@ -75,18 +20,74 @@ export default function BookingsPage() {
     { key: "cancelled", label: "Cancelled" },
   ];
 
+  // Get user's actual bookings from backend
+  const userBookings = getUserBookings();
+
   // Filter bookings based on active tab
-  const filteredBookings = bookings.filter(
-    (booking) => booking.status === activeTab
+  const filteredBookings = userBookings.filter(
+    (userBooking) => userBooking.status?.toLowerCase() === activeTab
   );
 
+  // Dynamic empty messages
+  const emptyMessages = {
+    ongoing: {
+      title: "No Ongoing Bookings",
+      subtitle:
+        "Your next adventure is just around the corner. Start booking now",
+    },
+    completed: {
+      title: "No Completed Bookings",
+      subtitle:
+        "Your next adventure is just around the corner. Start booking now",
+    },
+    cancelled: {
+      title: "No Cancelled Bookings",
+      subtitle:
+        "Your next adventure is just around the corner. Start booking now",
+    },
+  };
+
+  // Show loading state
+  if (userLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F9F9F9]">
+        <header className="px-[21px] pt-4 pb-[20px]">
+          <h1 className="text-[24px] font-medium text-[#0D1321]">Bookings</h1>
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A20BA2]"></div>
+        </div>
+        <footer className="sticky bottom-0">
+          <Navigation />
+        </footer>
+      </div>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F9F9F9]">
+        <header className="px-[21px] pt-4 pb-[20px]">
+          <h1 className="text-[24px] font-medium text-[#0D1321]">Bookings</h1>
+        </header>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-500">Please login to view your bookings</p>
+        </div>
+        <footer className="sticky bottom-0">
+          <Navigation />
+        </footer>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex px-[2px] flex-col min-h-screen bg-gray-50">
+    <div className="flex px-[2px] flex-col min-h-screen bg-[#F9F9F9]">
       {/* Heading */}
       <header className="px-[21px] pt-4 pb-[20px]">
         <h1 className="text-[24px] font-medium text-[#0D1321]">Bookings</h1>
         <p className="text-[#666666] text-[14px]">
-          Manage your Bookings here as a Guest
+          Manage your Bookings here as a {user?.role?.toLowerCase() || "user"}
         </p>
       </header>
 
@@ -111,14 +112,46 @@ export default function BookingsPage() {
       <main className="flex-1 mt-[15px] p-4 space-y-4">
         {filteredBookings.length > 0 ? (
           filteredBookings.map((booking) => (
-            <MyBooking
+            <Bookings
               key={booking.id}
-              lodge={booking}
-              status={booking.status}
+              booking={booking}
+              status={booking.status?.toLowerCase() || "ongoing"}
+              completedButtonText={
+                booking.status?.toLowerCase() === "completed"
+                  ? "Rate your Stay"
+                  : undefined
+              }
             />
           ))
         ) : (
-          <p className="text-center text-gray-500">No bookings found</p>
+          <div className="mt-[105px] flex flex-col items-center">
+            {/* Image stack */}
+            <div className="relative w-full h-[180px]">
+              <img
+                src="/icons/Rectangle1.svg"
+                alt="Back"
+                className="absolute top-0 left-[70px] w-[131.37px] h-[151.83px] z-30"
+              />
+              <img
+                src="/icons/rectangle3.svg"
+                alt="Back"
+                className="absolute top-2 right-[82px] w-[111.37px] h-[141.83px] border-[2.5px] border-white z-20"
+              />
+              <img
+                src="/icons/rectangle2.jpg"
+                alt="Back"
+                className="absolute top-7 right-[132px] w-[111.37px] h-[141.83px] rounded-[10px] border-[2.5px] border-white z-40"
+              />
+            </div>
+
+            {/* Text below */}
+            <h2 className="mt-3 text-center text-[14px] font-medium text-[#505050]">
+              {emptyMessages[activeTab].title}
+            </h2>
+            <p className="text-[12px] text-[#807F7F] mx-auto text-center mt-2 w-[240px]">
+              {emptyMessages[activeTab].subtitle}
+            </p>
+          </div>
         )}
       </main>
 

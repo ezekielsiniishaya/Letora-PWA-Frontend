@@ -38,8 +38,13 @@ export default function SecurityDeposit() {
     const number = Number(numericValue);
     setDeposit(number.toLocaleString());
 
+    // Validate against max limit
     if (number > MAX_DEPOSIT) {
-      return;
+      setError(
+        `Security deposit cannot exceed ₦${MAX_DEPOSIT.toLocaleString()}`
+      );
+    } else if (number <= 0) {
+      setError("Please enter a valid security deposit amount");
     } else {
       setError("");
     }
@@ -54,14 +59,17 @@ export default function SecurityDeposit() {
       return;
     }
 
-    if (error) {
-      return;
-    }
-
     const depositAmount = Number(rawDeposit);
 
     if (depositAmount <= 0) {
       setError("Please enter a valid security deposit amount");
+      return;
+    }
+
+    if (depositAmount > MAX_DEPOSIT) {
+      setError(
+        `Security deposit cannot exceed ₦${MAX_DEPOSIT.toLocaleString()}`
+      );
       return;
     }
 
@@ -108,13 +116,6 @@ export default function SecurityDeposit() {
           Set your security deposit amount
         </p>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-
         <form className="mt-[75px] flex flex-col" onSubmit={handleSubmit}>
           {/* Deposit Input */}
           <label className="block text-[14px] font-medium text-[#333333] mb-2">
@@ -133,12 +134,12 @@ export default function SecurityDeposit() {
             disabled={loading}
           />
 
-          {/* Error message */}
+          {/* Error message under input box */}
           {error && (
             <div className="text-red-500 text-[12px] mt-1">{error}</div>
           )}
 
-          {/* Max note */}
+          {/* Max note - when no input */}
           {!error && (
             <div className="text-right text-[12px] text-[#666666] mt-1">
               Max. ₦100,000

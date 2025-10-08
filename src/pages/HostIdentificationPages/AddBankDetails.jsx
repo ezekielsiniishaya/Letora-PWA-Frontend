@@ -144,14 +144,12 @@ export default function BankAccount() {
     ],
     []
   );
-
   // Load existing banking info from context
   useEffect(() => {
     if (
       hostProfileData.bankingInfo.bankName &&
       hostProfileData.bankingInfo.accountNo
     ) {
-      // Find the bank in our options
       const existingBank = bankOptions.find(
         (bank) => bank.label === hostProfileData.bankingInfo.bankName
       );
@@ -161,6 +159,8 @@ export default function BankAccount() {
       setAccountNumber(hostProfileData.bankingInfo.accountNo);
     }
   }, [bankOptions, hostProfileData.bankingInfo]);
+
+  // Debug: Check what documents we have
   useEffect(() => {
     console.log(
       "Current verification documents in context:",
@@ -170,12 +170,26 @@ export default function BankAccount() {
     hostProfileData.verificationDocuments.forEach((doc, index) => {
       console.log(`Document ${index}:`, {
         type: doc.type,
+        hasUrl: !!doc.url,
         hasFile: !!doc.file,
         fileName: doc.name,
-        fileSize: doc.file?.size,
+        urlType: doc.url?.substring(0, 20), // Show first 20 chars of URL
       });
     });
   }, [hostProfileData.verificationDocuments]);
+
+  // Convert base64 URL back to File object for upload
+  const base64ToFile = (base64String, filename, mimeType) => {
+    const byteString = atob(base64String.split(",")[1]);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+
+    return new File([ab], filename, { type: mimeType });
+  };
   const handleCreateAccount = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -191,17 +205,27 @@ export default function BankAccount() {
       return;
     }
 
-    // Check if we have the required documents WITH FILE DATA
-    const idCardWithData = hostProfileData.verificationDocuments.find(
-      (doc) => doc.type === "ID_CARD" && doc.file
+    // Check if we have BOTH required documents
+    const idCard = hostProfileData.verificationDocuments.find(
+      (doc) => doc.type === "ID_CARD" && doc.url
     );
-    const idPhotographWithData = hostProfileData.verificationDocuments.find(
-      (doc) => doc.type === "ID_PHOTOGRAPH" && doc.file
+    const idPhotograph = hostProfileData.verificationDocuments.find(
+      (doc) => doc.type === "ID_PHOTOGRAPH" && doc.url
     );
 
-    if (!idCardWithData || !idPhotographWithData) {
+    console.log("Found ID Card:", idCard);
+    console.log("Found ID Photograph:", idPhotograph);
+
+    if (!idCard) {
       setError(
-        "Please complete all identity verification steps first. Documents are missing file data."
+        "ID Card document is missing. Please complete the ID card upload step first."
+      );
+      return;
+    }
+
+    if (!idPhotograph) {
+      setError(
+        "ID Photograph document is missing. Please complete the selfie upload step first."
       );
       return;
     }
@@ -223,27 +247,63 @@ export default function BankAccount() {
       // Create FormData
       const formData = new FormData();
 
-      // Append banking info as JSON string (this is what the backend expects)
+      // Append banking info as JSON string
       formData.append("bankingInfo", JSON.stringify(bankingInfo));
 
-      // Append documents and their types
-      hostProfileData.verificationDocuments.forEach((doc) => {
-        if (doc.file) {
-          formData.append("documents", doc.file);
-          formData.append("documentTypes", doc.type);
+      // Append BOTH documents - ID_CARD and ID_PHOTOGRAPH
+      const documentsToUpload = [
+        { doc: idCard, type: "ID_CARD" },
+        { doc: idPhotograph, type: "ID_PHOTOGRAPH" },
+      ];
+
+      for (const { doc, type } of documentsToUpload) {
+        if (doc.url) {
+          let fileToUpload;
+
+          if (doc.url.startsWith("data:")) {
+            // Convert base64 back to File object
+            fileToUpload = base64ToFile(
+              doc.url,
+              doc.name || `document_${doc.type}`,
+              doc.fileType || "image/jpeg"
+            );
+          } else if (doc.file) {
+            // Use existing File object
+            fileToUpload = doc.file;
+          } else {
+            console.warn(`Document ${doc.type} has URL but no file data`);
+            continue;
+          }
+
+          formData.append("documents", fileToUpload);
+          formData.append("documentTypes", type);
 
           console.log(`Appending document:`, {
-            type: doc.type,
-            name: doc.name,
-            size: doc.file.size,
+            type: type,
+            name: fileToUpload.name,
+            size: fileToUpload.size,
           });
         }
-      });
+      }
 
       // Debug: Log FormData contents
       console.log("FormData contents:");
       for (let pair of formData.entries()) {
         console.log(pair[0] + ":", pair[1]);
+      }
+
+      // Verify we're sending both document types
+      const documentTypes = formData.getAll("documentTypes");
+      console.log("Document types being sent:", documentTypes);
+
+      if (
+        documentTypes.length !== 2 ||
+        !documentTypes.includes("ID_CARD") ||
+        !documentTypes.includes("ID_PHOTOGRAPH")
+      ) {
+        throw new Error(
+          "Missing required documents. Please ensure both ID Card and Selfie are uploaded."
+        );
       }
 
       // Call API
@@ -262,6 +322,7 @@ export default function BankAccount() {
       setIsLoading(false);
     }
   };
+  // ... rest of your component remains the same
   const handleOkay = () => {
     console.log("Closing success modal");
     setIsSuccessOpen(false);
@@ -270,19 +331,18 @@ export default function BankAccount() {
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
-    setError(""); // Clear error when interacting with dropdown
+    setError("");
   };
 
   const handleAccountNumberChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ""); // Only allow numbers
+    const value = e.target.value.replace(/\D/g, "");
     setAccountNumber(value);
-    setError(""); // Clear error when typing
+    setError("");
   };
 
-  // Handle bank selection
   const handleBankSelect = (bank) => {
     setSelectedBank(bank);
-    setError(""); // Clear error when selecting bank
+    setError("");
   };
 
   return (

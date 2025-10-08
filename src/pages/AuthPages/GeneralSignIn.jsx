@@ -4,7 +4,9 @@ import Header from "../../components/Header";
 import PasswordInput from "../../components/auth/PasswordInput";
 import { Link, useNavigate } from "react-router-dom";
 import { loginAPI } from "../../services/authApi";
-import { useUser } from "../../hooks/useUser"; // Import the useUser hook
+import { useUser } from "../../hooks/useUser";
+import { useHostProfile } from "../../contexts/HostProfileContext";
+import { useApartmentListing } from "../../hooks/useApartmentListing";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -13,13 +15,26 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { login } = useUser(); // Get the login function from user context
+  const { login, logout } = useUser(); // Get the login function from user context
+  const { clearHostProfileData } = useHostProfile();
+  const { clearApartments } = useApartmentListing();
+
+  const clearAllUserData = () => {
+    // Clear localStorage
+    localStorage.clear();
+
+    // Clear all context states
+    logout(); // From UserProvider
+    clearHostProfileData(); // From HostProfileProvider
+    clearApartments(); // From ApartmentListingProvider (after you add it)
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
+    // Clear previous user data firts
+    clearAllUserData();
     try {
       const result = await loginAPI(email, password);
 
@@ -114,7 +129,7 @@ export default function SignIn() {
                 className="peer appearance-none [-webkit-appearance:none] border border-[#CCC] w-[18px] h-[18px] rounded-[5px]
              checked:bg-[#A20BA2] checked:border-[#A20BA2] disabled:opacity-50"
               />
-              <span className="absolute left-5 text-white text-xs hidden peer-checked:block">
+              <span className="absolute left-4 text-white text-xs hidden peer-checked:block">
                 ✔
               </span>
 
