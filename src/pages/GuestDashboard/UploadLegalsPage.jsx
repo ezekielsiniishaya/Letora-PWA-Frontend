@@ -96,7 +96,6 @@ export default function UploadLegalsPage() {
         return [
           "professional_license",
           "utility_bill",
-          "consent_letter",
           "authorization_document",
         ];
       default:
@@ -207,13 +206,6 @@ export default function UploadLegalsPage() {
           Your paperwork, our partnership
         </p>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-
         <form
           className="mt-[35px] flex flex-col space-y-8"
           onSubmit={handleSubmit}
@@ -235,6 +227,12 @@ export default function UploadLegalsPage() {
           {/* Dynamic Form based on selection */}
           {selectedRole && renderForm()}
 
+          {/* Error Message */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          )}
           {/* Next Button */}
           {selectedRole && (
             <div className="pt-[50px] pb-20">

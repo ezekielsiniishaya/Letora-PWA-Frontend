@@ -2,124 +2,24 @@ import { useState } from "react";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
 import MyBooking from "../../components/dashboard/Bookings";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../../hooks/useUser"; // Import your user hook
 
 export default function HostDashboardPage() {
   const [activeTab, setActiveTab] = useState("myListings");
   const navigate = useNavigate();
+  const { user } = useUser(); // Get user data from context
 
-  // Mock data for listings
-  const listings = [
-    {
-      id: 1,
-      title: "3-Bedroom Apartment",
-      location: "Ikoyi, Lagos",
-      image: "/images/apartment.png",
-      price: "N100K",
-      verified: true,
-      rating: "4.0",
-      likes: 15,
-    },
-    {
-      id: 2,
-      title: "Self-Con/ Studio",
-      location: "Surulere, Lagos",
-      image: "/images/apartment.png",
-      price: "N100K",
-      verified: false,
-      rating: 0,
-      likes: 15,
-    },
-    {
-      id: 3,
-      title: "BQ/Annex",
-      location: "Ojodu Berger, Lagos",
-      image: "/images/apartment.png",
-      price: "N100K",
-      verified: true,
-      rating: "4.0",
-      likes: 15,
-    },
-  ];
+  // Use actual listings from user context
+  const listings = user?.apartments || [];
 
-  // Mock data for bookings
-  const bookings = [
-    {
-      id: 101,
-      title: "2-Bedroom Shortlet",
-      location: "Lekki, Lagos",
-      image: "/images/apartment.png",
-      price: "₦120,000",
-      status: "ongoing",
-      bookingDate: "30-Dec-2025 | 10:00 AM",
-      checkIn: "30-Dec-2025",
-      checkOut: "30-Dec-2025",
-      duration: "30 Days",
-      feePaid: "₦1,500,000",
-      deposit: "₦100,000",
-      total: "₦1,602,500",
-      guestName: "Chinedu Chinedu",
-      guestPhone: "09876543221",
-      hostName: "Paul Ayodamola",
-      hostPhone: "09876543221",
-    },
-    {
-      id: 102,
-      title: "2-Bedroom Apartment",
-      location: "Lekki, Lagos",
-      image: "/images/apartment.png",
-      price: "₦90,000",
-      status: "completed",
-      bookingDate: "15-Sep-2025 | 3:00 PM",
-      checkIn: "15-Sep-2025",
-      checkOut: "20-Sep-2025",
-      duration: "5 Days",
-      feePaid: "₦450,000",
-      deposit: "₦50,000",
-      total: "₦501,500",
-      guestName: "Chinedu Chinedu",
-      guestPhone: "09876543221",
-      hostName: "Paul Ayodamola",
-      hostPhone: "09876543221",
-    },
-    {
-      id: 103,
-      title: "2-Bedroom Apartment",
-      location: "Lekki, Lagos",
-      image: "/images/apartment.png",
-      price: "₦90,000",
-      status: "cancelled",
-      bookingDate: "15-Sep-2025 | 3:00 PM",
-      checkIn: "15-Sep-2025",
-      checkOut: "20-Sep-2025",
-      duration: "5 Days",
-      feePaid: "₦450,000",
-      deposit: "₦50,000",
-      total: "₦501,500",
-      guestName: "Chinedu Chinedu",
-      guestPhone: "09876543221",
-      hostName: "Paul Ayodamola",
-      hostPhone: "09876543221",
-    },
-    {
-      id: 104,
-      title: "2-Bedroom Apartment",
-      location: "Lekki, Lagos",
-      image: "/images/apartment.png",
-      price: "₦90,000",
-      status: "cancelled",
-      bookingDate: "15-Sep-2025 | 3:00 PM",
-      checkIn: "15-Sep-2025",
-      checkOut: "20-Sep-2025",
-      duration: "5 Days",
-      feePaid: "₦450,000",
-      deposit: "₦50,000",
-      total: "₦501,500",
-      guestName: "Chinedu Chinedu",
-      guestPhone: "09876543221",
-      hostName: "Paul Ayodamola",
-      hostPhone: "09876543221",
-    },
-  ];
+  // Use actual bookings from user context and filter by host role
+  const allBookings = user?.bookings || [];
+
+  // Filter bookings where the user is the host (you might need to adjust this logic based on your data structure)
+  const hostBookings = allBookings.filter(
+    (booking) =>
+      booking.apartment?.host?.id === user?.id || booking.hostId === user?.id
+  );
 
   const tabs = [
     { key: "myListings", label: "My Listings" },
@@ -129,7 +29,7 @@ export default function HostDashboardPage() {
   ];
 
   // Filter bookings based on active tab
-  const filteredBookings = bookings.filter(
+  const filteredBookings = hostBookings.filter(
     (booking) => booking.status === activeTab
   );
 

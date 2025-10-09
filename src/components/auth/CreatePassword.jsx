@@ -5,6 +5,9 @@ import Header from "../Header";
 import PasswordInput from "./PasswordInput";
 import ShowSuccess from "../ShowSuccess";
 import { setPasswordAPI } from "../../services/authApi";
+import { useUser } from "../../hooks/useUser";
+import { useHostProfile } from "../../contexts/HostProfileContext";
+import { useApartmentListing } from "../../hooks/useApartmentListing";
 
 export default function CreatePassword() {
   const [password, setPassword] = useState("");
@@ -15,6 +18,11 @@ export default function CreatePassword() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Get user context functions
+  const { login } = useUser();
+  const { clearHostProfileData } = useHostProfile();
+  const { clearApartments } = useApartmentListing();
 
   // Get user role ONLY from navigation state
   const [userRole, setUserRole] = useState("");
@@ -55,12 +63,36 @@ export default function CreatePassword() {
     setError("");
 
     try {
+      // Clear previous user context first
+      localStorage.clear();
+      clearHostProfileData();
+      clearApartments();
+
+      console.log("🔄 Calling setPasswordAPI...");
+
       // Call the set password API
       const result = await setPasswordAPI(password);
 
-      console.log("Password set successfully:", result);
-      console.log("User role for redirection:", userRole);
-      setIsSuccessOpen(true);
+      console.log("🔍 FULL API RESPONSE:", result);
+      console.log("🔍 User data:", result?.user);
+      console.log("🔍 Access token:", result?.accessToken);
+
+      // Check what we actually received
+      if (result?.user && result?.accessToken) {
+        console.log("✅ Logging in user automatically");
+        login(result.user, result.accessToken);
+
+        // ✅ Use "token" instead of "authToken" to match apiRequest expectation
+        localStorage.setItem("token", result.accessToken);
+        setIsSuccessOpen(true);
+      } else {
+        console.log("❌ No user data received from setPasswordAPI");
+        console.log("❌ API returned:", result);
+
+        // If no user data, we might need to redirect to login
+        // But let's check if we can proceed anyway
+        setIsSuccessOpen(true);
+      }
     } catch (err) {
       console.error("Error setting password:", err);
       setError(err.message || "Failed to create account. Please try again.");
@@ -68,7 +100,6 @@ export default function CreatePassword() {
       setLoading(false);
     }
   };
-
   const handleOkay = () => {
     console.log("Closing success modal, user role:", userRole);
     setIsSuccessOpen(false);

@@ -42,7 +42,7 @@ export default function SignIn() {
       login(result.user, result.accessToken);
 
       // Store token for API requests
-      localStorage.setItem("authToken", result.accessToken);
+      localStorage.setItem("token", result.accessToken);
 
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");

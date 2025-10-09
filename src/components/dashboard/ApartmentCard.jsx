@@ -2,7 +2,10 @@ import { Link } from "react-router-dom";
 
 export default function ApartmentCard({ apt, role = "guest" }) {
   // role can be "guest" or "host"
-  const link = role === "host" ? `/view-listing/` : `/shortlet-overview/`;
+  const link =
+    role === "host"
+      ? `/view-listing/${apt.id || apt._id}`
+      : `/shortlet-overview/${apt.id || apt._id}`;
 
   // Transform the data to match the expected format
   const getPrimaryImage = () => {

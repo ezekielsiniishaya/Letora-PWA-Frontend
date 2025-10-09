@@ -12,9 +12,6 @@ export const getUserProfile = async () => {
 export const updateUserProfile = async (userData) => {
   return apiRequest("/api/users/profile", {
     method: "PUT",
-    body: JSON.stringify(userData),
-    headers: {
-      "Content-Type": "application/json",
-    },
+    body: userData,
   });
 };

@@ -32,10 +32,11 @@ export const kitchenSizeMap = {
 export const apartmentTypeMap = {
   ENTIRE_APARTMENT: "Entire Apartment",
   MINI_FLAT: "Mini Flat",
-  SELF_CON: "Self Contain",
-  ONE_BEDROOM: "1 Bedroom",
-  TWO_BEDROOM: "2 Bedroom",
-  THREE_BEDROOM: "3 Bedroom",
+  SELF_CON_STUDIO: "Self-Con/Studio",
+  BQ_ANNEX: "BQ/Annex",
+  TWO_BEDROOM_APARTMENT: "2 Bedroom",
+  THREE_BEDROOM_APARTMENT: "3 Bedroom",
+  DUPLEX: "Duplex",
 };
 
 // === FACILITIES ===

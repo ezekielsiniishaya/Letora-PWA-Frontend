@@ -42,11 +42,9 @@ export const apiRequest = async (endpoint, options = {}) => {
   }
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({
-        message: "Network error. Please check your connection.",
-      }));
+    const error = await response.json().catch(() => ({
+      message: "Network error. Please check your connection.",
+    }));
 
     // Just use the backend error message directly
     throw new Error(error.message);
@@ -61,6 +59,5 @@ export const logout = () => {
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");
   // Redirect to login page
-  window.location.href = "/login";
+  window.location.href = "/sign-in";
 };
-7

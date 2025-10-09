@@ -26,7 +26,7 @@ export default function Navigation() {
       : []),
     {
       name: "Bookings",
-      paths: ["/bookings"],
+      paths: user?.role === "HOST" ? ["/host-dashboard"] : ["/bookings"],
       icon: "/icons/booking.svg",
       activeIcon: "/icons/booking-purple.svg",
     },

@@ -53,7 +53,7 @@ export default function AgentForm({ files, onFileChange }) {
           <label className="w-full h-[172px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
             <input
               type="file"
-              accept="image/*,.pdf"
+              accept="image/*"
               className="hidden"
               onChange={(e) => onFileChange(e, "utility_bill")}
             />
@@ -99,9 +99,9 @@ export default function AgentForm({ files, onFileChange }) {
               type="file"
               accept=".pdf"
               className="hidden"
-              onChange={(e) => onFileChange(e, "consent_letter")}
+              onChange={(e) => onFileChange(e, "authorization_document")}
             />
-            {files.consent_letter ? (
+            {files.authorization_document ? (
               <>
                 <img
                   src="/icons/pdf.svg"
@@ -109,14 +109,14 @@ export default function AgentForm({ files, onFileChange }) {
                   className="w-[28px] h-[26px] mb-2"
                 />
                 <span className="text-[12px] text-[#333333] truncate max-w-[180px]">
-                  {files.consent_letter.name}
+                  {files.authorization_document.name}
                 </span>
               </>
             ) : (
               <>
                 <img
                   src="/icons/pdf.svg"
-                  alt="Upload Consent Letter"
+                  alt="Upload authorization document"
                   className="w-[28px] h-[26px] mb-2"
                 />
                 <span className="text-center font-medium text-[10px]">

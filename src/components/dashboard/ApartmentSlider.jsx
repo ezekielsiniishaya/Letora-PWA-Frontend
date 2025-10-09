@@ -43,6 +43,11 @@ export default function ApartmentSlider() {
       : title;
   };
 
+  // Navigate to apartment details
+  const handleApartmentClick = (apartmentId) => {
+    navigate(`/shortlet-overview/${apartmentId}`);
+  };
+
   if (hotApartmentsLoading) {
     return (
       <div className="w-full flex justify-center items-center py-8">
@@ -50,12 +55,12 @@ export default function ApartmentSlider() {
       </div>
     );
   }
+
   // Check if apartment is verified based on status
   const isApartmentVerified = (apartment) => {
     return apartment.status === "VERIFIED";
   };
 
-  // In the JSX, replace apartment.isVerified with isApartmentVerified(apartment)
   // Use real data if available, otherwise use empty array
   const slides = hotApartments && hotApartments.length > 0 ? hotApartments : [];
 
@@ -75,7 +80,7 @@ export default function ApartmentSlider() {
         {slides.map((apartment, index) => (
           <SwiperSlide key={apartment.id || index}>
             <div
-              onClick={() => navigate("/shortlet-overview")}
+              onClick={() => handleApartmentClick(apartment.id)}
               className="relative rounded-[5px] overflow-hidden cursor-pointer group"
             >
               <img

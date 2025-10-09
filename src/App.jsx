@@ -188,9 +188,12 @@ function App() {
                   path="/booking-overview"
                   element={<BookingOverviewPage />}
                 />
-                <Route path="/shortlet-review" element={<ShortletReview />} />
                 <Route
-                  path="/shortlet-overview"
+                  path="/shortlet-review/:id?"
+                  element={<ShortletReview />}
+                />
+                <Route
+                  path="/shortlet-overview/:id"
                   element={<ShortletOverviewPage />}
                 />
 
