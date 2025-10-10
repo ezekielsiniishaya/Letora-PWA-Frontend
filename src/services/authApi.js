@@ -100,7 +100,21 @@ export const forgotPasswordAPI = async (email) => {
     body: { email },
   });
 };
+// Verify password reset code
+export const verifyPasswordResetCodeAPI = async (code) => {
+  return apiRequest("/api/auth/verify-reset-code", {
+    method: "POST",
+    body: { code },
+  });
+};
 
+// Resend password reset code
+export const resendPasswordResetCodeAPI = async (email) => {
+  return apiRequest("/api/auth/resend-reset-code", {
+    method: "POST",
+    body: { email },
+  });
+};
 // Reset password with token
 export const resetPasswordAPI = async (token, newPassword) => {
   return apiRequest("/api/auth/reset-password", {

@@ -263,19 +263,20 @@ export const ApartmentDisplay = ({
               </p>
 
               {/* Rating and likes section */}
-              {/* Rating and likes section */}
-              <div className="flex items-center mt-2 gap-1 md:mt-4 md:gap-2">
-                <div className="flex -space-x-2 md:-space-x-3">
-                  <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#8B44FF] md:w-[36.62px] md:h-[36.62px]" />
-                  <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#E00E9A] md:w-[36.62px] md:h-[36.62px]" />
-                  <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#FF4444] md:w-[36.62px] md:h-[36.62px]" />
-                  <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#70E5FF] md:w-[36.62px] md:h-[36.62px]" />
-                </div>
+              {apartment.totalLikes != null && (
+                <div className="flex items-center mt-2 gap-1 md:mt-4 md:gap-2">
+                  <div className="flex -space-x-2 md:-space-x-3">
+                    <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#8B44FF] md:w-[36.62px] md:h-[36.62px]" />
+                    <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#E00E9A] md:w-[36.62px] md:h-[36.62px]" />
+                    <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#FF4444] md:w-[36.62px] md:h-[36.62px]" />
+                    <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#70E5FF] md:w-[36.62px] md:h-[36.62px]" />
+                  </div>
 
-                <span className="text-[12px] font-medium text-[#333333] md:text-[20px]">
-                  {apartment.totalLikes?.toString()}+ Liked this place
-                </span>
-              </div>
+                  <span className="text-[12px] font-medium text-[#333333] md:text-[20px]">
+                    {apartment.totalLikes?.toString()}+ Liked this place
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col items-end">

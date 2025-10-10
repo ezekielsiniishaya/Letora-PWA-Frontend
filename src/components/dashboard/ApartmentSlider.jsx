@@ -1,23 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { Autoplay } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
 import { useApartmentListing } from "../../hooks/useApartmentListing";
+import { toggleFavoriteAPI } from "../../services/apartmentApi";
+import { useUser } from "../../hooks/useUser"; // Import user hook to check favorites
 
 export default function ApartmentSlider() {
   const { hotApartments, hotApartmentsLoading } = useApartmentListing();
+  const { user, refreshUser } = useUser(); // Get user to check their favorites
   const navigate = useNavigate();
 
-  // State to track which slides are favorited
   const [favorites, setFavorites] = useState({});
+  const [loadingStates, setLoadingStates] = useState({});
 
-  const toggleFavorite = (index, e) => {
-    e.stopPropagation(); // Prevent navigating when clicking heart
-    setFavorites((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
+  // Initialize favorites from user's favorite apartments
+  useEffect(() => {
+    if (hotApartments && user) {
+      const initialFavorites = {};
+      hotApartments.forEach((apartment) => {
+        // Check if this apartment is in user's favorites
+        const isFavorited = user.favorites?.some(
+          (fav) => fav.apartmentId === apartment.id
+        );
+        initialFavorites[apartment.id] = isFavorited || false;
+      });
+      setFavorites(initialFavorites);
+    }
+  }, [hotApartments, user]);
+
+  const toggleFavorite = async (apartmentId, e) => {
+    e.stopPropagation();
+
+    setLoadingStates((prev) => ({ ...prev, [apartmentId]: true }));
+
+    try {
+      const response = await toggleFavoriteAPI(apartmentId);
+
+      if (response.success) {
+        // Update local state with the actual API response
+        setFavorites((prev) => ({
+          ...prev,
+          [apartmentId]: response.isFavorited,
+        }));
+      }
+      // Refresh favorites data
+      await refreshUser();
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [apartmentId]: false }));
+    }
   };
 
   // Get primary image for apartment
@@ -61,7 +95,6 @@ export default function ApartmentSlider() {
     return apartment.status === "VERIFIED";
   };
 
-  // Use real data if available, otherwise use empty array
   const slides = hotApartments && hotApartments.length > 0 ? hotApartments : [];
 
   return (
@@ -77,8 +110,8 @@ export default function ApartmentSlider() {
           1024: { slidesPerView: 3.2 },
         }}
       >
-        {slides.map((apartment, index) => (
-          <SwiperSlide key={apartment.id || index}>
+        {slides.map((apartment) => (
+          <SwiperSlide key={apartment.id}>
             <div
               onClick={() => handleApartmentClick(apartment.id)}
               className="relative rounded-[5px] overflow-hidden cursor-pointer group"
@@ -125,18 +158,23 @@ export default function ApartmentSlider() {
 
               {/* Favorite (heart) button */}
               <button
-                className="absolute top-3 right-3 w-[19.82px] h-[19.82px] bg-white rounded-full px-1 flex items-center justify-center"
-                onClick={(e) => toggleFavorite(index, e)}
+                className="absolute top-3 right-3 w-[19.82px] h-[19.82px] bg-white rounded-full px-1 flex items-center justify-center disabled:opacity-50"
+                onClick={(e) => toggleFavorite(apartment.id, e)}
+                disabled={loadingStates[apartment.id]}
               >
-                <img
-                  src={
-                    favorites[index]
-                      ? "/icons/heart-purple.svg"
-                      : "/icons/heart-gray.svg"
-                  }
-                  alt="heart"
-                  className="w-[13.1px] h-[11.27px]"
-                />
+                {loadingStates[apartment.id] ? (
+                  <div className="w-3 h-3 border-2 border-[#A20BA2] border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <img
+                    src={
+                      favorites[apartment.id]
+                        ? "/icons/heart-purple.svg"
+                        : "/icons/heart-gray.svg"
+                    }
+                    alt="heart"
+                    className="w-[13.1px] h-[11.27px]"
+                  />
+                )}
               </button>
             </div>
           </SwiperSlide>

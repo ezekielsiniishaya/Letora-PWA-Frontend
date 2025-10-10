@@ -1,37 +1,52 @@
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../hooks/useUser";
+import { useEffect, useState } from "react"; // Add useState import
+
 export default function ApartmentList() {
   const navigate = useNavigate();
-
   const { loading: userLoading, error } = useUser();
+  const [loadingStates, setLoadingStates] = useState({}); // Add loading states for each apartment
 
   const apartmentsLoading = userLoading;
-  const {
-    getUserFavorites,
-    addToFavorites,
-    removeFromFavorites,
-    refreshFavorites,
-  } = useUser();
+  const { getUserFavorites, addToFavorites, removeFromFavorites, refreshUser } =
+    useUser();
   const userFavorites = getUserFavorites();
   const favoriteApartments = userFavorites.map((fav) => fav.apartment);
+
+  // Refresh favorites when component mounts - only once
+  useEffect(() => {
+    refreshUser();
+  }, []); // Add empty dependency array
+
   const toggleFavorite = async (apartmentId, e) => {
     e.stopPropagation();
 
-    if (isFavorited(apartmentId)) {
-      // Call API to remove from favorites
-      await removeFromFavorites(apartmentId);
-    } else {
-      // Call API to add to favorites
-      await addToFavorites(apartmentId);
-    }
+    // Set loading state for this specific apartment
+    setLoadingStates((prev) => ({ ...prev, [apartmentId]: true }));
 
-    // Refresh favorites data
-    refreshFavorites();
+    try {
+      if (isFavorited(apartmentId)) {
+        // Call API to remove from favorites
+        await removeFromFavorites(apartmentId);
+      } else {
+        // Call API to add to favorites
+        await addToFavorites(apartmentId);
+      }
+
+      // Refresh favorites data
+      await refreshUser();
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    } finally {
+      // Clear loading state for this apartment
+      setLoadingStates((prev) => ({ ...prev, [apartmentId]: false }));
+    }
   };
 
   const isFavorited = (apartmentId) => {
     return userFavorites.some((fav) => fav.apartmentId === apartmentId);
   };
+
   // Helper function to get primary image
   const getPrimaryImage = (apartment) => {
     if (!apartment?.images) return "/images/apartment-dashboard.png";
@@ -75,8 +90,6 @@ export default function ApartmentList() {
 
   return (
     <div className="bg-[#F9F9F9] min-h-screen">
-      {/* Top Nav */}
-
       {/* Apartments list */}
       <div className="w-full space-y-[10px] px-[21px] pb-[100px]">
         {favoriteApartments.length > 0 ? (
@@ -120,20 +133,25 @@ export default function ApartmentList() {
                 </div>
               </div>
 
-              {/* Favorite (heart) button */}
+              {/* Favorite (heart) button with loading indicator */}
               <button
-                className="absolute top-3 right-3 w-[28.39px] h-[28.39px] bg-white rounded-full flex items-center justify-center"
+                className="absolute top-3 right-3 w-[28.39px] h-[28.39px] bg-white rounded-full flex items-center justify-center disabled:opacity-50"
                 onClick={(e) => toggleFavorite(apartment.id, e)}
+                disabled={loadingStates[apartment.id]}
               >
-                <img
-                  src={
-                    isFavorited(apartment.id)
-                      ? "/icons/heart-purple.svg"
-                      : "/icons/heart-gray.svg"
-                  }
-                  alt="heart"
-                  className="w-[18.77px] h-[16.15px]"
-                />
+                {loadingStates[apartment.id] ? (
+                  <div className="w-4 h-4 border-2 border-[#A20BA2] border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <img
+                    src={
+                      isFavorited(apartment.id)
+                        ? "/icons/heart-purple.svg"
+                        : "/icons/heart-gray.svg"
+                    }
+                    alt="heart"
+                    className="w-[18.77px] h-[16.15px]"
+                  />
+                )}
               </button>
             </div>
           ))

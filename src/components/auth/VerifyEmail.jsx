@@ -7,7 +7,7 @@ import {
   resendVerificationEmailAPI,
 } from "../../services/authApi.js";
 
-export default function VerifyEmail() {
+export default function VerifyPassswordEmail() {
   const [code, setCode] = useState(["", "", "", "", ""]);
   const [resendTimer, setResendTimer] = useState(120);
   const [loading, setLoading] = useState(false);

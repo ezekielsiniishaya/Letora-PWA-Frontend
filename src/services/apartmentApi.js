@@ -136,3 +136,37 @@ export const createCompleteApartmentWithProgress = async (
     xhr.send(formData);
   });
 };
+
+// Update banking information
+export const updateBankingInfoAPI = async (bankingInfo) => {
+  return await apiRequest("/api/users/bank/update", {
+    method: "PUT",
+    body: { bankingInfo }, // No need to stringify now
+  });
+};
+
+// Get banking information
+export const getBankingInfoAPI = async () => {
+  return await apiRequest("/api/banking");
+};
+// Delete apartment permanently
+export const deleteApartment = async (apartmentId) => {
+  return await apiRequest(`/apartments/${apartmentId}`, {
+    method: "DELETE",
+  });
+};
+
+// Soft delete apartment (mark as not listed)
+export const softDeleteApartmentAPI = async (apartmentId) => {
+  return await apiRequest(`/apartments/${apartmentId}/soft-delete`, {
+    method: "PATCH",
+  });
+};
+
+// Add to your apartmentApi.js
+export const toggleFavoriteAPI = async (apartmentId) => {
+  return await apiRequest(`/apartments/${apartmentId}/favorite`, {
+    method: "POST",
+    body: { apartmentId },
+  });
+};

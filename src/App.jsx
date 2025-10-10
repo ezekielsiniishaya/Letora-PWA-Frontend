@@ -61,6 +61,7 @@ import HostNotificationsPage from "./pages/HostDashboard/HostNotificationsPage";
 import GuestEmptyState from "./components/dashboard/GuestEmptyState";
 import HostEmptyState from "./components/dashboard/HostEmptyState";
 import GuestHomepage from "./components/dashboard/GuestHomepage";
+import VerifyPasswordEmail from "./components/auth/VerifyPasswordEmail";
 
 function App() {
   return (
@@ -77,7 +78,14 @@ function App() {
                 <Route path="/choose-type" element={<ChooseType />} />
                 <Route path="/sign-in" element={<GeneralSignIn />} />
                 <Route path="/sign-up" element={<SignUpForm />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route
+                  path="/verify-password-email"
+                  element={<VerifyPasswordEmail />}
+                />
+                <Route
+                  path="/verify-password-email"
+                  element={<VerifyPasswordEmail />}
+                />
                 <Route path="/create-password" element={<CreatePassword />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
@@ -101,7 +109,10 @@ function App() {
                 <Route path="/host-homepage" element={<HostHomepage />} />
                 <Route path="/host-dashboard" element={<HostDashboard />} />
                 <Route path="/confirm-edit" element={<ConfirmEdit />} />
-                <Route path="/view-listing" element={<ViewListing />} />
+                <Route
+                  path="/view-listing/:apartmentId"
+                  element={<ViewListing />}
+                />
                 <Route
                   path="/host-booking-details/:id"
                   element={<HostBookingDetails />}

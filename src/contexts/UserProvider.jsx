@@ -1,7 +1,8 @@
 // contexts/UserProvider.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { UserContext } from "./UserContext";
 import { getUserProfile } from "../services/userApi";
+import { toggleFavoriteAPI } from "../services/apartmentApi"; // Import the toggle favorite API
 
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -57,7 +58,6 @@ const UserProvider = ({ children }) => {
     setError(null);
   };
 
-  // ... rest of your functions remain the same
   const logout = () => {
     setUser(null);
     localStorage.removeItem("authToken");
@@ -68,7 +68,7 @@ const UserProvider = ({ children }) => {
     setUser((prev) => ({ ...prev, ...updatedData }));
   };
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const response = await getUserProfile();
       const userData = response.data || response;
@@ -77,14 +77,79 @@ const UserProvider = ({ children }) => {
       console.error("Error refreshing user:", err);
       setError("Failed to refresh user data");
     }
-  };
+  }, []);
+
+  // Add to favorites function
+  const addToFavorites = useCallback(
+    async (apartmentId) => {
+      try {
+        const response = await toggleFavoriteAPI(apartmentId);
+
+        if (response.success) {
+          // Refresh user data to get updated favorites
+          await refreshUser();
+          return { success: true };
+        } else {
+          throw new Error(response.message || "Failed to add to favorites");
+        }
+      } catch (err) {
+        console.error("Error adding to favorites:", err);
+        setError("Failed to add to favorites");
+        return { success: false, error: err.message };
+      }
+    },
+    [refreshUser]
+  );
+
+  // Remove from favorites function
+  const removeFromFavorites = useCallback(
+    async (apartmentId) => {
+      try {
+        const response = await toggleFavoriteAPI(apartmentId);
+
+        if (response.success) {
+          // Refresh user data to get updated favorites
+          await refreshUser();
+          return { success: true };
+        } else {
+          throw new Error(
+            response.message || "Failed to remove from favorites"
+          );
+        }
+      } catch (err) {
+        console.error("Error removing from favorites:", err);
+        setError("Failed to remove from favorites");
+        return { success: false, error: err.message };
+      }
+    },
+    [refreshUser]
+  );
+
+  // Refresh favorites function (alternative to refreshUser for just favorites)
+  const refreshFavorites = useCallback(async () => {
+    try {
+      const response = await getUserProfile();
+      const userData = response.data || response;
+
+      // Update only favorites in user state
+      setUser((prevUser) => ({
+        ...prevUser,
+        favorites: userData.favorites || [],
+      }));
+
+      return userData.favorites || [];
+    } catch (err) {
+      console.error("Error refreshing favorites:", err);
+      setError("Failed to refresh favorites");
+      return [];
+    }
+  }, []);
 
   // Check if user is authenticated
-
-  const isAuthenticated = () => {
+  const isAuthenticated = useCallback(() => {
     const token = localStorage.getItem("authToken");
-    return !!token && !!user; // Both token and user data must be present
-  };
+    return !!token && !!user;
+  }, [user]);
 
   // Check user role
   const isHost = user?.role === "HOST";
@@ -100,24 +165,24 @@ const UserProvider = ({ children }) => {
   };
 
   // Get user's bookings
-  const getUserBookings = () => {
+  const getUserBookings = useCallback(() => {
     return user?.bookings || [];
-  };
+  }, [user]);
 
   // Get user's favorites
-  const getUserFavorites = () => {
+  const getUserFavorites = useCallback(() => {
     return user?.favorites || [];
-  };
+  }, [user]);
 
   // Get user's apartments (if host)
-  const getUserApartments = () => {
+  const getUserApartments = useCallback(() => {
     return user?.apartments || [];
-  };
+  }, [user]);
 
   // Get user's documents
-  const getUserDocuments = () => {
+  const getUserDocuments = useCallback(() => {
     return user?.documents || [];
-  };
+  }, [user]);
 
   const value = {
     user,
@@ -131,6 +196,9 @@ const UserProvider = ({ children }) => {
     logout,
     updateUser,
     refreshUser,
+    refreshFavorites,
+    addToFavorites,
+    removeFromFavorites,
     getUserLocation,
     getUserBookings,
     getUserFavorites,
