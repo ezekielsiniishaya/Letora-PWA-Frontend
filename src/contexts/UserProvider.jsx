@@ -68,6 +68,7 @@ const UserProvider = ({ children }) => {
     setUser((prev) => ({ ...prev, ...updatedData }));
   };
 
+  // In UserProvider.jsx
   const refreshUser = useCallback(async () => {
     try {
       const response = await getUserProfile();
@@ -77,7 +78,7 @@ const UserProvider = ({ children }) => {
       console.error("Error refreshing user:", err);
       setError("Failed to refresh user data");
     }
-  }, []);
+  }, []); // Add useCallback with empty dependencies
 
   // Add to favorites function
   const addToFavorites = useCallback(

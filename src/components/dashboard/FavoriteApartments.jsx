@@ -16,8 +16,8 @@ export default function ApartmentList() {
   // Refresh favorites when component mounts - only once
   useEffect(() => {
     refreshUser();
-  }, []); // Add empty dependency array
-
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  
   const toggleFavorite = async (apartmentId, e) => {
     e.stopPropagation();
 
