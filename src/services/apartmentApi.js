@@ -3,13 +3,13 @@ import { apiRequest } from "./apiRequest";
 
 // GET endpoints for fetching apartments
 export const getApprovedApartments = async () => {
-  return apiRequest("/apartments/approved", {
+  return apiRequest("/api/apartments/approved", {
     method: "GET",
   });
 };
 
 export const getHotApartments = async () => {
-  return apiRequest("/apartments/hot", {
+  return apiRequest("/api/apartments/hot", {
     method: "GET",
   });
 };
@@ -19,7 +19,7 @@ export const getNearbyApartments = async (state, town) => {
   if (state) params.append("state", state);
   if (town) params.append("town", town);
 
-  return apiRequest(`/apartments/nearby?${params.toString()}`, {
+  return apiRequest(`/api/apartments/nearby?${params.toString()}`, {
     method: "GET",
   });
 };
@@ -39,7 +39,7 @@ export const searchApartments = async (filters = {}) => {
     }
   });
 
-  return apiRequest(`/apartments/search?${params.toString()}`, {
+  return apiRequest(`/api/apartments/search?${params.toString()}`, {
     method: "GET",
   });
 };
@@ -48,7 +48,7 @@ export const searchApartments = async (filters = {}) => {
 
 // Single endpoint to create complete apartment
 export const createCompleteApartment = async (formData) => {
-  return apiRequest("/apartments/create", {
+  return apiRequest("/api/apartments/create", {
     method: "POST",
     body: formData,
   });
@@ -56,19 +56,19 @@ export const createCompleteApartment = async (formData) => {
 
 // Keep existing GET endpoints for viewing/editing
 export const getApartmentById = async (apartmentId) => {
-  return apiRequest(`/apartments/${apartmentId}`, {
+  return apiRequest(`/api/apartments/${apartmentId}`, {
     method: "GET",
   });
 };
 
 export const getHostApartments = async () => {
-  return apiRequest("/apartments/host/list", {
+  return apiRequest("/api/apartments/host/list", {
     method: "GET",
   });
 };
 
 export const updateApartmentStatus = async (apartmentId, status) => {
-  return apiRequest(`/apartments/${apartmentId}/status`, {
+  return apiRequest(`/api/apartments/${apartmentId}/status`, {
     method: "PATCH",
     body: JSON.stringify(status),
     headers: {
@@ -151,21 +151,21 @@ export const getBankingInfoAPI = async () => {
 };
 // Delete apartment permanently
 export const deleteApartment = async (apartmentId) => {
-  return await apiRequest(`/apartments/${apartmentId}`, {
+  return await apiRequest(`/api/apartments/${apartmentId}`, {
     method: "DELETE",
   });
 };
 
 // Soft delete apartment (mark as not listed)
 export const softDeleteApartmentAPI = async (apartmentId) => {
-  return await apiRequest(`/apartments/${apartmentId}/soft-delete`, {
+  return await apiRequest(`/api/apartments/${apartmentId}/soft-delete`, {
     method: "PATCH",
   });
 };
 
 // Add to your apartmentApi.js
 export const toggleFavoriteAPI = async (apartmentId) => {
-  return await apiRequest(`/apartments/${apartmentId}/favorite`, {
+  return await apiRequest(`/api/apartments/${apartmentId}/favorite`, {
     method: "POST",
     body: { apartmentId },
   });
