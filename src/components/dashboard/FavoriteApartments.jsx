@@ -17,7 +17,7 @@ export default function ApartmentList() {
   useEffect(() => {
     refreshUser();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  
+
   const toggleFavorite = async (apartmentId, e) => {
     e.stopPropagation();
 
@@ -108,11 +108,13 @@ export default function ApartmentList() {
               <div className="absolute bottom-0 left-0 mx-1 mb-1 w-[calc(100%-.5rem)] p-3 text-white text-xs bg-black/60 rounded-[5px]">
                 <div className="flex items-center justify-between">
                   <h3 className="flex items-center gap-1 text-[16px] font-medium">
-                    <img
-                      src="/icons/tick-white.svg"
-                      alt="tick"
-                      className="w-4 h-4"
-                    />
+                    {apartment.status === "VERIFIED" && (
+                      <img
+                        src="/icons/tick-white.svg"
+                        alt="Verified"
+                        className="w-4 h-4"
+                      />
+                    )}
                     {apartment.title}
                   </h3>
                   <span className="flex items-center gap-1">

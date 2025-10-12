@@ -3,6 +3,7 @@ import { useState } from "react";
 import PropertyDetails from "../dashboard/PropertyDetails";
 import Facilities from "../dashboard/Facilities";
 import HouseRules from "../dashboard/HouseRules";
+import { useNavigate } from "react-router-dom";
 import {
   parkingSpaceMap,
   guestNumberMap,
@@ -83,13 +84,13 @@ export const ApartmentDisplay = ({
   onEdit,
   status = "draft",
   showLegalDocuments = true,
+  backToHostDashboard = false,
 }) => {
   const [showGallery, setShowGallery] = useState(false);
-
+  const navigate = useNavigate();
   if (!apartment) {
     return <div>Loading apartment details...</div>;
   }
-
   // Destructure apartment data with defaults
   const {
     basicInfo = {},
@@ -173,12 +174,15 @@ export const ApartmentDisplay = ({
       {showActions && (
         <div className="flex items-center mb-[20px] justify-between">
           <button
-            onClick={() => window.history.back()}
+            onClick={() =>
+              backToHostDashboard
+                ? navigate("/host-dashboard")
+                : window.history.back()
+            }
             className="hover:bg-gray-200"
           >
             <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
           </button>
-
           {status === "draft" && onEdit && (
             <button
               onClick={onEdit}
@@ -187,7 +191,6 @@ export const ApartmentDisplay = ({
               Edit
             </button>
           )}
-
           {status === "under_review" && (
             <button className="bg-[#167DDD] text-[12px] font-medium w-[151px] h-[21px] text-white px-4 rounded-full">
               Undergoing Review

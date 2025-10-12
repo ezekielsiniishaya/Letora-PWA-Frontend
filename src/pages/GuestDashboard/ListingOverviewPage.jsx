@@ -3,7 +3,10 @@ import { useState } from "react";
 import ShowSuccess from "../../components/ShowSuccess";
 import { useNavigate } from "react-router-dom";
 import { useApartmentCreation } from "../../hooks/useApartmentCreation";
-import { createCompleteApartment } from "../../services/apartmentApi";
+import {
+  createCompleteApartment,
+  updateCompleteApartment,
+} from "../../services/apartmentApi";
 import { useUser } from "../../hooks/useUser";
 import ApartmentDisplay from "../../components/apartment/ApartmentDisplay";
 
@@ -38,7 +41,8 @@ export default function ListingOverviewPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { apartmentData, clearApartmentData } = useApartmentCreation();
+  const { apartmentData, clearApartmentData, isEditing } =
+    useApartmentCreation();
   const navigate = useNavigate();
   const { user } = useUser();
 
@@ -52,6 +56,7 @@ export default function ListingOverviewPage() {
     securityDeposit = {},
     houseRules = [],
     legalDocuments = [],
+    existingApartmentId = null,
   } = apartmentData;
 
   const handleSubmit = async () => {
@@ -65,39 +70,41 @@ export default function ListingOverviewPage() {
 
     try {
       console.log("🟡 Preparing submission...");
+      console.log("Is editing mode:", isEditing());
+      console.log("Existing apartment ID:", existingApartmentId);
 
-      // 1. Transform apartmentData for backend - use destructured variables
+      // 1. Transform apartmentData for backend - FLAT structure
       const submissionData = {
-        basicInfo: {
-          title: basicInfo.title,
-          description: basicInfo.description,
-          apartmentType: basicInfo.apartmentType,
-          town: basicInfo.town,
-          state: basicInfo.state,
-          address: basicInfo.address,
-          price: pricing.pricePerNight,
-        },
+        // Basic info at ROOT level (not nested under basicInfo)
+        title: basicInfo?.title || "",
+        apartmentType: basicInfo?.apartmentType || "",
+        town: basicInfo?.town || "",
+        state: basicInfo?.state || "",
+        price: pricing?.pricePerNight || 0,
+
+        // Other data as nested objects/arrays
         details: {
-          bedrooms: details.bedrooms,
-          bathrooms: details.bathrooms,
-          parkingSpace: details.parkingSpace,
-          guestNumber: details.guestNumber,
-          electricity: details.electricity,
-          kitchenSize: details.kitchenSize,
-          description: details.description,
+          bedrooms: details?.bedrooms || 0,
+          bathrooms: details?.bathrooms || 0,
+          parkingSpace: details?.parkingSpace || "",
+          guestNumber: details?.guestNumber || "",
+          electricity: details?.electricity || "",
+          kitchenSize: details?.kitchenSize || "",
+          description: details?.description || "",
         },
-        facilities: facilities.map((f) => f.value),
-        houseRules: houseRules.map((r) => r.value),
-        securityDeposit:
-          securityDeposit.amount > 0
-            ? {
-                amount: securityDeposit.amount,
-              }
-            : null,
+        facilities: facilities
+          .map((f) => f?.value || f?.name || "")
+          .filter(Boolean),
+        houseRules: houseRules
+          .map((r) => r?.value || r?.rule || "")
+          .filter(Boolean),
+        securityDeposit: securityDeposit?.amount || 0,
         legalDocuments: legalDocuments?.role
           ? { role: legalDocuments.role }
           : null,
       };
+
+      console.log("📦 Final submission data:", submissionData);
 
       // 🔹 2. Create FormData FIRST
       const formData = new FormData();
@@ -167,10 +174,19 @@ export default function ListingOverviewPage() {
           console.log("📄 document:", val.name, val.size);
       }
 
-      // 6. Call backend API
-      const response = await createCompleteApartment(formData);
+      let response;
+
+      // 🔹 6. Check if we're updating an existing apartment or creating a new one
+      if (isEditing() && existingApartmentId) {
+        console.log("🔄 Updating existing apartment:", existingApartmentId);
+        response = await updateCompleteApartment(existingApartmentId, formData);
+      } else {
+        console.log("🆕 Creating new apartment");
+        response = await createCompleteApartment(formData);
+      }
+
       if (response.success) {
-        console.log("🟢 Apartment created successfully:", response.apartment);
+        console.log("🟢 Apartment operation successful:", response.apartment);
         clearApartmentData();
         setShowSuccess(true);
 
@@ -178,10 +194,11 @@ export default function ListingOverviewPage() {
         navigate("/shortlet-review", {
           state: {
             apartment: response.apartment,
+            isUpdate: isEditing(), // Pass whether this was an update
           },
         });
       } else {
-        throw new Error(response.error || "Failed to create apartment");
+        throw new Error(response.error || "Failed to process apartment");
       }
     } catch (err) {
       console.error("🔴 Submission failed:", err);
@@ -250,15 +267,29 @@ export default function ListingOverviewPage() {
             : "bg-gray-400 cursor-not-allowed"
         }`}
       >
-        {loading ? "Submitting..." : "Submit"}
+        {loading
+          ? isEditing()
+            ? "Updating..."
+            : "Submitting..."
+          : isEditing()
+          ? "Update Listing"
+          : "Submit Listing"}
       </button>
 
       {/* Success Modal */}
       {showSuccess && (
         <ShowSuccess
           image="/icons/document.png"
-          heading="Listing Submitted for Review"
-          message="Letora will now run standard checks to verify your identity and listing details. You'll be notified once it's approved."
+          heading={
+            isEditing()
+              ? "Listing Updated Successfully"
+              : "Listing Submitted for Review"
+          }
+          message={
+            isEditing()
+              ? "Your apartment listing has been updated successfully."
+              : "Letora will now run standard checks to verify your identity and listing details. You'll be notified once it's approved."
+          }
           buttonText="Done"
           onClose={() => {
             setShowSuccess(false);

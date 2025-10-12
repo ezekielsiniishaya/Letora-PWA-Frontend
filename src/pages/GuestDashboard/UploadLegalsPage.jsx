@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Button from "../../components/Button";
 import Dropdown from "../../components/dashboard/Dropdown";
 import LandlordForm from "./LandlordForm";
@@ -14,6 +14,8 @@ export default function UploadLegalsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const hasHydrated = useRef(false);
 
   const { apartmentData, updateLegalDocuments } = useApartmentCreation();
 
@@ -26,34 +28,95 @@ export default function UploadLegalsPage() {
     []
   );
 
-  // 🔹 Hydrate from context/localStorage
-  const hydrateFromContext = useCallback(() => {
-    if (
-      apartmentData.legalDocuments &&
-      apartmentData.legalDocuments.role &&
-      apartmentData.legalDocuments.documents
-    ) {
-      const foundRole = hostTypeOptions.find(
-        (opt) => opt.value === apartmentData.legalDocuments.role
-      );
-      if (foundRole) setSelectedRole(foundRole);
+  // 🔹 FIXED: Proper hydration without circular dependencies
+  const hydrateFromState = useCallback(() => {
+    if (hasHydrated.current) return;
 
-      // Restore files object
-      const restoredFiles = {};
-      apartmentData.legalDocuments.documents.forEach((doc) => {
-        restoredFiles[doc.documentType.toLowerCase()] = {
+    console.log("=== HYDRATION START ===");
+    console.log("Navigation state:", location.state);
+    console.log("Apartment legalDocuments:", apartmentData.legalDocuments);
+
+    let roleToSet = null;
+    let filesToSet = {};
+
+    // Priority 1: Navigation state
+    if (location.state?.role) {
+      roleToSet = hostTypeOptions.find(
+        (opt) => opt.value === location.state.role
+      );
+      console.log("Role from navigation:", roleToSet);
+    }
+
+    if (location.state?.documents) {
+      location.state.documents.forEach((doc) => {
+        const fieldName = doc.documentType.toLowerCase();
+        filesToSet[fieldName] = {
           name: doc.name,
-          data: doc.data, // base64 string
+          data: doc.data,
           type: doc.type,
         };
       });
-      setFiles(restoredFiles);
+      console.log("Files from navigation:", filesToSet);
     }
-  }, [apartmentData.legalDocuments, hostTypeOptions]);
+
+    // Priority 2: Extract from apartment legalDocuments
+    if (!roleToSet && apartmentData.legalDocuments) {
+      // Get role from the legalDocuments object or first document
+      const documentRole =
+        apartmentData.legalDocuments.role ||
+        apartmentData.legalDocuments.documents?.[0]?.role;
+
+      roleToSet = hostTypeOptions.find((opt) => opt.value === documentRole);
+      console.log("Role from legalDocuments:", roleToSet);
+
+      // Restore files from legalDocuments
+      if (apartmentData.legalDocuments.documents) {
+        apartmentData.legalDocuments.documents.forEach((doc) => {
+          const fieldName = doc.documentType.toLowerCase();
+          filesToSet[fieldName] = {
+            name: doc.name,
+            data: doc.data || doc.url,
+            type: doc.type || "application/pdf",
+          };
+        });
+        console.log("Files from legalDocuments:", filesToSet);
+      }
+    }
+
+    // Apply the hydrated state
+    if (roleToSet) {
+      setSelectedRole(roleToSet);
+    }
+    if (Object.keys(filesToSet).length > 0) {
+      setFiles(filesToSet);
+    }
+
+    hasHydrated.current = true;
+    console.log("=== HYDRATION COMPLETE ===");
+  }, [location.state, apartmentData.legalDocuments, hostTypeOptions]);
 
   useEffect(() => {
-    hydrateFromContext();
-  }, [hydrateFromContext]);
+    console.log("Running hydration...");
+    hydrateFromState();
+  }, [hydrateFromState]);
+
+  // Reset hydration when legal documents change
+  useEffect(() => {
+    hasHydrated.current = false;
+    console.log("Legal documents changed, resetting hydration");
+  }, [
+    apartmentData.legalDocuments?.documents?.length,
+    apartmentData.legalDocuments?.role,
+  ]);
+
+  // Debug useEffect
+  useEffect(() => {
+    console.log("Selected role updated:", selectedRole);
+  }, [selectedRole]);
+
+  useEffect(() => {
+    console.log("Files updated:", files);
+  }, [files]);
 
   const handleFileChange = async (e, field) => {
     const file = e.target.files[0];
@@ -64,6 +127,7 @@ export default function UploadLegalsPage() {
       ...prev,
       [field]: { name: file.name, data: base64, type: file.type },
     }));
+    setError(""); // Clear error when file is selected
   };
 
   const fileToBase64 = (file) => {
@@ -76,7 +140,7 @@ export default function UploadLegalsPage() {
   };
 
   const handleRoleSelect = (role) => {
-    // Only clear files if role changes
+    console.log("Role selected:", role);
     if (selectedRole?.value !== role.value) {
       setSelectedRole(role);
       setFiles({});
@@ -156,6 +220,7 @@ export default function UploadLegalsPage() {
         name: file.name,
         type: file.type,
         data: file.data, // base64 encoded string
+        role: selectedRole.value, // Make sure role is included
       }));
 
       // Save role + documents to context
@@ -233,6 +298,7 @@ export default function UploadLegalsPage() {
               {error}
             </div>
           )}
+
           {/* Next Button */}
           {selectedRole && (
             <div className="pt-[50px] pb-20">

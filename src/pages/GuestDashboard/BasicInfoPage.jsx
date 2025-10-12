@@ -1,47 +1,43 @@
 // pages/BasicInfoPage.jsx
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import StateDropdown from "../../components/auth/StateDropDown";
 import Dropdown from "../../components/dashboard/Dropdown";
 import { useApartmentCreation } from "../../hooks/useApartmentCreation";
+import { getApartmentById } from "../../services/apartmentApi";
+import { apartmentTypeMap } from "../../components/utils/mapping";
 
-// Move maps outside the component to make them stable
-const apartmentTypeMap = {
-  "Self-Con/Studio": "SELF_CON_STUDIO",
-  "Mini Flat": "MINI_FLAT",
-  "2-bedroom Apartment": "TWO_BEDROOM_APARTMENT",
-  "3-bedroom Apartment": "THREE_BEDROOM_APARTMENT",
-  "Entire Apartment": "ENTIRE_APARTMENT",
-  "BQ/Annex": "BQ_ANNEX",
-  Duplex: "DUPLEX",
-};
+// Create reverse mapping for display - FIXED VERSION
+const reverseApartmentTypeMap = Object.entries(apartmentTypeMap).reduce(
+  (acc, [enumKey, displayValue]) => {
+    acc[enumKey] = displayValue; // Map enum key to display value
+    return acc;
+  },
+  {}
+);
 
-const reverseApartmentTypeMap = {
-  SELF_CON_STUDIO: "Self-Con/Studio",
-  MINI_FLAT: "Mini Flat",
-  TWO_BEDROOM_APARTMENT: "2-bedroom Apartment",
-  THREE_BEDROOM_APARTMENT: "3-bedroom Apartment",
-  ENTIRE_APARTMENT: "Entire Apartment",
-  BQ_ANNEX: "BQ/Annex",
-  DUPLEX: "Duplex",
-};
-
-const apartmentOptions = [
-  { label: "Self-Con/Studio", value: "Self-Con/Studio" },
-  { label: "Mini Flat", value: "Mini Flat" },
-  { label: "2-bedroom Apartment", value: "2-bedroom Apartment" },
-  { label: "3-bedroom Apartment", value: "3-bedroom Apartment" },
-  { label: "Entire Apartment", value: "Entire Apartment" },
-  { label: "BQ/Annex", value: "BQ/Annex" },
-  { label: "Duplex", value: "Duplex" },
-];
+// Create options for dropdown using the centralized mapping
+const apartmentOptions = Object.values(apartmentTypeMap).map((value) => ({
+  label: value,
+  value: value,
+}));
 
 export default function BasicInfoPage() {
   const navigate = useNavigate();
-  const { apartmentData, updateBasicInfo, setCurrentStep } =
-    useApartmentCreation();
+  const { apartmentId } = useParams();
+  const {
+    apartmentData,
+    updateBasicInfo,
+    setCurrentStep,
+    loadExistingApartment,
+    isEditing,
+  } = useApartmentCreation();
+
   const [openDropdown, setOpenDropdown] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(!!apartmentId);
+  const [hasFetched, setHasFetched] = useState(false);
+  const [error, setError] = useState("");
 
   // Initialize form data from context
   const [formData, setFormData] = useState({
@@ -51,14 +47,92 @@ export default function BasicInfoPage() {
     town: "",
   });
 
+  // Load existing apartment data when ID is present in URL
+  useEffect(() => {
+    const fetchExistingApartment = async () => {
+      if (!apartmentId || hasFetched) return;
+
+      try {
+        setPageLoading(true);
+        setError("");
+        console.log("Fetching apartment with ID:", apartmentId);
+        const response = await getApartmentById(apartmentId);
+        const existingApartment = response.data;
+        console.log("Fetched apartment:", existingApartment);
+        console.log(
+          "Apartment type from API:",
+          existingApartment.apartmentType
+        );
+        console.log(
+          "Reverse mapping result:",
+          reverseApartmentTypeMap[existingApartment.apartmentType]
+        );
+
+        // Transform API data to match context structure
+        const transformedApartment = {
+          basicInfo: {
+            title: existingApartment.title,
+            apartmentType: existingApartment.apartmentType, // Keep as enum for context
+            state: existingApartment.state,
+            town: existingApartment.town,
+          },
+          details: {
+            bedrooms: existingApartment.details?.bedrooms,
+            bathrooms: existingApartment.details?.bathrooms,
+            electricity: existingApartment.details?.electricity,
+            guestNumber: existingApartment.details?.guestNumber,
+            parkingSpace: existingApartment.details?.parkingSpace,
+            kitchenSize: existingApartment.details?.kitchenSize,
+            description: existingApartment.details?.description,
+          },
+          facilities:
+            existingApartment.facilities?.map((facility) => ({
+              value: facility.name,
+            })) || [],
+          houseRules:
+            existingApartment.houseRules?.map((rule) => ({
+              value: rule.rule,
+            })) || [],
+          images: existingApartment.images || [],
+          pricing: {
+            pricePerNight: existingApartment.price,
+          },
+          securityDeposit: existingApartment.securityDeposit || {},
+          legalDocuments: {
+            role: existingApartment.documents?.[0]?.role || "",
+            documents: existingApartment.documents || [],
+          },
+        };
+
+        // Load the existing apartment into context with editing mode
+        loadExistingApartment(apartmentId, transformedApartment);
+        setHasFetched(true);
+      } catch (error) {
+        console.error("Error loading apartment:", error);
+        setError(
+          error.response?.data?.message ||
+            error.message ||
+            "Failed to load apartment data. Please try again."
+        );
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    fetchExistingApartment();
+  }, [apartmentId, hasFetched, loadExistingApartment]);
+
   // Load data from context when component mounts or context changes
   useEffect(() => {
     if (apartmentData.basicInfo) {
+      console.log("Context apartmentData:", apartmentData.basicInfo);
+
       // Convert backend enum to frontend display value for apartmentType
       const frontendApartmentType = apartmentData.basicInfo.apartmentType
-        ? reverseApartmentTypeMap[apartmentData.basicInfo.apartmentType] ||
-          apartmentData.basicInfo.apartmentType
+        ? reverseApartmentTypeMap[apartmentData.basicInfo.apartmentType] || ""
         : "";
+
+      console.log("Converted apartment type:", frontendApartmentType);
 
       setFormData({
         title: apartmentData.basicInfo.title || "",
@@ -71,12 +145,13 @@ export default function BasicInfoPage() {
 
   // Get current selected apartment type for dropdown
   const currentApartmentType = useMemo(() => {
+    console.log("Current form apartment type:", formData.apartmentType);
     if (!formData.apartmentType) return null;
-    return (
-      apartmentOptions.find(
-        (option) => option.value === formData.apartmentType
-      ) || null
+    const found = apartmentOptions.find(
+      (option) => option.value === formData.apartmentType
     );
+    console.log("Found dropdown option:", found);
+    return found || null;
   }, [formData.apartmentType]);
 
   const handleInputChange = (field, value) => {
@@ -84,13 +159,17 @@ export default function BasicInfoPage() {
       ...prev,
       [field]: value,
     }));
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
   const handleApartmentTypeSelect = (selectedOption) => {
+    console.log("Apartment type selected:", selectedOption);
     handleInputChange("apartmentType", selectedOption?.value || "");
   };
 
   const handleStateChange = (value) => {
+    console.log("State selected:", value);
     handleInputChange("state", value);
     // Reset town when state changes
     handleInputChange("town", "");
@@ -99,27 +178,48 @@ export default function BasicInfoPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (
-      !formData.title ||
-      !formData.apartmentType ||
-      !formData.state ||
-      !formData.town
-    ) {
-      alert("Please fill in all required fields");
+    // Debug: Check current form values
+    console.log("Form data before validation:", formData);
+    console.log("Required fields check:", {
+      title: !!formData.title,
+      apartmentType: !!formData.apartmentType,
+      state: !!formData.state,
+      town: !!formData.town,
+    });
+
+    // Enhanced validation with better error messages
+    const missingFields = [];
+    if (!formData.title?.trim()) missingFields.push("Listing Title");
+    if (!formData.apartmentType?.trim()) missingFields.push("Apartment Type");
+    if (!formData.state?.trim()) missingFields.push("State");
+    if (!formData.town?.trim()) missingFields.push("Town");
+
+    if (missingFields.length > 0) {
+      setError(
+        `Please fill in the following required fields: ${missingFields.join(
+          ", "
+        )}`
+      );
       return;
     }
 
     setLoading(true);
+    setError("");
 
     try {
-      // Convert frontend values to backend enum values
+      // Convert frontend display value to backend enum value
+      const backendApartmentType =
+        Object.keys(apartmentTypeMap).find(
+          (key) => apartmentTypeMap[key] === formData.apartmentType
+        ) || formData.apartmentType;
+
+      console.log("Converted backend apartment type:", backendApartmentType);
+
       const backendData = {
-        title: formData.title,
-        apartmentType:
-          apartmentTypeMap[formData.apartmentType] || formData.apartmentType,
-        state: formData.state,
-        town: formData.town,
+        title: formData.title.trim(),
+        apartmentType: backendApartmentType,
+        state: formData.state.trim(),
+        town: formData.town.trim(),
       };
 
       console.log("Saving basic info:", backendData);
@@ -134,17 +234,56 @@ export default function BasicInfoPage() {
       navigate("/listing-apartment-details");
     } catch (error) {
       console.error("Error saving basic info:", error);
-      alert("Failed to save information. Please try again.");
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to save information. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Debug logging
-  useEffect(() => {
-    console.log("Current formData:", formData);
-    console.log("Context apartmentData:", apartmentData.basicInfo);
-  }, [formData, apartmentData.basicInfo]);
+  // Show loading while fetching apartment data
+  if (pageLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F9F9F9] px-[20px] items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A20BA2] mx-auto"></div>
+          <p className="mt-4 text-[#666666]">Loading apartment data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if failed to load apartment
+  if (error && apartmentId && !hasFetched) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F9F9F9] px-[20px] items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center"></div>
+          <h2 className="text-lg font-semibold text-red-600 mb-2">
+            Unable to Load Apartment
+          </h2>
+          <p className="text-red-500 mb-4">{error}</p>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-[#A20BA2] text-white px-4 py-2 rounded-md hover:bg-[#8a1a8a]"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F9F9F9] px-[20px]">
@@ -160,11 +299,28 @@ export default function BasicInfoPage() {
 
       {/* Heading */}
       <header className="pt-4">
-        <h1 className="text-[24px] font-medium text-[#0D1321]">Basic Info</h1>
+        <h1 className="text-[24px] font-medium text-[#0D1321]">
+          {isEditing() ? "Edit Basic Info" : "Basic Info"}
+        </h1>
         <p className="text-[#666666] text-[14px]">
-          Let's start with some basic details
+          {isEditing()
+            ? "Update the basic details"
+            : "Let's start with some basic details"}
         </p>
       </header>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md flex items-center">
+          <span>{error}</span>
+          <button
+            onClick={() => setError("")}
+            className="ml-auto text-red-700 hover:text-red-900"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Form */}
       <div className="w-full max-w-sm">
@@ -225,11 +381,11 @@ export default function BasicInfoPage() {
             />
           </div>
 
-          {/* Next button */}
+          {/* Next button - Always shows "Next" */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#A20BA2] text-white text-[16px] font-semibold h-[57px] py-3 rounded-md disabled:opacity-50"
+            className="w-full bg-[#A20BA2] text-white text-[16px] font-semibold h-[57px] py-3 rounded-md disabled:opacity-50 hover:bg-[#8a1a8a] transition-colors"
           >
             {loading ? "Saving..." : "Next"}
           </button>

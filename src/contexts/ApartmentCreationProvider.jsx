@@ -15,7 +15,12 @@ const getInitialApartmentData = () => {
         pricing: {},
         securityDeposit: {},
         houseRules: [],
-        legalDocuments: [],
+        legalDocuments: {
+          role: "",
+          documents: [],
+        },
+        isEditing: false,
+        existingApartmentId: null,
       };
 };
 
@@ -28,7 +33,7 @@ const ApartmentCreationProvider = ({ children }) => {
   useEffect(() => {
     try {
       // Create a copy without images to prevent localStorage quota issues
-      const { ...dataWithoutImages } = apartmentData;
+      const { images: _images, ...dataWithoutImages } = apartmentData;
       localStorage.setItem("apartmentDraft", JSON.stringify(dataWithoutImages));
     } catch (error) {
       console.error("Error saving to localStorage:", error);
@@ -114,11 +119,30 @@ const ApartmentCreationProvider = ({ children }) => {
       pricing: {},
       securityDeposit: {},
       houseRules: [],
-      legalDocuments: [],
+      legalDocuments: {
+        role: "",
+        documents: [],
+      },
+      isEditing: false,
+      existingApartmentId: null,
     });
     localStorage.removeItem("apartmentDraft");
     setCurrentStep(1);
   };
+
+  // Helper method to enable editing mode and load existing apartment
+  const loadExistingApartment = (apartmentId, apartmentData) => {
+    setApartmentData({
+      ...apartmentData,
+      isEditing: true,
+      existingApartmentId: apartmentId,
+    });
+    // Clear any existing draft since we're editing an existing apartment
+    localStorage.removeItem("apartmentDraft");
+  };
+
+  // Helper method to check if we're in editing mode
+  const isEditing = () => apartmentData.isEditing;
 
   const value = {
     apartmentData,
@@ -133,6 +157,8 @@ const ApartmentCreationProvider = ({ children }) => {
     updateHouseRules,
     updateLegalDocuments,
     clearApartmentData,
+    loadExistingApartment,
+    isEditing,
   };
 
   return (

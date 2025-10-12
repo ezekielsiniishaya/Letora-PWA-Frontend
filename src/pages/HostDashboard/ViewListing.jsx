@@ -121,12 +121,9 @@ export default function ViewListing() {
 
   const handleEdit = () => {
     if (apartmentId) {
-      navigate(`/edit-apartment/${apartmentId}`);
-    } else {
-      navigate("/basic-info");
+      navigate(`/basic-info/${apartmentId}`);
     }
   };
-
   const handleSuccessClose = () => {
     setSuccessType(null);
     if (successType === "delete") {

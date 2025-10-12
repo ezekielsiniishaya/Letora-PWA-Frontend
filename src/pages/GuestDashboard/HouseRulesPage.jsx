@@ -7,12 +7,11 @@ export default function HouseRulesPage() {
   const navigate = useNavigate();
   const { apartmentData, updateHouseRules, setCurrentStep } =
     useApartmentCreation();
-  const [selectedRules, setSelectedRules] = useState(
-    apartmentData.houseRules || []
-  );
+
+  const dropdownRef = useRef(null);
+  const [selectedRules, setSelectedRules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const dropdownRef = useRef(null);
 
   const houseRulesOptions = [
     { label: "No Smoking", value: "NO_SMOKING", icon: "/icons/no-smoking.svg" },
@@ -51,6 +50,38 @@ export default function HouseRulesPage() {
     { label: "Kids Allowed", value: "KIDS_ALLOWED", icon: "/icons/kids.svg" },
   ];
 
+  // Make mapping tolerant to different shapes
+  const mapExistingRules = (rules) => {
+    if (!rules || !Array.isArray(rules)) return [];
+
+    return rules.map((rule) => {
+      // Already full rule object (from context)
+      if (rule && rule.label && rule.icon && rule.value) return rule;
+
+      // extract a canonical key we can compare to options
+      const key =
+        (typeof rule === "string" && rule) ||
+        (rule && (rule.value || rule.name)) ||
+        null;
+
+      const full = houseRulesOptions.find((opt) => opt.value === key);
+
+      if (full) return full;
+
+      // fallback to a minimal shape using whatever key we derived
+      return {
+        value: key || (rule && rule.value) || JSON.stringify(rule),
+        label: key || (rule && rule.value) || "Unknown rule",
+        icon: "/icons/default-facility.svg",
+      };
+    });
+  };
+
+  // init and keep in sync with context
+  useEffect(() => {
+    setSelectedRules(mapExistingRules(apartmentData.houseRules));
+  }, [apartmentData.houseRules]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -63,14 +94,15 @@ export default function HouseRulesPage() {
     setError("");
 
     try {
-      // Save to context
       updateHouseRules(selectedRules);
-
-      // Update current step
       setCurrentStep(8);
-
-      // Navigate to next step - NO API CALL!
-      navigate("/upload-legals");
+      // Navigate to next step WITH role and documents data
+      navigate("/upload-legals", {
+        state: {
+          role: apartmentData.legalDocuments?.role, // Pre-existing role if any
+          documents: apartmentData.legalDocuments?.documents, // Pre-existing documents if any
+        },
+      });
     } catch (err) {
       console.error("Error saving house rules:", err);
       setError("An error occurred while saving house rules");
@@ -79,21 +111,18 @@ export default function HouseRulesPage() {
     }
   };
 
-  // Custom Dropdown Component
+  // Dropdown component
   const HouseRulesDropdown = () => {
     const [open, setOpen] = useState(false);
     const [tempRules, setTempRules] = useState(selectedRules);
 
-    // Use useCallback to memoize the function
     const applySelections = useCallback(() => {
       setSelectedRules(tempRules);
       setOpen(false);
     }, [tempRules]);
 
     const toggleDropdown = () => {
-      if (!open) {
-        setTempRules(selectedRules);
-      }
+      if (!open) setTempRules(selectedRules);
       setOpen(!open);
     };
 
@@ -107,20 +136,16 @@ export default function HouseRulesPage() {
       });
     };
 
-    // commit selections when clicking outside
     useEffect(() => {
       const handleClickOutside = (e) => {
         if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-          if (open) {
-            applySelections();
-          }
+          if (open) applySelections();
         }
       };
-
       document.addEventListener("mousedown", handleClickOutside);
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
-    }, [open, applySelections]); // Now include applySelections in dependencies
+    }, [open, applySelections]);
 
     return (
       <div className="relative" ref={dropdownRef}>
@@ -145,6 +170,7 @@ export default function HouseRulesPage() {
             <div className="text-[14px] font-medium ml-8 mt-6 text-black py-2">
               Select Choice
             </div>
+
             {houseRulesOptions.map((rule) => {
               const isSelected = tempRules.some((r) => r.value === rule.value);
               return (
@@ -154,7 +180,14 @@ export default function HouseRulesPage() {
                   onClick={() => handleSelectTemp(rule)}
                 >
                   <div className="flex items-center gap-2">
-                    <img src={rule.icon} alt={rule.label} className="w-5 h-5" />
+                    <img
+                      src={rule.icon}
+                      alt={rule.label}
+                      className="w-5 h-5"
+                      onError={(e) =>
+                        (e.target.src = "/icons/default-facility.svg")
+                      }
+                    />
                     <span className="text-sm text-[#333333]">{rule.label}</span>
                   </div>
 
@@ -173,7 +206,6 @@ export default function HouseRulesPage() {
               );
             })}
 
-            {/* Apply Button inside dropdown - COPIED FROM FACILITIES PAGE */}
             <div className="sticky bottom-0 bg-white border-t p-4">
               <button
                 type="button"
@@ -191,7 +223,6 @@ export default function HouseRulesPage() {
 
   return (
     <div className="w-full min-h-screen px-[20px] bg-[#F9F9F9]">
-      {/* Top bar */}
       <div className="flex justify-between items-center pt-5">
         <button onClick={() => navigate(-1)}>
           <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-4" />
@@ -201,23 +232,19 @@ export default function HouseRulesPage() {
         </span>
       </div>
 
-      {/* Heading */}
       <header className="pt-4">
         <h1 className="text-[24px] font-medium text-[#0D1321]">House Rules</h1>
         <p className="text-[#666666] text-[14px]">Your Apartment, Your Rules</p>
       </header>
 
-      {/* Error Message */}
       {error && (
         <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
         </div>
       )}
 
-      {/* Form */}
       <div className="flex-1 mt-[80px]">
         <form className="space-y-9" onSubmit={handleSubmit}>
-          {/* House Rules Dropdown */}
           <div>
             <label className="block text-sm font-medium text-[#333333] mb-1">
               House Rules <span className="text-red-500">*</span>
@@ -225,30 +252,38 @@ export default function HouseRulesPage() {
             <HouseRulesDropdown />
           </div>
 
-          {/* Selected Rules Display */}
+          {/* Updated Selected Rules Display - Matches Facilities Page */}
           {selectedRules.length > 0 && (
-            <div className="grid grid-cols-2 mt-4 w-full">
-              {selectedRules.map((rule, index) => (
-                <div
-                  key={rule.value}
-                  className={`flex items-center space-x-2 py-3 w-full ${
-                    index % 2 === 1 ? "justify-end" : ""
-                  }`}
-                >
-                  <img
-                    src={rule.icon}
-                    alt={rule.label}
-                    className="w-4 h-4 flex-shrink-0"
-                  />
-                  <span className="text-[11.52px] text-[#505050]">
-                    {rule.label}
-                  </span>
-                </div>
-              ))}
+            <div className="mt-6">
+              <h3 className="text-[16px] font-medium text-[#333333] mb-4">
+                Selected House Rules:
+              </h3>
+              <div className="grid grid-cols-2 gap-x-10 gap-y-3 w-full">
+                {selectedRules.map((rule, index) => (
+                  <div
+                    key={rule.value}
+                    className={`flex items-center space-x-2 p-3 w-full ${
+                      index % 2 === 1 ? "justify-end" : ""
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <img
+                        src={rule.icon}
+                        alt={rule.label}
+                        className="w-4 h-4 flex-shrink-0"
+                        onError={(e) => {
+                          e.target.src = "/icons/default-facility.svg";
+                        }}
+                      />
+                      <span className="text-[11.52px] text-[#505050] whitespace-nowrap">
+                        {rule.label}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
-
-          {/* Next Button */}
           <div className="pt-[70px] pb-20">
             <Button
               text={loading ? "Saving..." : "Next"}

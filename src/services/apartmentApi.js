@@ -170,3 +170,18 @@ export const toggleFavoriteAPI = async (apartmentId) => {
     body: { apartmentId },
   });
 };
+
+// Delete apartment image
+export const deleteApartmentImageAPI = async (imageId) => {
+  return await apiRequest(`/api/apartments/images/${imageId}`, {
+    method: "DELETE",
+  });
+};
+// Update complete apartment with all data (including images and documents)
+export const updateCompleteApartment = async (apartmentId, formData) => {
+  return apiRequest(`/api/apartments/${apartmentId}`, {
+    method: "PUT",
+    body: formData,
+    // Note: Don't set Content-Type header for FormData - let browser set it with boundary
+  });
+};

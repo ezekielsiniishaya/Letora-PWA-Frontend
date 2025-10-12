@@ -1,10 +1,59 @@
-// pages/ListingOverviewPage.jsx - FOR VIEWING CREATED APARTMENTS
+// pages/ListingOverviewPage.jsx - FIXED VERSION
 import { useState, useEffect } from "react";
 import ShowSuccess from "../../components/ShowSuccess";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import ApartmentDisplay from "../../components/apartment/ApartmentDisplay";
 import { useUser } from "../../hooks/useUser";
 import { getApartmentById } from "../../services/apartmentApi";
+
+// Helper function to transform API data to match ApartmentDisplay expectations
+const transformApartmentData = (apiData) => {
+  if (!apiData) return null;
+
+  return {
+    // Basic info
+    basicInfo: {
+      title: apiData.title,
+      apartmentType: apiData.apartmentType,
+      state: apiData.state,
+      town: apiData.town,
+      price: apiData.price,
+    },
+
+    // Details
+    details: apiData.details || {},
+
+    // Facilities - transform from array of objects to array of values
+    facilities: apiData.facilities
+      ? apiData.facilities.map((facility) => ({ value: facility.name }))
+      : [],
+
+    // House rules - transform from array of objects to array of values
+    houseRules: apiData.houseRules
+      ? apiData.houseRules.map((rule) => ({ value: rule.rule }))
+      : [],
+
+    // Images
+    images: apiData.images || [],
+
+    // Security deposit
+    securityDeposit: apiData.securityDeposit || {},
+
+    // Legal documents
+    legalDocuments: {
+      role: apiData.documents?.[0]?.role || "",
+      documents: apiData.documents || [],
+    },
+
+    // Pricing
+    pricing: {
+      pricePerNight: apiData.price,
+    },
+
+    // Include the raw API data for debugging
+    _raw: apiData,
+  };
+};
 
 export default function ListingOverviewPage() {
   const [showSuccess, setShowSuccess] = useState(false);
@@ -14,7 +63,7 @@ export default function ListingOverviewPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { id } = useParams(); // Get apartment ID from URL
+  const { id } = useParams();
   const { user } = useUser();
 
   useEffect(() => {
@@ -25,7 +74,11 @@ export default function ListingOverviewPage() {
         // First try to get from location state (if coming from creation)
         if (location.state?.apartment) {
           console.log("✅ Setting apartment from location state");
-          setApartment(location.state.apartment);
+          const transformedData = transformApartmentData(
+            location.state.apartment
+          );
+          console.log("📦 Transformed apartment data:", transformedData);
+          setApartment(transformedData);
           setLoading(false);
           return;
         }
@@ -35,8 +88,10 @@ export default function ListingOverviewPage() {
           console.log("🔍 Fetching apartment by ID:", id);
           const response = await getApartmentById(id);
           if (response.success) {
-            console.log("✅ Apartment fetched from API:", response.data);
-            setApartment(response.data);
+            console.log("✅ Raw API response:", response.data);
+            const transformedData = transformApartmentData(response.data);
+            console.log("📦 Transformed apartment data:", transformedData);
+            setApartment(transformedData);
           } else {
             console.error("❌ Failed to fetch apartment");
           }
@@ -52,6 +107,17 @@ export default function ListingOverviewPage() {
 
     fetchApartment();
   }, [location.state, id]);
+
+  // Debug: Log the current apartment data
+  useEffect(() => {
+    if (apartment) {
+      console.log("🏠 Current apartment state:", apartment);
+      console.log("🔧 Facilities:", apartment.facilities);
+      console.log("📜 House Rules:", apartment.houseRules);
+      console.log("💰 Pricing:", apartment.pricing);
+      console.log("📄 Documents:", apartment.legalDocuments);
+    }
+  }, [apartment]);
 
   const handleDeleteClick = () => {
     setShowConfirm(true);
@@ -94,8 +160,9 @@ export default function ListingOverviewPage() {
         apartment={apartment}
         user={user}
         showActions={true}
-        status={apartment.isListed ? "under_review" : "draft"}
+        status={"under_review"}
         showLegalDocuments={true}
+        backToHostDashboard={true}
       />
 
       {/* Delete Button */}

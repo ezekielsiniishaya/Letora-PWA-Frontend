@@ -8,13 +8,6 @@ export default function ListingFacilitiesPage() {
   const { apartmentData, updateFacilities, setCurrentStep } =
     useApartmentCreation();
 
-  const [selectedFacilities, setSelectedFacilities] = useState(
-    apartmentData.facilities || []
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const dropdownRef = useRef(null);
-
   const facilitiesOptions = [
     {
       label: "Laundry Service",
@@ -54,6 +47,46 @@ export default function ListingFacilitiesPage() {
     { label: "Gym", value: "GYM", icon: "/icons/gym.svg" },
     { label: "DSTV Netflix", value: "DSTV_NETFLIX", icon: "/icons/dstv.svg" },
   ];
+
+  // Map existing facilities to include full facility data
+  const mapExistingFacilities = (facilities) => {
+    if (!facilities || !Array.isArray(facilities)) return [];
+
+    return facilities.map((facility) => {
+      // If facility already has full data, return it
+      if (facility.label && facility.icon) {
+        return facility;
+      }
+
+      // Otherwise, find the full facility data by value
+      const fullFacility = facilitiesOptions.find(
+        (opt) => opt.value === facility.value || opt.value === facility
+      );
+
+      return (
+        fullFacility || {
+          value: facility.value,
+          label: facility.value,
+          icon: "/icons/default-facility.svg",
+        }
+      );
+    });
+  };
+
+  const [selectedFacilities, setSelectedFacilities] = useState(
+    mapExistingFacilities(apartmentData.facilities)
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const dropdownRef = useRef(null);
+
+  // Update selected facilities when apartmentData changes (for editing mode)
+  useEffect(() => {
+    console.log("Apartment data facilities:", apartmentData.facilities);
+    const mappedFacilities = mapExistingFacilities(apartmentData.facilities);
+    console.log("Mapped facilities:", mappedFacilities);
+    setSelectedFacilities(mappedFacilities);
+  }, [apartmentData.facilities]);
 
   // Custom Dropdown Component
   const FacilityDropdown = () => {
@@ -96,7 +129,7 @@ export default function ListingFacilitiesPage() {
       document.addEventListener("mousedown", handleClickOutside);
       return () =>
         document.removeEventListener("mousedown", handleClickOutside);
-    }, [open, applySelections]); // Now include applySelections in dependencies
+    }, [open, applySelections]);
 
     return (
       <div className="relative" ref={dropdownRef}>
@@ -193,7 +226,7 @@ export default function ListingFacilitiesPage() {
       // Update current step
       setCurrentStep(4);
 
-      // Navigate to next step - NO API CALL!
+      // Navigate to next step
       navigate("/media-upload");
     } catch (err) {
       console.error("Error saving facilities:", err);
@@ -231,7 +264,6 @@ export default function ListingFacilitiesPage() {
           {error}
         </div>
       )}
-
       {/* Form */}
       <div className="flex-1 mt-[80px]">
         <form className="space-y-9" onSubmit={handleSubmit}>
@@ -243,7 +275,7 @@ export default function ListingFacilitiesPage() {
             <FacilityDropdown />
           </div>
 
-          {/* Selected Facilities Display - This will update when selections are applied */}
+          {/* Selected Facilities Display */}
           {selectedFacilities.length > 0 && (
             <div className="mt-6">
               <h3 className="text-[16px] font-medium text-[#333333] mb-4">
@@ -253,7 +285,7 @@ export default function ListingFacilitiesPage() {
                 {selectedFacilities.map((facility, index) => (
                   <div
                     key={facility.value}
-                    className={`flex items-center space-x-2 p-3 w-full bg-white rounded-md border ${
+                    className={`flex items-center space-x-2 p-3 w-full  rounded-md ${
                       index % 2 === 1 ? "justify-end" : ""
                     }`}
                   >
@@ -261,6 +293,9 @@ export default function ListingFacilitiesPage() {
                       src={facility.icon}
                       alt={facility.label}
                       className="w-4 h-4 flex-shrink-0"
+                      onError={(e) => {
+                        e.target.src = "/icons/default-facility.svg";
+                      }}
                     />
                     <span className="text-[11.52px] text-[#505050]">
                       {facility.label}

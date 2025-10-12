@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { useApartmentCreation } from "../../hooks/useApartmentCreation";
+import { deleteApartmentImageAPI } from "../../services/apartmentApi";
 
 export default function MediaUploadPage() {
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null); // Track which image is being deleted
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { apartmentData, updateImages, setCurrentStep } =
@@ -73,9 +75,29 @@ export default function MediaUploadPage() {
     setError("");
   };
 
-  const handleRemove = (index) => {
-    const newImages = images.filter((_, i) => i !== index);
-    updateImages(newImages);
+  const handleRemove = async (index, imageId = null) => {
+    // If it's an existing image from the database (has imageId), delete from backend
+    if (imageId) {
+      setDeleteLoading(imageId);
+      try {
+        await deleteApartmentImageAPI(imageId);
+
+        // Remove from local state after successful deletion
+        const newImages = images.filter((_, i) => i !== index);
+        updateImages(newImages);
+
+        setError("");
+      } catch (err) {
+        console.error("Error deleting image:", err);
+        setError("Failed to delete image. Please try again.");
+      } finally {
+        setDeleteLoading(null);
+      }
+    } else {
+      // If it's a newly uploaded file (no imageId), just remove from local state
+      const newImages = images.filter((_, i) => i !== index);
+      updateImages(newImages);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -98,6 +120,11 @@ export default function MediaUploadPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to check if image is from database (has ID) or newly uploaded
+  const isDatabaseImage = (img) => {
+    return img.id !== undefined;
   };
 
   return (
@@ -161,11 +188,11 @@ export default function MediaUploadPage() {
               <div className="grid grid-cols-3 gap-2">
                 {images.map((img, index) => (
                   <div
-                    key={`${img.name}-${index}`}
+                    key={img.id || `new-${index}`}
                     className="relative w-full h-[100px] rounded-lg overflow-hidden border"
                   >
                     <img
-                      src={img.data}
+                      src={img.data || img.url}
                       alt={`Preview ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -176,11 +203,23 @@ export default function MediaUploadPage() {
                     )}
                     <button
                       type="button"
-                      onClick={() => handleRemove(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                      onClick={() => handleRemove(index, img.id)}
+                      disabled={deleteLoading === img.id}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs disabled:bg-gray-400"
                     >
-                      ×
+                      {deleteLoading === img.id ? (
+                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        "×"
+                      )}
                     </button>
+
+                    {/* Show database indicator */}
+                    {isDatabaseImage(img) && (
+                      <div className="absolute bottom-1 left-1 bg-blue-500 text-white text-[6px] px-1 py-0.5 rounded">
+                        Saved
+                      </div>
+                    )}
                   </div>
                 ))}
 

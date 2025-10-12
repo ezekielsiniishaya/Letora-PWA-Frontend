@@ -169,7 +169,10 @@ function App() {
                 {/* ===== LISTING CREATION FLOW (Shared) ===== */}
 
                 {/* Listing Creation Steps */}
-                <Route path="/basic-info" element={<BasicInfoPage />} />
+                <Route
+                  path="/basic-info/:apartmentId?"
+                  element={<BasicInfoPage />}
+                />
                 <Route
                   path="/listing-apartment-details"
                   element={<ListingApartmentDetails />}
