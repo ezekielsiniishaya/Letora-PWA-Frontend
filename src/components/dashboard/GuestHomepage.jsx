@@ -27,9 +27,11 @@ export default function Dashboard() {
     loading: userLoading,
     isAuthenticated,
     getUserBookings,
+    getUnreadNotificationsCount,
   } = useUser();
 
   console.log("User context:", user); // Debug log to check user data
+  const unreadCount = getUnreadNotificationsCount();
 
   // Get user's actual bookings
   const userBookings = getUserBookings();
@@ -84,16 +86,18 @@ export default function Dashboard() {
             className="w-[43.77px] h-[43.77px] rounded-full object-cover"
           />
 
-          <Link to="/guest-notifications">
+          <Link to="/notifications">
             <div className="relative w-[30px] h-[30px] bg-[#1A1A1A] rounded-full flex items-center justify-center">
               <img
                 src="/icons/notification.svg"
                 alt="Notifications"
                 className="w-[17px] h-[17px] cursor-pointer"
               />
-              <span className="absolute -top-1 -right-2 bg-[#1A1A1A] text-white text-[9px] font-medium rounded-full w-[18px] h-[18px] flex items-center justify-center border">
-                5
-              </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-2 bg-[#1A1A1A] text-white text-[9px] font-medium rounded-full w-[18px] h-[18px] flex items-center justify-center border">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </div>
           </Link>
         </div>

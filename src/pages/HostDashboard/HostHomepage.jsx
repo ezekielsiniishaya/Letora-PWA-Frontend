@@ -39,12 +39,13 @@ export default function Dashboard() {
     loading: userLoading,
     isAuthenticated,
     getUserBookings,
-    // getUserApartments,
+    getUnreadNotificationsCount,
   } = useUser();
 
   // Get user's actual bookings and apartments
   const userBookings = getUserBookings();
   // const userApartments = getUserApartments();
+  const unreadCount = getUnreadNotificationsCount();
 
   // Use first booking or fallback
   const currentBooking = userBookings.length > 0 ? userBookings[0] : null;
@@ -106,16 +107,18 @@ export default function Dashboard() {
                 className="w-[18.67px] h-[18.67px] cursor-pointer"
               />
             </Link>
-            <Link to="/host-notifications">
+            <Link to="/notifications">
               <div className="relative">
                 <img
                   src="/icons/notification.svg"
                   alt="Notifications"
                   className="w-[18.65px] h-[18.65px] cursor-pointer"
                 />
-                <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[16px] h-[16px] flex items-center justify-center shadow">
-                  5
-                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[16px] h-[16px] flex items-center justify-center shadow">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </div>
             </Link>
           </div>

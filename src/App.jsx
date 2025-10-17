@@ -57,7 +57,7 @@ import ChangeBankPage from "./pages/HostDashboard/ChangeBankPage";
 import HostReviews from "./pages/HostDashboard/HostReviews";
 import FaqPage from "./pages/HostDashboard/FaqPage";
 import GuestNotificationsPage from "./pages/GuestDashboard/GuestNotificationsPage";
-import HostNotificationsPage from "./pages/HostDashboard/HostNotificationsPage";
+import NotificationsPage from "./components/dashboard/NotificationsPage";
 import GuestEmptyState from "./components/dashboard/GuestEmptyState";
 import HostEmptyState from "./components/dashboard/HostEmptyState";
 import GuestHomepage from "./components/dashboard/GuestHomepage";
@@ -128,10 +128,7 @@ function App() {
                 />
                 <Route path="/host-reviews" element={<HostReviews />} />
                 <Route path="/faq" element={<FaqPage />} />
-                <Route
-                  path="/host-notifications"
-                  element={<HostNotificationsPage />}
-                />
+                <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/host" element={<HostEmptyState />} />
 
                 {/* ===== GUEST-SPECIFIC ROUTES ===== */}

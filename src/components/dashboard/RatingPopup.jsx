@@ -1,16 +1,34 @@
 import { useState } from "react";
 import ShowSuccess from "../ShowSuccess";
+import { createRating } from "../../services/userApi";
 
-export default function RatingPopup({ onClose }) {
+export default function RatingPopup({ onClose, apartmentId }) {
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+const [error, setError] = useState("");
+const handleRateNow = async () => {
+  if (rating === 0) {
+    setError("Please select a rating");
+    return;
+  }
 
-  const handleRateNow = () => {
-    console.log("Rating:", rating, "Feedback:", feedback);
-    setShowSuccess(true); // show success popup
-  };
-
+  setError("");
+  
+  try {
+    setIsSubmitting(true);
+    const result = await createRating(apartmentId, rating, feedback);
+    
+    if (result.success) {
+      setShowSuccess(true);
+    }
+  } catch (error) {
+    setError(error.message || "Failed to submit rating");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   return (
     <>
       {!showSuccess ? (
@@ -50,22 +68,27 @@ export default function RatingPopup({ onClose }) {
                 placeholder="Add feedback"
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-              ></textarea>
+              ></textarea>  
+              {error && (
+  <p className="text-red-500 text-[12px] mt-2 text-center">{error}</p>
+)}
             </div>
 
             {/* Actions */}
             <div className="flex mt-[20px] justify-between gap-4">
               <button
                 onClick={onClose}
-                className="w-1/2 py-2 border border-gray-300 rounded-[5px] text-gray-600 hover:bg-gray-100"
+                disabled={isSubmitting}
+                className="w-1/2 py-2 border border-gray-300 rounded-[5px] text-gray-600 disabled:opacity-50"
               >
                 Later
               </button>
               <button
                 onClick={handleRateNow}
-                className="w-1/2 py-2 bg-[#A20BA2] text-white rounded-[5px] hover:bg-purple-700"
+                disabled={isSubmitting || rating === 0}
+                className="w-1/2 py-2 bg-[#A20BA2] text-white rounded-[5px] disabled:opacity-50"
               >
-                Rate Now
+                {isSubmitting ? "Submitting..." : "Rate Now"}
               </button>
             </div>
           </div>

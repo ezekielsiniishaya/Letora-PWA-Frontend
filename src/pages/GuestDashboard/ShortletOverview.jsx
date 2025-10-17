@@ -6,6 +6,7 @@ import { getApartmentById } from "../../services/apartmentApi";
 import { Link } from "react-router-dom";
 import Button from "../../components/Button";
 import ButtonWhite from "../../components/ButtonWhite";
+import { requestAvailability } from "../../services/userApi";
 
 export default function ShortletOverviewPage() {
   const { id } = useParams();
@@ -13,6 +14,8 @@ export default function ShortletOverviewPage() {
   const [host, setHost] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [isRequesting, setIsRequesting] = useState(false);
+
 
   useEffect(() => {
     const fetchApartment = async () => {
@@ -101,6 +104,22 @@ export default function ShortletOverviewPage() {
       <div className="text-center mt-10 text-red-500">Apartment not found.</div>
     );
   }
+const handleRequestAvailability = async () => {
+  try {
+    setIsRequesting(true);
+    const res = await requestAvailability(id);
+    
+    if (res.success) {
+      // Show success message
+      alert("Availability request sent to host successfully!");
+    }
+  } catch (error) {
+    console.error("Failed to send availability request:", error);
+    alert(error.message || "Failed to send availability request");
+  } finally {
+    setIsRequesting(false);
+  }
+};
 
   return (
     <div className="bg-white min-h-screen">
@@ -166,9 +185,12 @@ export default function ShortletOverviewPage() {
         </div>
 
         {/* Booking Button */}
-        <Link to="">
-          <ButtonWhite text="Request Availability" className={"mt-20 mb-5"} />
-        </Link>
+      <ButtonWhite 
+  text={isRequesting ? "Sending Request..." : "Request Availability"} 
+  className={"mt-20 mb-5"}
+  onClick={handleRequestAvailability}
+  disabled={isRequesting}
+/>
         <Link to="/id-check">
           <Button
             text={`Book @ ₦${apartment.pricing?.pricePerNight?.toLocaleString()}/Night`}

@@ -234,14 +234,15 @@ export default function MyBooking({
         />
       )}
 
-      {showRating && (
-        <RatingPopup
-          onClose={() => {
-            setShowRating(false);
-            setActionCompleted(true);
-          }}
-        />
-      )}
+   {showRating && (
+  <RatingPopup
+    apartmentId={booking?.apartment?.id}
+    onClose={() => {
+      setShowRating(false);
+      setActionCompleted(true);
+    }}
+  />
+)}
 
       {showHoldSuccess && (
         <ShowSuccess

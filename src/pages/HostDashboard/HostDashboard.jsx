@@ -42,7 +42,7 @@ export default function HostDashboardPage() {
             src="/icons/arrow-left.svg"
             alt="Back"
             className="w-[16.33px] cursor-pointer"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/host-homepage")}
           />
           <span className="font-medium text-[13.2px] text-[#333333]">
             My Dashboard
