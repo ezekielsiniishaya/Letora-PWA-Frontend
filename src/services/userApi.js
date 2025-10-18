@@ -58,3 +58,23 @@ export const createRating = async (apartmentId, rating, comment) => {
     body: { apartmentId, rating, comment },
   });
 };
+
+export const getBookingById = async (bookingId) => {
+  return apiRequest("/api/users/bookings/${bookingId}", {
+    method: "GET",
+    body: { bookingId },
+  });
+};
+
+export const cancelBooking = async (bookingId, cancellationReason) => {
+  return apiRequest(`/api/users/bookings/${bookingId}/cancel`, {
+    method: "PUT",
+    body: { cancellationReason },
+  });
+};
+
+export const holdSecurityDeposit = async (bookingId) => {
+  return apiRequest(`/api/users/bookings/${bookingId}/hold-deposit`, {
+    method: "PUT",
+  });
+};

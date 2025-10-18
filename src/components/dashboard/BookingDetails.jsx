@@ -1,18 +1,18 @@
+// components/booking/BookingDetails.jsx
 import { useState, useContext, useEffect } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { UserContext } from "../../contexts/UserContext";
-import CancelBookingPopup from "../../components/dashboard/CancelBookingPopup";
-import ConfirmCancelPopup from "../../components/dashboard/ConfirmCancelPopup";
-import ShowSuccess from "../../components/ShowSuccess";
-import RatingPopup from "../../components/dashboard/RatingPopup";
-import ButtonWhite from "../../components/ButtonWhite";
-import Button from "../../components/Button";
+import CancelBookingPopup from "../dashboard/CancelBookingPopup";
+import ConfirmCancelPopup from "../dashboard/ConfirmCancelPopup";
+import ShowSuccess from "../ShowSuccess";
+import RatingPopup from "../dashboard/RatingPopup";
+import ButtonWhite from "../ButtonWhite";
+import Button from "../Button";
 
-export default function HostBookingDetails() {
+export default function BookingDetails({ role = "guest" }) {
   const navigate = useNavigate();
-  const location = useLocation();
   const { id } = useParams();
-  const { getUserBookings, user } = useContext(UserContext);
+  const { getUserBookings } = useContext(UserContext);
   
   const [showRating, setShowRating] = useState(false);
   const [showCancelBooking, setShowCancelBooking] = useState(false);
@@ -25,38 +25,15 @@ export default function HostBookingDetails() {
 
   // Get booking from user context
   useEffect(() => {
-    console.log("Booking ID from URL:", id);
-    console.log("User bookings:", getUserBookings());
-    
     const userBookings = getUserBookings();
-    
-    // Try to find booking by ID
-    let foundBooking = userBookings.find(booking => booking.id === id);
-    
-    // If not found by exact ID, try case-insensitive match or check if it's a substring
-    if (!foundBooking) {
-      foundBooking = userBookings.find(booking => 
-        booking.id.toLowerCase() === id?.toLowerCase() ||
-        booking.id.includes(id) ||
-        id.includes(booking.id)
-      );
-    }
-    
-    // Also check if booking is passed via state
-    if (!foundBooking && location.state?.booking) {
-      console.log("Using booking from state:", location.state.booking);
-      foundBooking = location.state.booking;
-    }
+    const foundBooking = userBookings.find(booking => booking.id === id);
     
     if (foundBooking) {
-      console.log("Found booking:", foundBooking);
       setBooking(foundBooking);
-    } else {
-      console.log("No booking found. Available bookings:", userBookings.map(b => ({ id: b.id, title: b.apartment?.title })));
     }
     
     setLoading(false);
-  }, [id, getUserBookings, location.state]);
+  }, [id, getUserBookings]);
 
   // Status styles
   const statusMap = {
@@ -71,10 +48,9 @@ export default function HostBookingDetails() {
       bg: "bg-[#FFE2E2]",
       text: "text-[#E11D48]",
     },
-    CONFIRMED: { label: "Confirmed", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" }, // Added CONFIRMED status
   };
 
-  // Helper functions to handle actual booking data
+  // Helper functions
   const getPrimaryImage = (bookingData) => {
     if (!bookingData?.apartment?.images) return "/images/default-apartment.jpg";
     const primaryImage = bookingData.apartment.images.find(
@@ -102,17 +78,11 @@ export default function HostBookingDetails() {
 
   const formatDate = (dateString) => {
     if (!dateString) return "Date not set";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "Invalid date";
-      const day = date.getDate();
-      const month = date.toLocaleString("en-US", { month: "short" });
-      const year = date.getFullYear();
-      return `${day}-${month}-${year}`;
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Date not set";
-    }
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString("en-US", { month: "short" });
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   };
 
   const formatCurrency = (amount) => {
@@ -125,21 +95,14 @@ export default function HostBookingDetails() {
 
   const calculateDuration = (startDate, endDate) => {
     if (!startDate || !endDate) return "Not specified";
-    try {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) return "Not specified";
-      
-      const diffTime = Math.abs(end - start);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return `${diffDays} night${diffDays !== 1 ? 's' : ''}`;
-    } catch (error) {
-      console.error("Error calculating duration:", error);
-      return "Not specified";
-    }
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return `${diffDays} night${diffDays !== 1 ? 's' : ''}`;
   };
 
-  // Calculate payment breakdown based on total price
+  // Calculate payment breakdown
   const calculatePaymentBreakdown = (totalPrice) => {
     if (!totalPrice) {
       return {
@@ -151,9 +114,9 @@ export default function HostBookingDetails() {
       };
     }
     
-    const bookingFee = totalPrice * 0.10; // 10% booking fee
-    const securityDeposit = totalPrice * 0.20; // 20% security deposit
-    const convenienceFee = totalPrice * 0.05; // 5% convenience fee
+    const bookingFee = totalPrice * 0.10;
+    const securityDeposit = totalPrice * 0.20;
+    const convenienceFee = totalPrice * 0.05;
     const subtotal = totalPrice - bookingFee - securityDeposit - convenienceFee;
     
     return {
@@ -165,19 +128,17 @@ export default function HostBookingDetails() {
     };
   };
 
-  // Determine role and display name
+  // Determine display information based on role
   const getDisplayName = (bookingData) => {
-    if (user?.role === "HOST") {
-      // Show guest name for host
+    if (role === "host") {
       return `${bookingData?.guest?.firstName || ''} ${bookingData?.guest?.lastName || ''}`.trim() || "Guest";
     } else {
-      // Show host name for guest
       return `${bookingData?.apartment?.host?.firstName || ''} ${bookingData?.apartment?.host?.lastName || ''}`.trim() || "Host";
     }
   };
 
   const getDisplayPhone = (bookingData) => {
-    if (user?.role === "HOST") {
+    if (role === "host") {
       return bookingData?.guest?.phone || "Not provided";
     } else {
       return bookingData?.apartment?.host?.phone || "Not provided";
@@ -185,7 +146,7 @@ export default function HostBookingDetails() {
   };
 
   const getDisplayEmail = (bookingData) => {
-    if (user?.role === "HOST") {
+    if (role === "host") {
       return bookingData?.guest?.email || "Not provided";
     } else {
       return bookingData?.apartment?.host?.email || "Not provided";
@@ -193,14 +154,13 @@ export default function HostBookingDetails() {
   };
 
   const getProfilePicture = (bookingData) => {
-    if (user?.role === "HOST") {
-      return bookingData?.guest?.profilePic || "/images/default-avatar.jpg";
+    if (role === "host") {
+      return bookingData?.guest?.profilePic || "/images/profile-image.png";
     } else {
-      return bookingData?.apartment?.host?.profilePic || "/images/default-avatar.jpg";
+      return bookingData?.apartment?.host?.profilePic || "/images/profile-image.png";
     }
   };
 
-  // Get status with fallback
   const getBookingStatus = (bookingData) => {
     if (!bookingData?.status) return "ONGOING";
     return bookingData.status;
@@ -221,27 +181,20 @@ export default function HostBookingDetails() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-gray-500 mb-2">Booking not found for ID: {id}</p>
-        <p className="text-gray-500 text-sm mb-4">Available bookings: {getUserBookings().length}</p>
         <button
           className="mt-4 px-4 py-2 bg-[#A20BA2] text-white rounded"
           onClick={() => navigate(-1)}
         >
           Go Back
         </button>
-        <button
-          className="mt-2 px-4 py-2 bg-gray-500 text-white rounded"
-          onClick={() => window.location.reload()}
-        >
-          Refresh Page
-        </button>
       </div>
     );
   }
 
-  // Determine which actions to show based on status
-  const showCancelButton = ["ONGOING", "CONFIRMED"].includes(getBookingStatus(booking));
-  const showReviewButton = getBookingStatus(booking) === "COMPLETED" && user?.role === "GUEST";
-  const showHoldDepositButton = getBookingStatus(booking) === "COMPLETED" && user?.role === "HOST";
+  // Determine which actions to show based on status and role
+  const showCancelButton = ["ONGOING"].includes(getBookingStatus(booking)) && role === "guest";
+  const showReviewButton = getBookingStatus(booking) === "COMPLETED" && role === "guest";
+  const showHoldDepositButton = getBookingStatus(booking) === "COMPLETED" && role === "host";
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] flex flex-col items-center">
@@ -275,7 +228,7 @@ export default function HostBookingDetails() {
 
           <img
             src={getProfilePicture(booking)}
-            alt={user?.role === "HOST" ? "Guest" : "Host"}
+            alt={role === "host" ? "Guest" : "Host"}
             className="absolute left-1 bottom-0 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
           />
         </div>
@@ -305,7 +258,7 @@ export default function HostBookingDetails() {
             {/* Status + Price */}
             <div className="flex flex-col items-end">
               <span
-                className={`text-[10px] px-3 rounded-full font-medium mb-[32px] ${currentStatus.bg} ${currentStatus.text}`}
+                className={`text-[10px] px-2 rounded-full font-medium mb-[32px] ${currentStatus.bg} ${currentStatus.text}`}
               >
                 {currentStatus.label}
               </span>
@@ -365,18 +318,18 @@ export default function HostBookingDetails() {
         {/* Host/Guest Details */}
         <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
           <h3 className="font-medium mb-2">
-            {user?.role === "GUEST" ? "Your Host Details" : "Your Guest Details"}
+            {role === "guest" ? "Your Host Details" : "Your Guest Details"}
           </h3>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span>{user?.role === "GUEST" ? "Host Name" : "Guest Name"}</span>
+              <span>{role === "guest" ? "Host Name" : "Guest Name"}</span>
               <span>{getDisplayName(booking)}</span>
             </div>
             <div className="flex justify-between">
               <span>Phone Number</span>
               <span>{getDisplayPhone(booking)}</span>
             </div>
-            {user?.role === "HOST" && (
+            {role === "host" && (
               <div className="flex justify-between">
                 <span>Email</span>
                 <span>{getDisplayEmail(booking)}</span>

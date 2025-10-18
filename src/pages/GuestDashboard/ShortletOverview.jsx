@@ -15,8 +15,18 @@ export default function ShortletOverviewPage() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [isRequesting, setIsRequesting] = useState(false);
+const [successMessage, setSuccessMessage] = useState("");
+const [errorMessage, setErrorMessage] = useState("");
+useEffect(() => {
+  if (successMessage || errorMessage) {
+    const timer = setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+    }, 5000); // Clear after 5 seconds
 
-
+    return () => clearTimeout(timer);
+  }
+}, [successMessage, errorMessage]);
   useEffect(() => {
     const fetchApartment = async () => {
       try {
@@ -107,15 +117,18 @@ export default function ShortletOverviewPage() {
 const handleRequestAvailability = async () => {
   try {
     setIsRequesting(true);
+    // Clear any previous messages
+    setSuccessMessage("");
+    setErrorMessage("");
+    
     const res = await requestAvailability(id);
     
     if (res.success) {
-      // Show success message
-      alert("Availability request sent to host successfully!");
+      setSuccessMessage("Availability request sent to host successfully!");
     }
   } catch (error) {
     console.error("Failed to send availability request:", error);
-    alert(error.message || "Failed to send availability request");
+    setErrorMessage(error.message || "Failed to send availability request");
   } finally {
     setIsRequesting(false);
   }
@@ -183,7 +196,19 @@ const handleRequestAvailability = async () => {
             on the website.
           </p>
         </div>
+{/* Success Message */}
+{successMessage && (
+  <div className="p-2 mt-2 bg-green-100 border border-green-400 text-green-700 rounded">
+    {successMessage}
+  </div>
+)}
 
+{/* Error Message */}
+{errorMessage && (
+  <div className="p-2 mt-2 bg-red-100 border border-red-400 text-red-700 rounded">
+    {errorMessage}
+  </div>
+)}
         {/* Booking Button */}
       <ButtonWhite 
   text={isRequesting ? "Sending Request..." : "Request Availability"} 
