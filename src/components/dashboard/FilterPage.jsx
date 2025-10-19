@@ -7,16 +7,28 @@ import { Link } from "react-router-dom";
 export default function FilterPage() {
   const navigate = useNavigate();
   const [budget, setBudget] = useState(30000);
-  const [openDropdown, setOpenDropdown] = useState(null); // which dropdown is open
+  const [openDropdown, setOpenDropdown] = useState(null);
+  
+  // Add state for each dropdown
+  const [apartmentType, setApartmentType] = useState(null);
+  const [ratings, setRatings] = useState(null);
+  const [bedrooms, setBedrooms] = useState(null);
+  const [bathrooms, setBathrooms] = useState(null);
+  const [electricity, setElectricity] = useState(null);
+  const [guests, setGuests] = useState(null);
+  const [kitchenSize, setKitchenSize] = useState(null);
+  const [parkingSpace, setParkingSpace] = useState(null);
+  const [facilities, setFacilities] = useState([]);
+  const [houseRules, setHouseRules] = useState([]);
 
   const apartmentOptions = [
-    { label: "Self-Con/Studio", value: "Self-Con/Studio" },
-    { label: "Mini Flat", value: "Mini Flat" },
-    { label: "2-bedroom Apartment", value: "2-bedroom Apartment" },
-    { label: "3-bedroom Apartment", value: "3-bedroom Apartment" },
-    { label: "Entire Apartment", value: "Entire Apartment" },
-    { label: "BO/Amex", value: "BO/Amex" },
-    { label: "Duplex", value: "Duplex" },
+    { label: "Self-Con/Studio", value: "SELF_CON_STUDIO" },
+    { label: "Mini Flat", value: "MINI_FLAT" },
+    { label: "2-bedroom Apartment", value: "TWO_BEDROOM_APARTMENT" },
+    { label: "3-bedroom Apartment", value: "THREE_BEDROOM_APARTMENT" },
+    { label: "Entire Apartment", value: "ENTIRE_APARTMENT" },
+    { label: "BQ/Annex", value: "BQ_ANNEX" },
+    { label: "Duplex", value: "DUPLEX" },
   ];
 
   const ratingOptions = Array.from({ length: 6 }, (_, i) => ({
@@ -28,123 +40,81 @@ export default function FilterPage() {
     label: `${i + 1}`,
     value: i + 1,
   }));
+
   const electricityOptions = [
-    { label: "24/7", value: "24/7" },
-    { label: "Band A", value: "Band A" },
-    { label: "Band B", value: "Band B" },
-    { label: "Band C", value: "Band C" },
-    { label: "Unstable", value: "Unstable" },
+    { label: "24/7", value: "TWENTY_FOUR_SEVEN" },
+    { label: "Band A", value: "BAND_A" },
+    { label: "Band B", value: "BAND_B" },
+    { label: "Band C", value: "BAND_C" },
+    { label: "Unstable", value: "UNSTABLE" },
   ];
+
   const guestOptions = [
-    { label: "1", value: 1 },
-    { label: "2", value: 2 },
-    { label: "3", value: 3 },
-    { label: "4", value: 4 },
-    { label: "Many", value: "Many" },
+    { label: "1", value: "ONE" },
+    { label: "2", value: "TWO" },
+    { label: "3", value: "THREE" },
+    { label: "4", value: "FOUR" },
+    { label: "Many", value: "MANY" },
   ];
+
   const kitchenOptions = [
-    { label: "Small", value: "Small" },
-    { label: "Medium", value: "Medium" },
-    { label: "Big", value: "Big" },
+    { label: "Small", value: "SMALL" },
+    { label: "Medium", value: "MEDIUM" },
+    { label: "Big", value: "BIG" },
   ];
+
   const parkingOptions = [
-    { label: "Small", value: "Small" },
-    { label: "Medium", value: "Medium" },
-    { label: "Large", value: "Large" },
-    { label: "None", value: "None" },
+    { label: "Small", value: "SMALL" },
+    { label: "Medium", value: "MEDIUM" },
+    { label: "Large", value: "LARGE" },
+    { label: "None", value: "NONE" },
   ];
+
   const houseRulesOptions = [
-    { label: "No Smoking", value: "no_smoking", icon: "/icons/no-smoking.svg" },
-    {
-      label: "Smoking Allowed",
-      value: "smoking_allowed",
-      icon: "/icons/smoking.svg",
-    },
-    {
-      label: "Flush Properly",
-      value: "flush_properly",
-      icon: "/icons/flush.svg",
-    },
-    {
-      label: "Dispose Wastes Properly",
-      value: "dispose_wastes_properly",
-      icon: "/icons/dispose.svg",
-    },
-    {
-      label: "No Loud Music/Partying",
-      value: "no_loud_music_partying",
-      icon: "/icons/no-music.svg",
-    },
-    {
-      label: "Partying Allowed",
-      value: "partying_allowed",
-      icon: "/icons/party.svg",
-    },
-    {
-      label: "No Pets allowed",
-      value: "no_pets_allowed",
-      icon: "/icons/no-pets.svg",
-    },
-    {
-      label: "Pets allowed",
-      value: "pets_allowed",
-      icon: "/icons/pets.svg",
-    },
-    { label: "No Crowds", value: "no_crowds", icon: "/icons/crowd.svg" },
-    {
-      label: "No Damage to Properties",
-      value: "no_damage_to_properties",
-      icon: "/icons/no-damage.svg",
-    },
-    {
-      label: "Kids are Allowed",
-      value: "kids_allowed",
-      icon: "/icons/kids.svg",
-    },
+    { label: "No Smoking", value: "NO_SMOKING", icon: "/icons/no-smoking.svg" },
+    { label: "Smoking Allowed", value: "SMOKING_ALLOWED", icon: "/icons/smoking.svg" },
+    { label: "Flush Properly", value: "FLUSH_PROPERLY", icon: "/icons/flush.svg" },
+    { label: "Dispose Wastes Properly", value: "DISPOSE_WASTE_PROPERLY", icon: "/icons/dispose.svg" },
+    { label: "No Loud Music/Partying", value: "NO_PARTYING", icon: "/icons/no-music.svg" },
+    { label: "Partying Allowed", value: "PARTYING_ALLOWED", icon: "/icons/party.svg" },
+    { label: "No Pets allowed", value: "NO_PETS_ALLOWED", icon: "/icons/no-pets.svg" },
+    { label: "Pets allowed", value: "PETS_ALLOWED", icon: "/icons/pets.svg" },
+    { label: "No Crowds", value: "NO_CROWD", icon: "/icons/crowd.svg" },
+    { label: "No Damage to Properties", value: "NO_DAMAGE_TO_PROPERTIES", icon: "/icons/no-damage.svg" },
+    { label: "Kids are Allowed", value: "KIDS_ALLOWED", icon: "/icons/kids.svg" },
   ];
+
   const facilitiesOptions = [
-    {
-      label: "Laundry Service",
-      value: "laundry_service",
-      icon: "/icons/laundry.svg",
-    },
-    {
-      label: "Washing Machine",
-      value: "washing_machine",
-      icon: "/icons/washing-machine.svg",
-    },
-    { label: "Chef Service", value: "chef_service", icon: "/icons/chef.svg" },
-    {
-      label: "Air conditioning",
-      value: "air_conditioning",
-      icon: "/icons/ac.svg",
-    },
-    {
-      label: "Swimming pool",
-      value: "swimming_pool",
-      icon: "/icons/swimming.svg",
-    },
-    {
-      label: "Generator Backup",
-      value: "generator_backup",
-      icon: "/icons/generator.svg",
-    },
-    { label: "Solar", value: "solar", icon: "/icons/solar.svg" },
-    { label: "WiFi", value: "wifi", icon: "/icons/wifi.svg" },
-    {
-      label: "Play station",
-      value: "play_station",
-      icon: "/icons/playstation.svg",
-    },
-    { label: "Smart Home", value: "smart_home", icon: "/icons/smart-home.svg" },
-    { label: "CCTV", value: "cctv", icon: "/icons/cctv.svg" },
-    { label: "Gym", value: "gym", icon: "/icons/gym.svg" },
-    {
-      label: "DSTW Netflix",
-      value: "dstw_netflix",
-      icon: "/icons/dstv.svg",
-    },
+    { label: "Laundry Service", value: "LAUNDRY_SERVICE", icon: "/icons/laundry.svg" },
+    { label: "Washing Machine", value: "WASHING_MACHINE", icon: "/icons/washing-machine.svg" },
+    { label: "Chef Service", value: "CHEF_SERVICE", icon: "/icons/chef.svg" },
+    { label: "Air conditioning", value: "AIR_CONDITIONING", icon: "/icons/ac.svg" },
+    { label: "Swimming pool", value: "SWIMMING_POOL", icon: "/icons/swimming.svg" },
+    { label: "Generator Backup", value: "GENERATOR_BACKUP", icon: "/icons/generator.svg" },
+    { label: "Solar", value: "SOLAR", icon: "/icons/solar.svg" },
+    { label: "WiFi", value: "WIFI", icon: "/icons/wifi.svg" },
+    { label: "Play station", value: "PLAY_STATION", icon: "/icons/playstation.svg" },
+    { label: "Smart Home", value: "SMART_HOME", icon: "/icons/smart-home.svg" },
+    { label: "CCTV", value: "CCTV", icon: "/icons/cctv.svg" },
+    { label: "Gym", value: "GYM", icon: "/icons/gym.svg" },
+    { label: "DSTV Netflix", value: "DSTV_NETFLIX", icon: "/icons/dstv.svg" },
   ];
+
+  // Reset all filters
+  const handleReset = () => {
+    setApartmentType(null);
+    setRatings(null);
+    setBedrooms(null);
+    setBathrooms(null);
+    setElectricity(null);
+    setGuests(null);
+    setKitchenSize(null);
+    setParkingSpace(null);
+    setFacilities([]);
+    setHouseRules([]);
+    setBudget(30000);
+  };
+
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9]">
       {/* Header */}
@@ -161,7 +131,10 @@ export default function FilterPage() {
               Filters
             </span>
           </div>
-          <span className="text-[#A20BA2] font-medium text-[12px] cursor-pointer">
+          <span 
+            className="text-[#A20BA2] font-medium text-[12px] cursor-pointer"
+            onClick={handleReset}
+          >
             Reset
           </span>
         </div>
@@ -178,10 +151,11 @@ export default function FilterPage() {
             options={apartmentOptions}
             required
             isOpen={openDropdown === "apartment"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "apartment" ? null : "apartment")
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "apartment" ? null : "apartment")}
+            selected={apartmentType}
+            setSelected={setApartmentType}
           />
+
           {/* Location */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -222,6 +196,7 @@ export default function FilterPage() {
               }}
             />
           </div>
+
           {/* Ratings */}
           <Dropdown
             label="Ratings"
@@ -230,10 +205,11 @@ export default function FilterPage() {
             options={ratingOptions}
             required
             isOpen={openDropdown === "ratings"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "ratings" ? null : "ratings")
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "ratings" ? null : "ratings")}
+            selected={ratings}
+            setSelected={setRatings}
           />
+
           {/* Bedrooms */}
           <Dropdown
             label="Bedrooms"
@@ -242,10 +218,11 @@ export default function FilterPage() {
             options={numberOptions}
             required
             isOpen={openDropdown === "bedrooms"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "bedrooms" ? null : "bedrooms")
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "bedrooms" ? null : "bedrooms")}
+            selected={bedrooms}
+            setSelected={setBedrooms}
           />
+
           {/* Bathrooms */}
           <Dropdown
             label="Bathroom Number"
@@ -254,10 +231,12 @@ export default function FilterPage() {
             options={numberOptions}
             required
             isOpen={openDropdown === "bathrooms"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "bathrooms" ? null : "bathrooms")
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "bathrooms" ? null : "bathrooms")}
+            selected={bathrooms}
+            setSelected={setBathrooms}
           />
+
+          {/* Electricity Choice */}
           <Dropdown
             label="Electricity Choice"
             placeholder="Select Electricity"
@@ -265,12 +244,11 @@ export default function FilterPage() {
             options={electricityOptions}
             required
             isOpen={openDropdown === "electricity"}
-            onToggle={() =>
-              setOpenDropdown(
-                openDropdown === "electricity" ? null : "electricity"
-              )
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "electricity" ? null : "electricity")}
+            selected={electricity}
+            setSelected={setElectricity}
           />
+
           {/* Guest Number */}
           <Dropdown
             label="Guest Number"
@@ -279,10 +257,11 @@ export default function FilterPage() {
             options={guestOptions}
             required
             isOpen={openDropdown === "guests"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "guests" ? null : "guests")
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "guests" ? null : "guests")}
+            selected={guests}
+            setSelected={setGuests}
           />
+
           {/* Kitchen Size */}
           <Dropdown
             label="Kitchen Size"
@@ -291,10 +270,11 @@ export default function FilterPage() {
             options={kitchenOptions}
             required
             isOpen={openDropdown === "kitchen"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "kitchen" ? null : "kitchen")
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "kitchen" ? null : "kitchen")}
+            selected={kitchenSize}
+            setSelected={setKitchenSize}
           />
+
           {/* Parking Space */}
           <Dropdown
             label="Parking Space"
@@ -303,10 +283,11 @@ export default function FilterPage() {
             options={parkingOptions}
             required
             isOpen={openDropdown === "parking"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "parking" ? null : "parking")
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "parking" ? null : "parking")}
+            selected={parkingSpace}
+            setSelected={setParkingSpace}
           />
+
           {/* Facilities & Services */}
           <Dropdown
             label="Facilities & Services"
@@ -314,14 +295,13 @@ export default function FilterPage() {
             heading="Select Facilities & Services"
             options={facilitiesOptions}
             required
-            multiple={true} // enable multi-select circles
+            multiple={true}
             isOpen={openDropdown === "facilities"}
-            onToggle={() =>
-              setOpenDropdown(
-                openDropdown === "facilities" ? null : "facilities"
-              )
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "facilities" ? null : "facilities")}
+            selected={facilities}
+            setSelected={setFacilities}
           />
+
           {/* House Rules */}
           <Dropdown
             label="House Rules"
@@ -329,14 +309,13 @@ export default function FilterPage() {
             heading="Select House Rules"
             options={houseRulesOptions}
             required
-            multiple={true} // enable multi-select circles
+            multiple={true}
             isOpen={openDropdown === "houseRules"}
-            onToggle={() =>
-              setOpenDropdown(
-                openDropdown === "houseRules" ? null : "houseRules"
-              )
-            }
+            onToggle={() => setOpenDropdown(openDropdown === "houseRules" ? null : "houseRules")}
+            selected={houseRules}
+            setSelected={setHouseRules}
           />
+
           {/* Proceed */}
           <div className="pt-[67px] pb-10">
             <Link to="/filtered-search">

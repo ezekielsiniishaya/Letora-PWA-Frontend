@@ -185,3 +185,14 @@ export const updateCompleteApartment = async (apartmentId, formData) => {
     // Note: Don't set Content-Type header for FormData - let browser set it with boundary
   });
 };
+// Search apartments by query (name/location)
+export const searchApartmentsByQuery = async (query, page = 1, limit = 10) => {
+  const params = new URLSearchParams();
+  if (query) params.append("query", query);
+  params.append("page", page);
+  params.append("limit", limit);
+
+  return apiRequest(`/api/apartments/search?${params.toString()}`, {
+    method: "GET",
+  });
+};

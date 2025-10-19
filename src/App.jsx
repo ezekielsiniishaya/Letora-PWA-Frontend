@@ -21,7 +21,7 @@ import TermsPage from "./pages/StaticPages/TermsPage";
 import PrivacyPage from "./pages/StaticPages/PrivacyPage";
 import SearchPage from "./components/dashboard/SearchPage";
 import FilterPage from "./components/dashboard/FilterPage";
-import FilteredSearchPage from "./components/dashboard/FilteredSearchPage";
+import SearchResultsPage from "./components/dashboard/SearchResults";
 import BookingsPage from "./pages/GuestDashboard/BookingsPage";
 import BookingDetails from "./pages/GuestDashboard/BookingDetailsPage";
 import FavoritesPage from "./pages/GuestDashboard/FavoritesPages";
@@ -62,6 +62,8 @@ import GuestEmptyState from "./components/dashboard/GuestEmptyState";
 import HostEmptyState from "./components/dashboard/HostEmptyState";
 import GuestHomepage from "./components/dashboard/GuestHomepage";
 import VerifyPasswordEmail from "./components/auth/VerifyPasswordEmail";
+import SearchHistoryProvider from './contexts/SearchHistoryProvider';
+
 
 function App() {
   return (
@@ -70,6 +72,7 @@ function App() {
         <UserProvider>
           <ApartmentCreationProvider>
             <ApartmentListingProvider>
+                  <SearchHistoryProvider>
               <Routes>
                 {/* ===== PUBLIC ROUTES ===== */}
 
@@ -146,8 +149,8 @@ function App() {
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/filter" element={<FilterPage />} />
                 <Route
-                  path="/filtered-search"
-                  element={<FilteredSearchPage />}
+                  path="/search-results"
+                  element={<SearchResultsPage />}
                 />
                 <Route path="/hot-apartments" element={<HotApartmentsPage />} />
                 <Route path="/guest-listing" element={<GuestLIsting />} />
@@ -213,11 +216,12 @@ function App() {
                 {/* Reviews & Social Features */}
                 <Route path="/reviews" element={<ReviewsPage />} />
               </Routes>
-            </ApartmentListingProvider>
-          </ApartmentCreationProvider>
-        </UserProvider>
-      </HostProfileProvider>
-    </Router>
+            </SearchHistoryProvider>
+          </ApartmentListingProvider>
+        </ApartmentCreationProvider>
+      </UserProvider>
+    </HostProfileProvider>
+  </Router>
   );
 }
 

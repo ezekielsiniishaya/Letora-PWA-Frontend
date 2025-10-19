@@ -80,6 +80,11 @@ const login = async (userData, token) => {
 };
 
   const logout = () => {
+      // Clear search history for this user
+  const userId = user?.id || 'anonymous';
+  const storageKey = `apartmentSearchHistory_${userId}`;
+  localStorage.removeItem(storageKey);
+
     setUser(null);
     localStorage.removeItem("authToken");
     setError(null);
