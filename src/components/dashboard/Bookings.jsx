@@ -99,7 +99,7 @@ export default function MyBooking({
         {/* Apartment Info */}
         <div className="flex-1  mt-1 ml-1 text-[#333333] flex flex-col">
           {/* Title + Status */}
-          <div className="flex items-center justify-between w-[90%]">
+          <div className="flex items-center justify-between w-[92%]">
             <h4 className="font-medium text-[12px] truncate flex-1 max-w-[70%]">
               {getTitle(booking)}
             </h4>
@@ -234,15 +234,15 @@ export default function MyBooking({
         />
       )}
 
-   {showRating && (
-  <RatingPopup
-    apartmentId={booking?.apartment?.id}
-    onClose={() => {
-      setShowRating(false);
-      setActionCompleted(true);
-    }}
-  />
-)}
+      {showRating && (
+        <RatingPopup
+          apartmentId={booking?.apartment?.id}
+          onClose={() => {
+            setShowRating(false);
+            setActionCompleted(true);
+          }}
+        />
+      )}
 
       {showHoldSuccess && (
         <ShowSuccess

@@ -97,7 +97,7 @@ export default function BookingsPage() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 rounded-[4px] h-[25px] w-[115px] text-[12px] font-medium ${
+            className={`px-4 rounded-[4px] h-[25px] w-[120px] text-[12px] font-medium ${
               activeTab === tab.key
                 ? "bg-[#A20BA2] text-white"
                 : "bg-[#E9E9E9] text-[#666666]"
