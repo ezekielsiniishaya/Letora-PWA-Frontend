@@ -196,3 +196,33 @@ export const searchApartmentsByQuery = async (query, page = 1, limit = 10) => {
     method: "GET",
   });
 };
+
+// Filter apartments with comprehensive filters
+export const filterApartments = async (filters = {}) => {
+  const params = new URLSearchParams();
+
+  // Add all filter parameters if provided
+  Object.keys(filters).forEach((key) => {
+    const value = filters[key];
+
+    // Handle different types of values
+    if (value !== undefined && value !== null && value !== "") {
+      if (Array.isArray(value)) {
+        // Handle array values (facilities, houseRules)
+        value.forEach((item) => {
+          params.append(key, item);
+        });
+      } else if (typeof value === "boolean") {
+        // Convert boolean to string
+        params.append(key, value.toString());
+      } else {
+        // Handle string, number, etc.
+        params.append(key, value);
+      }
+    }
+  });
+
+  return apiRequest(`/api/apartments/filter?${params.toString()}`, {
+    method: "GET",
+  });
+};

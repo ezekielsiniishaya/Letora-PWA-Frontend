@@ -114,7 +114,6 @@ export default function EditProfilePage() {
   const handleSave = async () => {
     setLoading(true);
     setError(""); // Clear previous errors
-    setLoading(true);
     try {
       // Prepare user data - use exact field names backend expects
       const userData = {
@@ -134,6 +133,15 @@ export default function EditProfilePage() {
 
       // Append user data as JSON string
       submitFormData.append("userData", JSON.stringify(userData));
+
+      // Append profile image if selected
+      if (formData.profileImageFile) {
+        submitFormData.append("profilePic", formData.profileImageFile); // Use "profilePic" to match backend
+        console.log(
+          "✅ Profile image appended to FormData:",
+          formData.profileImageFile.name
+        );
+      }
 
       // Append documents if user is host and has documents
       if (isHost && idDocuments.length > 0) {
@@ -160,6 +168,13 @@ export default function EditProfilePage() {
       for (let pair of submitFormData.entries()) {
         if (pair[0] === "userData" || pair[0] === "verificationDocuments") {
           console.log(pair[0] + ":", JSON.parse(pair[1]));
+        } else if (pair[0] === "profilePic" || pair[0] === "documents") {
+          console.log(
+            pair[0] + ":",
+            pair[1].name,
+            pair[1].type,
+            pair[1].size + " bytes"
+          );
         } else {
           console.log(pair[0] + ":", pair[1]);
         }

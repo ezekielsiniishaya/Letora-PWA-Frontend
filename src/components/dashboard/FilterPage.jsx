@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import Dropdown from "./Dropdown";
-import { Link } from "react-router-dom";
+import { filterApartments } from "../../services/apartmentApi";
 
 export default function FilterPage() {
   const navigate = useNavigate();
   const [budget, setBudget] = useState(30000);
   const [openDropdown, setOpenDropdown] = useState(null);
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   // Add state for each dropdown
   const [apartmentType, setApartmentType] = useState(null);
   const [ratings, setRatings] = useState(null);
@@ -20,6 +22,7 @@ export default function FilterPage() {
   const [parkingSpace, setParkingSpace] = useState(null);
   const [facilities, setFacilities] = useState([]);
   const [houseRules, setHouseRules] = useState([]);
+  const [location, setLocation] = useState("");
 
   const apartmentOptions = [
     { label: "Self-Con/Studio", value: "SELF_CON_STUDIO" },
@@ -72,28 +75,76 @@ export default function FilterPage() {
 
   const houseRulesOptions = [
     { label: "No Smoking", value: "NO_SMOKING", icon: "/icons/no-smoking.svg" },
-    { label: "Smoking Allowed", value: "SMOKING_ALLOWED", icon: "/icons/smoking.svg" },
-    { label: "Flush Properly", value: "FLUSH_PROPERLY", icon: "/icons/flush.svg" },
-    { label: "Dispose Wastes Properly", value: "DISPOSE_WASTE_PROPERLY", icon: "/icons/dispose.svg" },
-    { label: "No Loud Music/Partying", value: "NO_PARTYING", icon: "/icons/no-music.svg" },
-    { label: "Partying Allowed", value: "PARTYING_ALLOWED", icon: "/icons/party.svg" },
-    { label: "No Pets allowed", value: "NO_PETS_ALLOWED", icon: "/icons/no-pets.svg" },
-    { label: "Pets allowed", value: "PETS_ALLOWED", icon: "/icons/pets.svg" },
-    { label: "No Crowds", value: "NO_CROWD", icon: "/icons/crowd.svg" },
-    { label: "No Damage to Properties", value: "NO_DAMAGE_TO_PROPERTIES", icon: "/icons/no-damage.svg" },
-    { label: "Kids are Allowed", value: "KIDS_ALLOWED", icon: "/icons/kids.svg" },
+    {
+      label: "Smoking Allowed",
+      value: "SMOKING_ALLOWED",
+      icon: "/icons/smoking.svg",
+    },
+    {
+      label: "Flush Properly",
+      value: "FLUSH_PROPERLY",
+      icon: "/icons/flush.svg",
+    },
+    {
+      label: "Dispose Waste Properly",
+      value: "DISPOSE_WASTE_PROPERLY",
+      icon: "/icons/dispose.svg",
+    },
+    {
+      label: "Partying Allowed",
+      value: "PARTYING_ALLOWED",
+      icon: "/icons/party.svg",
+    },
+    { label: "No Partying", value: "NO_PARTYING", icon: "/icons/no-music.svg" },
+    {
+      label: "No Pets Allowed",
+      value: "NO_PETS_ALLOWED",
+      icon: "/icons/no-pets.svg",
+    },
+    { label: "Pets Allowed", value: "PETS_ALLOWED", icon: "/icons/pets.svg" },
+    { label: "No Crowd", value: "NO_CROWD", icon: "/icons/crowd.svg" },
+    {
+      label: "No Damage to Properties",
+      value: "NO_DAMAGE_TO_PROPERTIES",
+      icon: "/icons/no-damage.svg",
+    },
+    { label: "Kids Allowed", value: "KIDS_ALLOWED", icon: "/icons/kids.svg" },
   ];
 
   const facilitiesOptions = [
-    { label: "Laundry Service", value: "LAUNDRY_SERVICE", icon: "/icons/laundry.svg" },
-    { label: "Washing Machine", value: "WASHING_MACHINE", icon: "/icons/washing-machine.svg" },
+    {
+      label: "Laundry Service",
+      value: "LAUNDRY_SERVICE",
+      icon: "/icons/laundry.svg",
+    },
+    {
+      label: "Washing Machine",
+      value: "WASHING_MACHINE",
+      icon: "/icons/washing-machine.svg",
+    },
     { label: "Chef Service", value: "CHEF_SERVICE", icon: "/icons/chef.svg" },
-    { label: "Air conditioning", value: "AIR_CONDITIONING", icon: "/icons/ac.svg" },
-    { label: "Swimming pool", value: "SWIMMING_POOL", icon: "/icons/swimming.svg" },
-    { label: "Generator Backup", value: "GENERATOR_BACKUP", icon: "/icons/generator.svg" },
+    {
+      label: "Air conditioning",
+      value: "AIR_CONDITIONING",
+      icon: "/icons/ac.svg",
+    },
+    {
+      label: "Swimming pool",
+      value: "SWIMMING_POOL",
+      icon: "/icons/swimming.svg",
+    },
+    {
+      label: "Generator Backup",
+      value: "GENERATOR_BACKUP",
+      icon: "/icons/generator.svg",
+    },
     { label: "Solar", value: "SOLAR", icon: "/icons/solar.svg" },
     { label: "WiFi", value: "WIFI", icon: "/icons/wifi.svg" },
-    { label: "Play station", value: "PLAY_STATION", icon: "/icons/playstation.svg" },
+    {
+      label: "Play station",
+      value: "PLAY_STATION",
+      icon: "/icons/playstation.svg",
+    },
     { label: "Smart Home", value: "SMART_HOME", icon: "/icons/smart-home.svg" },
     { label: "CCTV", value: "CCTV", icon: "/icons/cctv.svg" },
     { label: "Gym", value: "GYM", icon: "/icons/gym.svg" },
@@ -113,6 +164,95 @@ export default function FilterPage() {
     setFacilities([]);
     setHouseRules([]);
     setBudget(30000);
+    setLocation("");
+    setError("");
+  };
+
+  // Handle filter submission
+  const handleProceed = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // Prepare filters for API call - only include selected filters
+      const filters = {
+        // Location filter - simple text input
+        ...(location && {
+          // Let backend handle partial matching for both state and town
+          state: location,
+          town: location,
+        }),
+
+        // Price filter - only if budget is not default
+        ...(budget > 30000 &&
+          budget < 1000000 && {
+            minPrice: 0,
+            maxPrice: budget,
+          }),
+
+        // Only include filters that user actually selected
+        ...(apartmentType && { apartmentType: apartmentType.value }),
+        ...(ratings && ratings.value > 0 && { minRating: ratings.value }),
+        ...(bedrooms && {
+          minBedrooms: bedrooms.value,
+          maxBedrooms: bedrooms.value,
+        }),
+        ...(bathrooms && {
+          minBathrooms: bathrooms.value,
+          maxBathrooms: bathrooms.value,
+        }),
+        ...(electricity && { electricity: electricity.value }),
+        ...(guests && { guestNumber: guests.value }),
+        ...(kitchenSize && { kitchenSize: kitchenSize.value }),
+        ...(parkingSpace && { parkingSpace: parkingSpace.value }),
+
+        // Array filters - only if user selected any
+        ...(facilities.length > 0 && {
+          facilities: facilities.map((f) => f.value),
+        }),
+        ...(houseRules.length > 0 && {
+          houseRules: houseRules.map((hr) => hr.value),
+        }),
+
+        // Default filters for active listings only
+        isAvailable: true,
+        isListed: true,
+
+        // Pagination
+        page: 1,
+        limit: 10,
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      };
+
+      // Remove minPrice if it's 0 (no budget filter effectively)
+      if (filters.minPrice === 0 && !filters.maxPrice) {
+        delete filters.minPrice;
+      }
+
+      console.log("Sending filters:", filters);
+
+      // Call the filter API
+      const response = await filterApartments(filters);
+
+      if (response.success) {
+        // Navigate to filtered results page with data
+        navigate("/filtered-results", {
+          state: {
+            apartments: response.data.apartments,
+            filters: filters,
+            totalCount: response.data.pagination?.totalCount || 0,
+          },
+        });
+      } else {
+        setError(response.message || "Failed to filter apartments");
+      }
+    } catch (error) {
+      console.error("Error filtering apartments:", error);
+      setError(error.message || "An error occurred while filtering apartments");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -131,7 +271,7 @@ export default function FilterPage() {
               Filters
             </span>
           </div>
-          <span 
+          <span
             className="text-[#A20BA2] font-medium text-[12px] cursor-pointer"
             onClick={handleReset}
           >
@@ -140,9 +280,25 @@ export default function FilterPage() {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="mx-4 mt-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            <div className="flex items-center">
+              <img
+                src="/icons/error.svg"
+                alt="Error"
+                className="w-4 h-4 mr-2"
+              />
+              <span className="text-sm">{error}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Form */}
       <div className="flex-1 px-[20px] mt-[17px]">
-        <form className="space-y-9">
+        <form className="space-y-9" onSubmit={(e) => e.preventDefault()}>
           {/* Apartment Type */}
           <Dropdown
             label="Apartment Type"
@@ -151,7 +307,9 @@ export default function FilterPage() {
             options={apartmentOptions}
             required
             isOpen={openDropdown === "apartment"}
-            onToggle={() => setOpenDropdown(openDropdown === "apartment" ? null : "apartment")}
+            onToggle={() =>
+              setOpenDropdown(openDropdown === "apartment" ? null : "apartment")
+            }
             selected={apartmentType}
             setSelected={setApartmentType}
           />
@@ -165,6 +323,8 @@ export default function FilterPage() {
               type="text"
               placeholder="Ikorodu, Lagos"
               className="w-full text-[#686464] text-[14px] rounded-lg px-3 py-2"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
             />
           </div>
 
@@ -205,7 +365,9 @@ export default function FilterPage() {
             options={ratingOptions}
             required
             isOpen={openDropdown === "ratings"}
-            onToggle={() => setOpenDropdown(openDropdown === "ratings" ? null : "ratings")}
+            onToggle={() =>
+              setOpenDropdown(openDropdown === "ratings" ? null : "ratings")
+            }
             selected={ratings}
             setSelected={setRatings}
           />
@@ -218,7 +380,9 @@ export default function FilterPage() {
             options={numberOptions}
             required
             isOpen={openDropdown === "bedrooms"}
-            onToggle={() => setOpenDropdown(openDropdown === "bedrooms" ? null : "bedrooms")}
+            onToggle={() =>
+              setOpenDropdown(openDropdown === "bedrooms" ? null : "bedrooms")
+            }
             selected={bedrooms}
             setSelected={setBedrooms}
           />
@@ -231,7 +395,9 @@ export default function FilterPage() {
             options={numberOptions}
             required
             isOpen={openDropdown === "bathrooms"}
-            onToggle={() => setOpenDropdown(openDropdown === "bathrooms" ? null : "bathrooms")}
+            onToggle={() =>
+              setOpenDropdown(openDropdown === "bathrooms" ? null : "bathrooms")
+            }
             selected={bathrooms}
             setSelected={setBathrooms}
           />
@@ -244,7 +410,11 @@ export default function FilterPage() {
             options={electricityOptions}
             required
             isOpen={openDropdown === "electricity"}
-            onToggle={() => setOpenDropdown(openDropdown === "electricity" ? null : "electricity")}
+            onToggle={() =>
+              setOpenDropdown(
+                openDropdown === "electricity" ? null : "electricity"
+              )
+            }
             selected={electricity}
             setSelected={setElectricity}
           />
@@ -257,7 +427,9 @@ export default function FilterPage() {
             options={guestOptions}
             required
             isOpen={openDropdown === "guests"}
-            onToggle={() => setOpenDropdown(openDropdown === "guests" ? null : "guests")}
+            onToggle={() =>
+              setOpenDropdown(openDropdown === "guests" ? null : "guests")
+            }
             selected={guests}
             setSelected={setGuests}
           />
@@ -270,7 +442,9 @@ export default function FilterPage() {
             options={kitchenOptions}
             required
             isOpen={openDropdown === "kitchen"}
-            onToggle={() => setOpenDropdown(openDropdown === "kitchen" ? null : "kitchen")}
+            onToggle={() =>
+              setOpenDropdown(openDropdown === "kitchen" ? null : "kitchen")
+            }
             selected={kitchenSize}
             setSelected={setKitchenSize}
           />
@@ -283,7 +457,9 @@ export default function FilterPage() {
             options={parkingOptions}
             required
             isOpen={openDropdown === "parking"}
-            onToggle={() => setOpenDropdown(openDropdown === "parking" ? null : "parking")}
+            onToggle={() =>
+              setOpenDropdown(openDropdown === "parking" ? null : "parking")
+            }
             selected={parkingSpace}
             setSelected={setParkingSpace}
           />
@@ -297,7 +473,11 @@ export default function FilterPage() {
             required
             multiple={true}
             isOpen={openDropdown === "facilities"}
-            onToggle={() => setOpenDropdown(openDropdown === "facilities" ? null : "facilities")}
+            onToggle={() =>
+              setOpenDropdown(
+                openDropdown === "facilities" ? null : "facilities"
+              )
+            }
             selected={facilities}
             setSelected={setFacilities}
           />
@@ -311,16 +491,22 @@ export default function FilterPage() {
             required
             multiple={true}
             isOpen={openDropdown === "houseRules"}
-            onToggle={() => setOpenDropdown(openDropdown === "houseRules" ? null : "houseRules")}
+            onToggle={() =>
+              setOpenDropdown(
+                openDropdown === "houseRules" ? null : "houseRules"
+              )
+            }
             selected={houseRules}
             setSelected={setHouseRules}
           />
 
-          {/* Proceed */}
+          {/* Proceed Button */}
           <div className="pt-[67px] pb-10">
-            <Link to="/filtered-search">
-              <Button text="Proceed" />
-            </Link>
+            <Button
+              text={loading ? "Filtering..." : "Proceed"}
+              onClick={handleProceed}
+              disabled={loading}
+            />
           </div>
         </form>
       </div>
