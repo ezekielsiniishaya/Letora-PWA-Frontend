@@ -11,9 +11,15 @@ export const apiRequest = async (endpoint, options = {}) => {
     const config = {
       method: options.method || "GET",
       headers: {
-        ...(authToken && { Authorization: `Bearer ${authToken}` }),
-        ...(!isFormData && { "Content-Type": "application/json" }),
+        // Preserve any custom headers from options FIRST
         ...options.headers,
+        // Then add our headers (they won't override existing ones)
+        ...(authToken && { Authorization: `Bearer ${authToken}` }),
+        // Only add Content-Type if it's NOT FormData AND not already set
+        ...(!isFormData &&
+          !options.headers?.["Content-Type"] && {
+            "Content-Type": "application/json",
+          }),
       },
     };
 
@@ -21,6 +27,14 @@ export const apiRequest = async (endpoint, options = {}) => {
     if (options.body) {
       config.body = isFormData ? options.body : JSON.stringify(options.body);
     }
+
+    console.log("API Request Config:", {
+      endpoint,
+      isFormData,
+      headers: config.headers,
+      hasBody: !!config.body,
+      bodyType: typeof config.body,
+    });
 
     const response = await fetch(`${BASE_URL}${endpoint}`, config);
     return response;

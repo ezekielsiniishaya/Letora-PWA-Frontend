@@ -78,3 +78,11 @@ export const holdSecurityDeposit = async (bookingId) => {
     method: "PUT",
   });
 };
+
+// upload guest documents - accept FormData directly
+export const uploadGuestDocuments = async (formData) => {
+  return apiRequest("/api/users/guest-documents", {
+    method: "POST",
+    body: formData,
+  });
+};

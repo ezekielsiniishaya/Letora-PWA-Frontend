@@ -36,7 +36,7 @@ export default function ApartmentsPage() {
       <div className="flex items-center justify-between px-[21px] py-3">
         {/* Left section: arrow + text */}
         <div className="flex items-center space-x-3">
-          <button onClick={() => navigate(-1)}>
+          <button onClick={() => navigate("/guest-homepage")}>
             <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-4" />
           </button>
           <h1 className="text-[14px] font-medium text-[#000000]">

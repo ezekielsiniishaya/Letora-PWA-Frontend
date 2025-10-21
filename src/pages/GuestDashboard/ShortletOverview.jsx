@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import Button from "../../components/Button";
 import ButtonWhite from "../../components/ButtonWhite";
 import { requestAvailability } from "../../services/userApi";
+import { useUser } from "../../hooks/useUser"; // Import the user context
+import { useBooking } from "../../hooks/useBooking";
 
 export default function ShortletOverviewPage() {
   const { id } = useParams();
@@ -15,18 +17,33 @@ export default function ShortletOverviewPage() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [isRequesting, setIsRequesting] = useState(false);
-const [successMessage, setSuccessMessage] = useState("");
-const [errorMessage, setErrorMessage] = useState("");
-useEffect(() => {
-  if (successMessage || errorMessage) {
-    const timer = setTimeout(() => {
-      setSuccessMessage("");
-      setErrorMessage("");
-    }, 5000); // Clear after 5 seconds
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const { getGuestVerificationStatus, getGuestDocuments } = useUser(); // Get user context
+  const { setApartmentDetails, clearBookingData } = useBooking();
 
-    return () => clearTimeout(timer);
-  }
-}, [successMessage, errorMessage]);
+  useEffect(() => {
+    // Only set apartment details when apartment data is available
+    clearBookingData();
+    if (apartment && apartment.id) {
+      setApartmentDetails(
+        apartment.id,
+        apartment.pricing?.pricePerNight || apartment.price,
+        apartment.securityDeposit?.amount || 0
+      );
+    }
+  }, [apartment, clearBookingData, setApartmentDetails]);
+  useEffect(() => {
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+        setErrorMessage("");
+      }, 5000); // Clear after 5 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
+
   useEffect(() => {
     const fetchApartment = async () => {
       try {
@@ -100,6 +117,100 @@ useEffect(() => {
     };
   };
 
+  // Check guest verification status
+  const checkGuestStatus = () => {
+    const guestStatus = getGuestVerificationStatus();
+    const guestDocs = getGuestDocuments();
+
+    console.log("Guest Status:", guestStatus);
+    console.log("Guest Documents:", guestDocs);
+
+    // If no documents uploaded
+    if (guestDocs.length === 0) {
+      return {
+        status: "NO_DOCUMENTS",
+        message: "Please upload your ID documents to book an apartment",
+        action: () => navigate("/id-check"), // Replace with your actual upload documents route
+      };
+    }
+
+    // If documents are pending verification
+    if (guestStatus.status === "PENDING") {
+      return {
+        status: "PENDING_VERIFICATION",
+        message: "Please wait, your documents are undergoing review",
+        action: null,
+      };
+    }
+
+    // If documents are rejected
+    if (guestStatus.status === "REJECTED") {
+      return {
+        status: "REJECTED",
+        message: "Your documents were rejected. Please upload new documents.",
+        action: () => navigate("/id-check"),
+      };
+    }
+
+    // If verified and can book
+    if (guestStatus.status === "APPROVED" && guestStatus.canBook) {
+      return {
+        status: "VERIFIED",
+        message: "",
+        action: () => navigate(`/booking-dates/${id}`), // Replace with your actual booking dates route
+      };
+    }
+
+    // Default case - not verified
+    return {
+      status: "NOT_VERIFIED",
+      message: "Please complete your verification to book an apartment",
+      action: () => navigate("/id-check"),
+    };
+  };
+
+  const handleBookNow = () => {
+    const guestStatus = checkGuestStatus();
+
+    switch (guestStatus.status) {
+      case "NO_DOCUMENTS":
+      case "REJECTED":
+      case "NOT_VERIFIED":
+        guestStatus.action();
+        break;
+      case "PENDING_VERIFICATION":
+        setErrorMessage(guestStatus.message);
+        break;
+      case "VERIFIED":
+        guestStatus.action();
+        break;
+      default:
+        setErrorMessage(
+          "Please complete your verification to book an apartment"
+        );
+    }
+  };
+
+  const handleRequestAvailability = async () => {
+    try {
+      setIsRequesting(true);
+      // Clear any previous messages
+      setSuccessMessage("");
+      setErrorMessage("");
+
+      const res = await requestAvailability(id);
+
+      if (res.success) {
+        setSuccessMessage("Availability request sent to host successfully!");
+      }
+    } catch (error) {
+      console.error("Failed to send availability request:", error);
+      setErrorMessage(error.message || "Failed to send availability request");
+    } finally {
+      setIsRequesting(false);
+    }
+  };
+
   // Show loading spinner like in dashboard
   if (loading) {
     return (
@@ -114,25 +225,6 @@ useEffect(() => {
       <div className="text-center mt-10 text-red-500">Apartment not found.</div>
     );
   }
-const handleRequestAvailability = async () => {
-  try {
-    setIsRequesting(true);
-    // Clear any previous messages
-    setSuccessMessage("");
-    setErrorMessage("");
-    
-    const res = await requestAvailability(id);
-    
-    if (res.success) {
-      setSuccessMessage("Availability request sent to host successfully!");
-    }
-  } catch (error) {
-    console.error("Failed to send availability request:", error);
-    setErrorMessage(error.message || "Failed to send availability request");
-  } finally {
-    setIsRequesting(false);
-  }
-};
 
   return (
     <div className="bg-white min-h-screen">
@@ -196,32 +288,35 @@ const handleRequestAvailability = async () => {
             on the website.
           </p>
         </div>
-{/* Success Message */}
-{successMessage && (
-  <div className="p-2 mt-2 bg-green-100 border border-green-400 text-green-700 rounded">
-    {successMessage}
-  </div>
-)}
 
-{/* Error Message */}
-{errorMessage && (
-  <div className="p-2 mt-2 bg-red-100 border border-red-400 text-red-700 rounded">
-    {errorMessage}
-  </div>
-)}
+        {/* Success Message */}
+        {successMessage && (
+          <div className="p-2 mt-2 bg-green-100 border border-green-400 text-green-700 rounded">
+            {successMessage}
+          </div>
+        )}
+
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="p-2 mt-2 bg-red-100 border border-red-400 text-red-700 rounded">
+            {errorMessage}
+          </div>
+        )}
+
         {/* Booking Button */}
-      <ButtonWhite 
-  text={isRequesting ? "Sending Request..." : "Request Availability"} 
-  className={"mt-20 mb-5"}
-  onClick={handleRequestAvailability}
-  disabled={isRequesting}
-/>
-        <Link to="/id-check">
-          <Button
-            text={`Book @ ₦${apartment.pricing?.pricePerNight?.toLocaleString()}/Night`}
-            className={"mb-20"}
-          />
-        </Link>
+        <ButtonWhite
+          text={isRequesting ? "Sending Request..." : "Request Availability"}
+          className={"mt-20 mb-5"}
+          onClick={handleRequestAvailability}
+          disabled={isRequesting}
+        />
+
+        {/* Book Now Button - Updated to handle guest verification */}
+        <Button
+          text={`Book @ ₦${apartment.pricing?.pricePerNight?.toLocaleString()}/Night`}
+          className={"mb-20"}
+          onClick={handleBookNow}
+        />
       </div>
     </div>
   );

@@ -1,18 +1,35 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useBooking } from "../../hooks/useBooking";
+import { useApartmentListing } from "../../hooks/useApartmentListing";
 
 export default function BookingPage() {
   const navigate = useNavigate();
-
+  const { id } = useParams(); // Get apartment ID from URL
+  const {
+    setApartmentDetails,
+    setBookingDates,
+    calculateFees,
+    getBookingSummary,
+  } = useBooking();
+  const { getApartmentById } = useApartmentListing();
   const [showCalendar, setShowCalendar] = useState(false);
   const [activeField, setActiveField] = useState(null);
   const [checkIn, setCheckIn] = useState(null);
   const [checkOut, setCheckOut] = useState(null);
 
-  const [days, setDays] = useState(0);
-  const [totalCost, setTotalCost] = useState(0);
+  useEffect(() => {
+    const apartment = getApartmentById(id);
 
-  const dailyRate = 30000; // per-day rate
+    if (apartment) {
+      const apartmentId = apartment.id;
+      const pricePerNight = apartment.price;
+      const securityDeposit = apartment.securityDeposit?.amount || 0;
+
+      // ✅ Pass these real values to your booking context
+      setApartmentDetails(apartmentId, pricePerNight, securityDeposit);
+    }
+  }, [id, getApartmentById, setApartmentDetails]);
 
   // calendar state
   const today = new Date();
@@ -52,20 +69,45 @@ export default function BookingPage() {
     setActiveField(null);
   };
 
-  // compute days + cost whenever checkIn & checkOut are both set
+  // Update booking context when dates change
   useEffect(() => {
     if (checkIn && checkOut) {
-      const diffTime = checkOut - checkIn;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays > 0) {
-        setDays(diffDays);
-        setTotalCost(diffDays * dailyRate);
-      } else {
-        setDays(0);
-        setTotalCost(0);
-      }
+      const apartment = getApartmentById(id);
+      if (!apartment) return;
+
+      const duration = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+
+      // Use local date formatting instead of ISO string
+      const formatDateForContext = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
+      const checkinString = formatDateForContext(checkIn);
+      const checkoutString = formatDateForContext(checkOut);
+
+      console.log(
+        "Saving to context - Checkin:",
+        checkinString,
+        "Checkout:",
+        checkoutString
+      );
+      console.log("Original checkIn:", checkIn.toString());
+      console.log("Original checkOut:", checkOut.toString());
+
+      setBookingDates(checkinString, checkoutString);
+
+      calculateFees(
+        apartment.price,
+        duration,
+        apartment.securityDeposit?.amount || 0
+      );
     }
-  }, [checkIn, checkOut]);
+  }, [checkIn, checkOut, id, getApartmentById, setBookingDates, calculateFees]);
+  // Get booking summary for display
+  const bookingSummary = getBookingSummary();
 
   const handlePrevMonth = () => {
     if (currentMonth === 0) {
@@ -161,11 +203,15 @@ export default function BookingPage() {
             Total Booking Cost
           </p>
           <p className="text-[30px] font-semibold text-black">
-            {days > 0 ? `N${totalCost.toLocaleString()}` : "0"}
+            {bookingSummary.totalAmount > 0
+              ? `₦${bookingSummary.totalAmount.toLocaleString()}`
+              : "0"}
           </p>
           <p className="text-[12px] font-medium text-[#505050]">
-            {days > 0
-              ? `${days} day${days > 1 ? "s" : ""} stay`
+            {bookingSummary.duration > 0
+              ? `${bookingSummary.duration} day${
+                  bookingSummary.duration > 1 ? "s" : ""
+                } stay`
               : "Select dates"}
           </p>
         </div>
@@ -173,8 +219,11 @@ export default function BookingPage() {
 
       {/* Bottom button */}
       <div className="p-4">
-        <Link to="/booking-overview">
-          <button className="w-full h-[57px] mt-[157px] rounded-[10px] font-semibold py-3 bg-[#A20BA2] text-white text-[16px]">
+        <Link to={`/current-booking-overview/${id}`}>
+          <button
+            className="w-full h-[57px] mt-[157px] rounded-[10px] font-semibold py-3 bg-[#A20BA2] text-white text-[16px] disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={!checkIn || !checkOut || bookingSummary.duration === 0}
+          >
             Proceed
           </button>
         </Link>
@@ -211,9 +260,9 @@ export default function BookingPage() {
 
             {/* Days of week */}
             <div className="grid grid-cols-7 text-[14.13px] text-gray-800 mb-2">
-              {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
-                <div key={d} className="text-center">
-                  {d}
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div key={day} className="text-center">
+                  {day.substring(0, 1)} {/* Show only first letter */}
                 </div>
               ))}
             </div>

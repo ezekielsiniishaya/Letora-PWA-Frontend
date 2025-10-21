@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { UserContext } from "./UserContext";
 import { getUserProfile } from "../services/userApi";
 import { toggleFavoriteAPI } from "../services/apartmentApi";
-import { markNotificationAsRead } from "../services/userApi"
+import { markNotificationAsRead } from "../services/userApi";
 
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -50,40 +50,39 @@ const UserProvider = ({ children }) => {
     initializeUser();
   }, []);
 
+  // Login function
+  const login = async (userData, token) => {
+    try {
+      setLoading(true);
 
-// Login function
-const login = async (userData, token) => {
-  try {
-    setLoading(true);
-    
-    // Store token first
-    localStorage.setItem("authToken", token);
-    
-    // Fetch complete user profile with notifications
-    const profileResponse = await getUserProfile();
-    const completeUserData = profileResponse.data || profileResponse;
-    
-    console.log("Complete user data after login:", completeUserData); // Debug log
-    
-    setUser(completeUserData);
-    setError(null);
-  } catch (err) {
-    console.error("Error fetching user profile after login:", err);
-    
-    // Fallback: use the basic user data from login
-    const actualUserData = userData.data || userData;
-    setUser(actualUserData);
-    setError("Logged in but could not load complete profile");
-  } finally {
-    setLoading(false);
-  }
-};
+      // Store token first
+      localStorage.setItem("authToken", token);
+
+      // Fetch complete user profile with notifications
+      const profileResponse = await getUserProfile();
+      const completeUserData = profileResponse.data || profileResponse;
+
+      console.log("Complete user data after login:", completeUserData); // Debug log
+
+      setUser(completeUserData);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching user profile after login:", err);
+
+      // Fallback: use the basic user data from login
+      const actualUserData = userData.data || userData;
+      setUser(actualUserData);
+      setError("Logged in but could not load complete profile");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const logout = () => {
-      // Clear search history for this user
-  const userId = user?.id || 'anonymous';
-  const storageKey = `apartmentSearchHistory_${userId}`;
-  localStorage.removeItem(storageKey);
+    // Clear search history for this user
+    const userId = user?.id || "anonymous";
+    const storageKey = `apartmentSearchHistory_${userId}`;
+    localStorage.removeItem(storageKey);
 
     setUser(null);
     localStorage.removeItem("authToken");
@@ -123,57 +122,62 @@ const login = async (userData, token) => {
       : 0;
   }, [user]);
 
-// In UserProvider.jsx - add a check to prevent unnecessary API calls
-const markAsRead = useCallback(async (notificationId) => {
-  try {
-    // Check if notification is already read in local state to avoid unnecessary API calls
-    const currentNotification = user?.notifications?.items?.find(
-      n => n.id === notificationId
-    );
-    
-    if (currentNotification?.isRead) {
-      console.log("Notification already read, skipping API call");
-      return { success: true };
-    }
+  // In UserProvider.jsx - add a check to prevent unnecessary API calls
+  const markAsRead = useCallback(
+    async (notificationId) => {
+      try {
+        // Check if notification is already read in local state to avoid unnecessary API calls
+        const currentNotification = user?.notifications?.items?.find(
+          (n) => n.id === notificationId
+        );
 
-    console.log("Marking notification as read:", notificationId);
-    
-    // Call API to mark as read
-    const response = await markNotificationAsRead(notificationId);
-    
-    if (!response.success) {
-      throw new Error(response.error || "Failed to mark notification as read");
-    }
+        if (currentNotification?.isRead) {
+          console.log("Notification already read, skipping API call");
+          return { success: true };
+        }
 
-    // Update local state
-    setUser((prev) => {
-      if (!prev || !prev.notifications?.items) return prev;
-      
-      const updatedItems = prev.notifications.items.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, isRead: true, readAt: new Date() }
-          : notification
-      );
-      
-      const unreadCount = updatedItems.filter(n => !n.isRead).length;
-      
-      return {
-        ...prev,
-        notifications: {
-          ...prev.notifications,
-          unread: unreadCount,
-          items: updatedItems,
-        },
-      };
-    });
+        console.log("Marking notification as read:", notificationId);
 
-    return { success: true };
-  } catch (err) {
-    console.error("Error marking notification as read:", err);
-    setError("Failed to mark notification as read");
-    return { success: false, error: err.message };
-  }
-}, [user]); // Add user to dependencies
+        // Call API to mark as read
+        const response = await markNotificationAsRead(notificationId);
+
+        if (!response.success) {
+          throw new Error(
+            response.error || "Failed to mark notification as read"
+          );
+        }
+
+        // Update local state
+        setUser((prev) => {
+          if (!prev || !prev.notifications?.items) return prev;
+
+          const updatedItems = prev.notifications.items.map((notification) =>
+            notification.id === notificationId
+              ? { ...notification, isRead: true, readAt: new Date() }
+              : notification
+          );
+
+          const unreadCount = updatedItems.filter((n) => !n.isRead).length;
+
+          return {
+            ...prev,
+            notifications: {
+              ...prev.notifications,
+              unread: unreadCount,
+              items: updatedItems,
+            },
+          };
+        });
+
+        return { success: true };
+      } catch (err) {
+        console.error("Error marking notification as read:", err);
+        setError("Failed to mark notification as read");
+        return { success: false, error: err.message };
+      }
+    },
+    [user]
+  ); // Add user to dependencies
 
   // MARK ALL NOTIFICATIONS AS READ
   const markAllAsRead = useCallback(async () => {
@@ -324,7 +328,40 @@ const markAsRead = useCallback(async (notificationId) => {
   const getUserDocuments = useCallback(() => {
     return user?.documents || [];
   }, [user]);
+  // Add these helper functions to your UserProvider:
 
+  // Check if guest is verified and can book
+  const isGuestVerified = useCallback(() => {
+    return user?.guestVerification?.canBook || false;
+  }, [user]);
+
+  // Get guest verification status
+  const getGuestVerificationStatus = useCallback(() => {
+    return (
+      user?.guestVerification || {
+        status: user?.guestDocumentStatus || "NOT_REQUIRED",
+        hasRequiredDocuments: false,
+        canBook: false,
+        documents: [],
+      }
+    );
+  }, [user]);
+
+  // Check if guest has uploaded documents (pending verification)
+  const hasPendingGuestDocuments = useCallback(() => {
+    return user?.guestDocumentStatus === "PENDING";
+  }, [user]);
+
+  // Get guest-specific documents
+  const getGuestDocuments = useCallback(() => {
+    return (
+      user?.guestVerification?.documents ||
+      user?.documents?.filter(
+        (doc) => doc.type === "ID_CARD" || doc.type === "ID_PHOTOGRAPH"
+      ) ||
+      []
+    );
+  }, [user]);
   const value = {
     user,
     loading,
@@ -345,7 +382,11 @@ const markAsRead = useCallback(async (notificationId) => {
     getUserFavorites,
     getUserApartments,
     getUserDocuments,
-
+    // Guest verification functions
+    isGuestVerified,
+    getGuestVerificationStatus,
+    hasPendingGuestDocuments,
+    getGuestDocuments,
     // Notification functions
     getUserNotifications,
     getUnreadNotificationsCount,

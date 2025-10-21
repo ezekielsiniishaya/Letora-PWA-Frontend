@@ -1,21 +1,93 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
-import { Link } from "react-router-dom";
+import { useGuestDocument } from "../../hooks/useGuestDocument";
 
 export default function IdentityVerification() {
   const [file, setFile] = useState(null);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { documents, addDocument, getDocumentStatus } = useGuestDocument();
+
+  // Sync local state with context when component mounts
+  useEffect(() => {
+    if (documents.idCard) {
+      // The context now stores the actual File object directly
+      setFile(documents.idCard);
+    }
+  }, [documents.idCard]);
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
+
+    // File validation
+    if (selectedFile.type !== "application/pdf") {
+      setError("Invalid file type. Please upload PDF files only.");
+      e.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setError("File too large. Please upload a file under 5MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setError("");
+    setFile(selectedFile);
+
+    // Save to context (this will save to localStorage)
+    addDocument("idCard", selectedFile);
+    console.log("ID Card saved to context:", getDocumentStatus());
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (file) {
-      navigate("/next-step"); // replace with your actual next route
+    const activeFile = file || documents.idCard;
+    if (!activeFile) {
+      setError("Please select an ID document to continue.");
+      return;
     }
+    navigate("/guest-id-last");
+  };
+
+  const getUploadBoxContent = () => {
+    // Check both local state and context
+    const activeFile = file || documents.idCard;
+    if (activeFile) {
+      return (
+        <>
+          <img
+            src="/icons/pdf.svg"
+            alt="Preview"
+            className="w-[24px] h-[28px] mb-2"
+          />
+          <span className="text-[12px] text-[#333333] truncate max-w-[180px]">
+            {activeFile.name}
+          </span>
+          <span className="text-[10px] text-[#666666] mt-1">
+            Click to change file
+          </span>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <img
+          src="/icons/pdf.svg"
+          alt="Upload"
+          className="w-[24px] h-[28px] mb-2"
+        />
+        <span className="text-center w-[187px] leading-tight">
+          NIN Slip / Int. Passport / Driver's License
+        </span>
+      </>
+    );
   };
 
   return (
@@ -44,57 +116,31 @@ export default function IdentityVerification() {
             Upload Valid Government ID <span className="text-red-500">*</span>
           </label>
 
-          {/* Upload Box */}
-          <span className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9]">
-            <label
-              className="w-full h-[200px] 
-      bg-[#CCCCCC42] 
-      rounded-lg 
-      flex flex-col items-center justify-center 
-      cursor-pointer text-[#505050] font-medium text-[12px]"
-            >
+          <div className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9]">
+            <label className="w-full h-[200px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
               <input
                 type="file"
-                accept="image/*,.pdf"
+                accept=".pdf,application/pdf"
                 className="hidden"
                 onChange={handleFileChange}
               />
-
-              {/* If file selected, show preview, else show JPG icon */}
-              {file ? (
-                <>
-                  {/* Image preview */}
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt="Preview"
-                    className="w-[90%] h-[70%] object-contain mb-1"
-                  />
-                  <span className="text-[12px] text-[#333333] truncate max-w-[180px]">
-                    {file.name}
-                  </span>
-                </>
-              ) : (
-                <>
-                  {/* Default JPG placeholder icon */}
-                  <img
-                    src="/icons/jpg.svg"
-                    alt="Upload"
-                    className="w-[24px] h-[28px] mb-2"
-                  />
-                  <span className="text-center w-[187px] leading-tight">
-                    NIN Slip / Int. Passport / Driver’s License
-                  </span>
-                </>
-              )}
+              {getUploadBoxContent()}
             </label>
-          </span>
+          </div>
 
-          {/* Next Button */}
-          <Link to="/guest-id-last">
-            <div className="mt-[173px]">
-              <Button text="Next" type="submit" />
+          {error && (
+            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
             </div>
-          </Link>
+          )}
+
+          <div className="mt-[173px]">
+            <Button
+              text="Next"
+              type="submit"
+              disabled={!file && !documents.idCard}
+            />
+          </div>
         </form>
       </div>
     </div>
