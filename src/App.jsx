@@ -67,6 +67,8 @@ import FilteredResultsPage from "./components/dashboard/FilterResultsPage";
 import GuestDocumentProvider from "./contexts/GuestDocumentProvider";
 import BookingProvider from "./contexts/BookingProvider";
 import CurrentBookingOverviewPage from "./pages/GuestDashboard/CurrentBookingOverviewPage";
+import BookingStatusPage from "./pages/GuestDashboard/BookingStatus";
+import PaymentPage from "./pages/GuestDashboard/PaymentPage";
 
 function App() {
   return (
@@ -143,7 +145,10 @@ function App() {
                         path="/host-booking-details/:id"
                         element={<HostBookingDetails />}
                       />
-
+                      <Route
+                        path="/booking-status/:id"
+                        element={<BookingStatusPage />}
+                      />
                       {/* Host Profile & Settings */}
                       <Route path="/profile" element={<ProfilePage />} />
                       <Route path="/edit-profile" element={<EditProfile />} />
@@ -268,7 +273,10 @@ function App() {
                         path="/shortlet-overview/:id"
                         element={<ShortletOverviewPage />}
                       />
-
+                      <Route
+                        path="/booking-payment/:id?"
+                        element={<PaymentPage />}
+                      />
                       {/* ===== SHARED ROUTES ===== */}
 
                       {/* Reviews & Social Features */}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ApartmentSlider from "../../components/dashboard/ApartmentSlider";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
 import WithdrawPopup from "../../components/dashboard/WithdrawPopUp";
@@ -40,6 +40,7 @@ export default function Dashboard() {
     isAuthenticated,
     getUserBookings,
     getUnreadNotificationsCount,
+    refreshUser,
   } = useUser();
 
   // Get user's actual bookings and apartments
@@ -59,7 +60,22 @@ export default function Dashboard() {
           minimumFractionDigits: 1,
           maximumFractionDigits: 2,
         });
+  // Refresh user data when component mounts
+  useEffect(() => {
+    const refreshUserData = async () => {
+      if (isAuthenticated() && !userLoading) {
+        try {
+          await refreshUser();
+          console.log("User data refreshed successfully");
+        } catch (error) {
+          console.error("Failed to refresh user data:", error);
+        }
+      }
+    };
 
+    refreshUserData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Show loading state for user data
   if (userLoading) {
     return (

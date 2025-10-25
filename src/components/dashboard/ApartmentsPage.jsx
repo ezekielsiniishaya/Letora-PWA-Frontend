@@ -2,13 +2,30 @@ import { useNavigate } from "react-router-dom";
 import ApartmentCard from "./ApartmentCard";
 import { Link } from "react-router-dom";
 import { useApartmentListing } from "../../hooks/useApartmentListing";
+import { useContext, useEffect } from "react";
+import { UserContext } from "../../contexts/UserContext";
 
 export default function ApartmentsPage() {
   const navigate = useNavigate();
+  const { refreshUser } = useContext(UserContext);
 
   // Use the apartment listing context to get actual apartments
   const { nearbyApartments, nearbyApartmentsLoading, error } =
     useApartmentListing();
+
+  // Refresh user data when component mounts
+  useEffect(() => {
+    const refreshUserData = async () => {
+      try {
+        await refreshUser?.();
+      } catch (err) {
+        console.error("Failed to refresh user data:", err);
+        // Silently fail - don't show error to user for background refresh
+      }
+    };
+
+    refreshUserData();
+  }, [refreshUser]);
 
   if (nearbyApartmentsLoading) {
     return (

@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
 import { useUser } from "../../hooks/useUser";
+import { UserContext } from "../../contexts/UserContext";
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState("ongoing");
+  const { refreshUser } = useContext(UserContext);
 
   // Use the user context to get actual bookings data
   const {
@@ -13,6 +15,20 @@ export default function BookingsPage() {
     user,
     getUserBookings,
   } = useUser();
+
+  // Refresh user data when component mounts
+  useEffect(() => {
+    const refreshUserData = async () => {
+      try {
+        await refreshUser?.();
+      } catch (err) {
+        console.error("Failed to refresh user data:", err);
+        // Silently fail - don't show error to user for background refresh
+      }
+    };
+
+    refreshUserData();
+  }, [refreshUser]);
 
   const tabs = [
     { key: "ongoing", label: "Ongoing" },

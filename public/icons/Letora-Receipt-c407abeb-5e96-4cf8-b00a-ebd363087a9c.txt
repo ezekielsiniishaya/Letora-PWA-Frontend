@@ -1,0 +1,23 @@
+
+    LETORA BOOKING RECEIPT
+    ======================
+    
+    Booking ID: c407abeb-5e96-4cf8-b00a-ebd363087a9c
+    Date: 10/25/2025
+    
+    Guest: Ezekiel Ishaya
+    Email: guest@mail.com
+    
+    Property: Elegant Duplex in Asokoro
+    Location: Asokoro, Abuja
+    
+    Check-in: 25-Oct-2025
+    Check-out: 27-Oct-2025
+    Duration: 2 days
+    
+    Total Amount: ₦858,800.00
+    Payment Status: PAID
+    Payment Reference: BOOK-c407abeb-5e96-4cf8-b00a-ebd363087a9c-8e4befb13ad8
+    
+    Thank you for choosing Letora!
+  

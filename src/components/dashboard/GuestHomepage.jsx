@@ -35,10 +35,10 @@ export default function Dashboard() {
 
   // Get user's actual bookings
   const userBookings = getUserBookings();
-
-  // Use first booking or fallback to hardcoded data
-  const currentBooking = userBookings.length > 0 ? userBookings[0] : null;
-
+  // Find the first booking that is not pending
+  const currentBooking = userBookings.find(
+    (booking) => booking.status?.toLowerCase() !== "pending" || null
+  );
   // Show loading state for user data
   if (userLoading) {
     return (
@@ -110,22 +110,22 @@ export default function Dashboard() {
           <p className="text-[12.02px]">Discover wonderful Apartments</p>
         </div>
 
-      {/* Search Bar - Click to navigate to search page */}
-<Link 
-  to="/search" 
-  className="absolute left-1/2 -translate-x-1/2 bottom-[32px] w-[90%] h-[42.91px] z-10"
->
-  <div className="bg-white rounded-full flex items-center px-[17px] py-[13px] shadow cursor-pointer">
-    <img
-      src="/icons/search.svg"
-      alt="Search"
-      className="w-[14px] h-[14px] mr-[14.3px]"
-    />
-    <div className="flex-1 text-[11px] text-[#666666]">
-      Search Apartments, Apartment type, Location...
-    </div>
-  </div>
-</Link>
+        {/* Search Bar - Click to navigate to search page */}
+        <Link
+          to="/search"
+          className="absolute left-1/2 -translate-x-1/2 bottom-[32px] w-[90%] h-[42.91px] z-10"
+        >
+          <div className="bg-white rounded-full flex items-center px-[17px] py-[13px] shadow cursor-pointer">
+            <img
+              src="/icons/search.svg"
+              alt="Search"
+              className="w-[14px] h-[14px] mr-[14.3px]"
+            />
+            <div className="flex-1 text-[11px] text-[#666666]">
+              Search Apartments, Apartment type, Location...
+            </div>
+          </div>
+        </Link>
       </div>
 
       {/* My Booking Section - Show empty state when no booking */}
