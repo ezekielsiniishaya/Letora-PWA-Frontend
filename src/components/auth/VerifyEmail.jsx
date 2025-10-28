@@ -35,7 +35,7 @@ export default function VerifyEmail() {
   // Countdown timer
   useEffect(() => {
     if (resendTimer === 0) return;
-    const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1);
+    const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
     return () => clearTimeout(timer);
   }, [resendTimer]);
 

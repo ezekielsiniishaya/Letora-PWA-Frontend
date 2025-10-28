@@ -111,32 +111,6 @@ export default function SignUpForm() {
           Create an account as a {urlRole}
         </p>
 
-        {/* ✅ Alerts */}
-        {error === "network" && (
-          <div className="mt-4">
-            <Alert
-              type="network"
-              message="Network issues. Get better reception and try again."
-            />
-          </div>
-        )}
-        {error === "email" && (
-          <div className="mt-4">
-            <Alert
-              type="error"
-              message="Email already exists. Please use another one or sign in."
-            />
-          </div>
-        )}
-        {error === "server" && (
-          <div className="mt-4">
-            <Alert
-              type="error"
-              message="Server error. Please try again later."
-            />
-          </div>
-        )}
-
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           {/* First Name */}
           <div>
@@ -314,6 +288,31 @@ export default function SignUpForm() {
               />
             </div>
           </div>
+          {/* ✅ Alerts */}
+          {error === "network" && (
+            <div className="mt-4">
+              <Alert
+                type="network"
+                message="Network issues. Get better reception and try again."
+              />
+            </div>
+          )}
+          {error === "email" && (
+            <div className="mt-4">
+              <Alert
+                type="error"
+                message="Email already exists. Please use another one or sign in."
+              />
+            </div>
+          )}
+          {error === "server" && (
+            <div className="mt-4">
+              <Alert
+                type="error"
+                message="Server error. Please try again later."
+              />
+            </div>
+          )}
 
           <Button
             type="submit"
