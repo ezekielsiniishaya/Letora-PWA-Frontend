@@ -1,31 +1,53 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../Header";
 import Button from "../Button";
+import Alert from "../utils/Alerts.jsx";
 import {
   verifyEmailAPI,
   resendVerificationEmailAPI,
 } from "../../services/authApi.js";
 
-export default function VerifyPassswordEmail() {
+export default function VerifyEmail() {
   const [code, setCode] = useState(["", "", "", "", ""]);
   const [resendTimer, setResendTimer] = useState(120);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [inlineError, setInlineError] = useState("");
+  const [alert, setAlert] = useState(null);
   const [hasVerified, setHasVerified] = useState(false);
   const [autoVerifyAttempted, setAutoVerifyAttempted] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Get email from navigation state or use a default
-  const userEmail = location.state?.email || "your email";
+  // ✅ Get email from location state OR localStorage as fallback
+  const getStoredEmail = () => {
+    try {
+      return localStorage.getItem("verificationEmail");
+    } catch (error) {
+      console.error("Failed to get email from localStorage:", error);
+      return null;
+    }
+  };
 
-  // Countdown timer for resend
+  const userEmail = location.state?.email || getStoredEmail() || "your email";
+
+  // Countdown timer
   useEffect(() => {
     if (resendTimer === 0) return;
-    const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1);
     return () => clearTimeout(timer);
   }, [resendTimer]);
+
+  const clearCode = () => {
+    setCode(["", "", "", "", ""]);
+    setAutoVerifyAttempted(false);
+  };
+
+  const showAlert = (type, message) => {
+    setAlert({ type, message });
+    setTimeout(() => setAlert(null), 3000);
+  };
 
   const handleKeyPress = (key) => {
     const newCode = [...code];
@@ -33,63 +55,134 @@ export default function VerifyPassswordEmail() {
 
     if (key === "del") {
       const lastIndex = newCode.findIndex((c) => c === "") - 1;
-      if (lastIndex >= 0) {
-        newCode[lastIndex] = "";
-      } else {
-        newCode[4] = "";
-      }
+      if (lastIndex >= 0) newCode[lastIndex] = "";
+      else newCode[4] = "";
     } else if (emptyIndex !== -1) {
       newCode[emptyIndex] = key;
     }
+
     setCode(newCode);
-    setError(""); // Clear error when user types
-    setAutoVerifyAttempted(false); // Reset when user types
+    setInlineError("");
+    setAutoVerifyAttempted(false);
   };
 
-  // NEW: Function to clear the code input
-  const clearCode = () => {
-    setCode(["", "", "", "", ""]);
-    setAutoVerifyAttempted(false);
+  // ✅ Simple and reliable error handler - similar to SignIn component
+  const handleError = (err) => {
+    console.log("Raw error:", err);
+
+    // Network errors - no response from server
+    if (!err.response) {
+      console.log("Network error detected");
+      return {
+        type: "network",
+        message: "Network issues. Get better reception and try again",
+      };
+    }
+
+    const status = err.response.status;
+    const backendMsg =
+      err.response.data?.error || err.response.data?.message || "";
+    const errorMsg = String(backendMsg).toLowerCase();
+
+    console.log("Backend error:", backendMsg);
+    console.log("Status code:", status);
+
+    // Database errors
+    if (
+      errorMsg.includes("can't reach database") ||
+      errorMsg.includes("prisma") ||
+      errorMsg.includes("database server") ||
+      errorMsg.includes("database error") ||
+      errorMsg.includes("neon.tech") ||
+      errorMsg.includes("connection") ||
+      errorMsg.includes("query") ||
+      errorMsg.includes("orm")
+    ) {
+      console.log("Database error detected");
+      return {
+        type: "error",
+        message: "Server or database error. Please try again later.",
+      };
+    }
+
+    // Invalid verification code errors
+    if (
+      errorMsg.includes("invalid or expired verification code") ||
+      errorMsg.includes("invalid verification code") ||
+      errorMsg.includes("expired verification code") ||
+      errorMsg.includes("invalid code")
+    ) {
+      console.log("Invalid code error detected");
+      return {
+        type: "error",
+        message: "Invalid or expired verification code",
+      };
+    }
+
+    // Server errors (5xx)
+    if (status >= 500) {
+      console.log("Server error detected (5xx)");
+      return {
+        type: "error",
+        message: "Server or database error. Please try again later.",
+      };
+    }
+
+    // Client errors (4xx) - show backend message
+    if (status >= 400 && status < 500) {
+      console.log("Client error detected (4xx)");
+      if (backendMsg) {
+        return { type: "error", message: backendMsg };
+      }
+      return {
+        type: "error",
+        message: "Request failed. Please try again.",
+      };
+    }
+
+    // Default fallback
+    console.log("Generic error fallback");
+    return {
+      type: "error",
+      message: "Something went wrong. Please try again.",
+    };
   };
 
   const handleVerify = async () => {
     const verificationCode = code.join("");
 
     if (verificationCode.length !== 5) {
-      setError("Please enter the complete 5-digit code");
+      setInlineError("Please enter the complete 5-digit code");
       return;
     }
 
     setLoading(true);
-    setError("");
+    setInlineError("");
 
     try {
       const result = await verifyEmailAPI(verificationCode);
-      setSuccess(result.message || "Email verified successfully!");
+      showAlert("success", result.message || "Email verified successfully!");
       setHasVerified(true);
 
-      // Store token if needed
-      if (result.token) {
-        localStorage.setItem("token", result.token);
-        console.log("Token stored after email verification");
+      if (result.token) localStorage.setItem("token", result.token);
+      const userRole = result.user?.role || result.role;
+
+      // ✅ Clear the stored email after successful verification
+      try {
+        localStorage.removeItem("verificationEmail");
+      } catch (error) {
+        console.error("Failed to clear email from localStorage:", error);
       }
 
-      // Get user role from API response
-      const userRole = result.user?.role || result.role;
-      console.log("User role from API:", userRole);
-
-      // Redirect to create password page with user role in state
       setTimeout(() => {
         navigate("/create-password", {
-          state: {
-            role: userRole,
-            email: userEmail,
-          },
+          state: { role: userRole, email: userEmail },
         });
       }, 1500);
     } catch (err) {
-      setError(err.message || "Verification failed. Please try again.");
-      // NEW: Clear code on verification failure
+      const errorInfo = handleError(err);
+      showAlert(errorInfo.type, errorInfo.message);
+      setInlineError("");
       clearCode();
     } finally {
       setLoading(false);
@@ -98,26 +191,44 @@ export default function VerifyPassswordEmail() {
 
   const handleResendCode = async () => {
     if (resendTimer > 0) return;
-
-    setError("");
-    setSuccess("");
+    setInlineError("");
     setAutoVerifyAttempted(false);
-    // NEW: Clear the code input when resending
     clearCode();
+    setResendLoading(true);
 
     try {
+      // ✅ Use the userEmail which now comes from localStorage if needed
       const result = await resendVerificationEmailAPI(userEmail);
-      setSuccess(result.message || "Verification code sent!");
+      showAlert(
+        "success",
+        result.message || "2FA  Required. OTP sent to your mail"
+      );
       setResendTimer(120);
     } catch (err) {
-      setError(err.message || "Failed to resend code. Please try again.");
+      const errorInfo = handleError(err);
+
+      // ✅ If the email doesn't exist in the system, clear localStorage
+      if (
+        err.response?.status === 404 ||
+        err.response?.data?.error?.includes("not found")
+      ) {
+        try {
+          localStorage.removeItem("verificationEmail");
+        } catch (error) {
+          console.error("Failed to clear email from localStorage:", error);
+        }
+      }
+
+      showAlert(errorInfo.type, errorInfo.message);
+      clearCode();
+    } finally {
+      setResendLoading(false);
     }
   };
 
-  // Auto-submit when code is complete
+  // Auto verify when code is complete
   useEffect(() => {
     const verificationCode = code.join("");
-
     if (
       verificationCode.length === 5 &&
       !loading &&
@@ -126,33 +237,35 @@ export default function VerifyPassswordEmail() {
     ) {
       const verify = async () => {
         setLoading(true);
-        setError("");
+        setInlineError("");
         setAutoVerifyAttempted(true);
 
         try {
           const result = await verifyEmailAPI(verificationCode);
-          setSuccess(result.message || "Email verified successfully!");
+          showAlert(
+            "success",
+            result.message || "Email verified successfully!"
+          );
           setHasVerified(true);
 
-          if (result.token) {
-            localStorage.setItem("token", result.token);
-          }
-
-          // Get user role from API response
+          if (result.token) localStorage.setItem("token", result.token);
           const userRole = result.user?.role || result.role;
-          console.log("User role from API (auto-verify):", userRole);
+
+          // ✅ Clear the stored email after successful verification
+          try {
+            localStorage.removeItem("verificationEmail");
+          } catch (error) {
+            console.error("Failed to clear email from localStorage:", error);
+          }
 
           setTimeout(() => {
             navigate("/create-password", {
-              state: {
-                role: userRole,
-                email: userEmail,
-              },
+              state: { role: userRole, email: userEmail },
             });
           }, 1500);
         } catch (err) {
-          setError(err.message || "Verification failed. Please try again.");
-          // NEW: Clear code on auto-verification failure
+          const errorInfo = handleError(err);
+          showAlert(errorInfo.type, errorInfo.message);
           clearCode();
         } finally {
           setLoading(false);
@@ -163,10 +276,20 @@ export default function VerifyPassswordEmail() {
     }
   }, [code, navigate, hasVerified, loading, userEmail, autoVerifyAttempted]);
 
+  // ✅ Add a cleanup effect to remove email when leaving the page
+  useEffect(() => {
+    return () => {
+      // Only remove if verification was successful
+      if (!hasVerified) {
+        // You might want to keep it for resend functionality
+        // localStorage.removeItem('verificationEmail');
+      }
+    };
+  }, [hasVerified]);
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
       <Header />
-
       <div className="w-full max-w-sm mt-[26px]">
         <h2 className="text-[22px] font-medium text-[#1A1A1A]">
           Verify Email Address
@@ -175,30 +298,24 @@ export default function VerifyPassswordEmail() {
           We've sent a code to {userEmail}. Enter the code below.
         </p>
 
-        {/* Error and Success Messages */}
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-            {success}
+        {/* ✅ Alert below the "We've sent a code" text */}
+        {alert && (
+          <div className="mt-4">
+            <Alert type={alert.type} message={alert.message} />
           </div>
         )}
 
-        {/* Enter verification code text */}
         <p className="text-[16px] text-[#666666] mt-[32px] mb-2">
           Enter verification code
         </p>
 
-        {/* Verification Code Boxes */}
-        <div className="flex justify-between">
+        {/* ✅ Code Boxes */}
+        <div className="flex justify-between mb-1">
           {code.map((c, i) => (
             <div
               key={i}
               className={`w-[48px] h-[48px] bg-white flex items-center justify-center text-lg font-medium rounded-md border-2 ${
-                error ? "border-red-500" : "border-gray-300"
+                inlineError ? "border-[#F81A0C]" : "border-[#CCC]"
               }`}
             >
               {c}
@@ -206,7 +323,12 @@ export default function VerifyPassswordEmail() {
           ))}
         </div>
 
-        {/* Resend code */}
+        {/* ✅ Inline small red text for incomplete code */}
+        {inlineError && (
+          <p className="text-[#F81A0C] text-[12px] mt-1">{inlineError}</p>
+        )}
+
+        {/* Resend */}
         <p className="text-[16px] mt-[36px] mb-[24px] text-center">
           {resendTimer > 0 ? (
             <span className="text-[#505050]">
@@ -218,22 +340,21 @@ export default function VerifyPassswordEmail() {
           ) : (
             <button
               onClick={handleResendCode}
-              className="text-[#A20BA2] underline"
-              disabled={loading}
+              className={resendLoading ? "text-[#666666]" : "text-[#A20BA2]"}
+              disabled={resendLoading}
             >
-              Resend Code
+              {resendLoading ? "Please wait..." : "Resend Code"}
             </button>
           )}
         </p>
 
-        {/* Verify button - Only show if not auto-submitting */}
         <Button
           text={loading ? "Verifying..." : "Verify"}
           onClick={handleVerify}
           disabled={loading || code.join("").length !== 5 || hasVerified}
         />
 
-        {/* On-screen keyboard */}
+        {/* Keypad */}
         <div className="grid grid-cols-3 gap-4 mt-[48px]">
           {["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "del"].map(
             (key) => (

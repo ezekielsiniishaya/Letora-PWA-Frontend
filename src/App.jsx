@@ -88,6 +88,7 @@ function App() {
                       <Route path="/choose-type" element={<ChooseType />} />
                       <Route path="/sign-in" element={<GeneralSignIn />} />
                       <Route path="/sign-up" element={<SignUpForm />} />
+                      <Route path="/verify-email" element={<VerifyEmail />} />
                       <Route
                         path="/verify-password-email"
                         element={<VerifyPasswordEmail />}

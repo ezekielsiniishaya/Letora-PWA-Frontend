@@ -77,9 +77,8 @@ export default function SplashWithOnboarding() {
             Letora
           </h1>
         </div>
-        <p className="mt-4 text-[14px] font-normal opacity-90 text-center max-w-xs">
-          Enjoy the <span className="italic font-medium">Mi Casa Su Casa</span>{" "}
-          Experience
+        <p className="mt-4 text-[14px] font-medium opacity-90 text-center max-w-xs">
+          Enjoy the Mi Casa Su Casa Experience
         </p>
       </div>
 

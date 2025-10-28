@@ -5,21 +5,26 @@ export default function PasswordInput({
   value,
   onChange,
   disabled = false,
+  hasError = false, // ✅ Added to handle red border from parent
+  errorMessage = "", // ✅ Optional custom error text
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
-  const isValid = value.length >= 6; // Changed to 6 characters to match your backend requirement
+  const isValid = value.length >= 6;
 
   return (
-    <div className="relative w-full mt-2">
-      <label className="block text-[14px] font-medium text-[#333333] mb-1">
+    <div className="relative w-full mt-[32px]">
+      <label className="block text-[14px] font-medium text-[#686464] mb-1">
         {label}
       </label>
 
+      {/* ✅ Border updates here */}
       <div
-        className={`flex items-center border rounded-md bg-white h-[48px] px-3 ${
-          disabled ? "opacity-50" : ""
-        }`}
+        className={`flex items-center rounded-md bg-white h-[48px] px-3 border ${
+          hasError
+            ? "border-[#F81A0C]"
+            : "border-[#CCC] focus-within:ring-[#A20BA2] focus-within:border-[#A20BA2]"
+        } ${disabled ? "opacity-50" : ""}`}
       >
         <input
           type={showPassword ? "text" : "password"}
@@ -76,10 +81,16 @@ export default function PasswordInput({
         </button>
       </div>
 
-      {!isValid && value.length > 0 && (
-        <p className="mt-2 text-[12px] text-[#999999]">
-          - minimum 6 characters
-        </p>
+      {/* ✅ Dynamic messages */}
+      {hasError ? (
+        <p className="text-[#F81A0C] text-[12px] mt-1">{errorMessage}</p>
+      ) : (
+        !isValid &&
+        value.length > 0 && (
+          <p className="mt-2 text-[12px] text-[#999999]">
+            - minimum 6 characters
+          </p>
+        )
       )}
     </div>
   );

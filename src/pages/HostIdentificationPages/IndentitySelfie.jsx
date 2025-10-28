@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHostProfile } from "../../contexts/HostProfileContext";
 import Button from "../../components/Button";
+import Alert from "../../components/utils/Alerts.jsx"; // Adjust path as needed
 
 export default function IdentitySelfie() {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState("");
+  const [alert, setAlert] = useState(null);
   const navigate = useNavigate();
 
   const {
@@ -47,7 +50,13 @@ export default function IdentitySelfie() {
         URL.revokeObjectURL(newPreviewUrl);
       }
     };
-  }, [file, existingSelfie  ]); // Remove previewUrl from dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, existingSelfie]); // Remove previewUrl from dependencies
+
+  const showAlert = (type, message) => {
+    setAlert({ type, message });
+    setTimeout(() => setAlert(null), 3000);
+  };
 
   // Handle file selection
   const handleFileChange = (e) => {
@@ -58,6 +67,7 @@ export default function IdentitySelfie() {
       return;
     }
 
+    // Client-side validation - use setError instead of showAlert
     if (!selectedFile.type.startsWith("image/")) {
       setError("Invalid file type. Please upload image files only.");
       e.target.value = "";
@@ -72,14 +82,21 @@ export default function IdentitySelfie() {
 
     setFile(selectedFile);
     setError("");
+    setFieldError("");
+    // No alert for successful file selection - this is client-side
   };
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Clear previous errors
+    setFieldError("");
+    setError("");
+
+    // Client-side validation - use fieldError instead of alert
     if (!file && !existingSelfie) {
-      setError("Please select an image file to continue.");
+      setFieldError("This field is required.");
       return;
     }
 
@@ -122,7 +139,12 @@ export default function IdentitySelfie() {
       navigate("/add-bank-details");
     } catch (err) {
       console.error("Error saving selfie:", err);
-      setError("Failed to save selfie. Please try again.");
+
+      // ✅ Only use alert for actual backend errors
+      const errorMessage =
+        err.response?.data?.message ||
+        "Failed to save selfie. Please try again.";
+      showAlert("error", errorMessage);
     } finally {
       setUploading(false);
     }
@@ -169,15 +191,6 @@ export default function IdentitySelfie() {
     }
   };
 
-  const handleRemoveFile = () => {
-    setFile(null);
-    setPreviewUrl(existingSelfie?.url || "");
-
-    // Clear the file input
-    const fileInput = document.querySelector('input[type="file"]');
-    if (fileInput) fileInput.value = "";
-  };
-
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px]">
       {/* Header */}
@@ -202,13 +215,25 @@ export default function IdentitySelfie() {
           We need to verify you
         </p>
 
+        {/* ✅ Alert display - ONLY for backend responses */}
+        {alert && (
+          <div className="mt-4">
+            <Alert type={alert.type} message={alert.message} />
+          </div>
+        )}
+
         <form className="mt-[45px] flex flex-col" onSubmit={handleSubmit}>
           <label className="block text-[14px] font-medium text-[#333333]">
             Upload Selfie with ID <span className="text-red-500">*</span>
           </label>
 
-          <div className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9] relative">
-            <label className="w-full h-[200px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
+          {/* Updated upload box with dashed border and red border for errors */}
+          <div className="mt-[10px] bg-white rounded-lg">
+            <label
+              className={`w-full h-[200px] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] border-[2.3px] border-dashed ${
+                fieldError ? "border-[#F81A0C]" : "border-[#D1D0D0]"
+              }`}
+            >
               <input
                 type="file"
                 accept="image/*"
@@ -217,23 +242,16 @@ export default function IdentitySelfie() {
               />
               {getUploadBoxContent()}
             </label>
-
-            {/* Remove button when new file is selected */}
-            {file && previewUrl && (
-              <button
-                type="button"
-                onClick={handleRemoveFile}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-              >
-                ×
-              </button>
-            )}
           </div>
 
-          {error && (
-            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
+          {/* ✅ Field error message - for client-side validation */}
+          {fieldError && (
+            <p className="text-[#F81A0C] text-[12px] mt-1">{fieldError}</p>
+          )}
+
+          {/* ✅ Client-side validation errors (file type, size, etc.) */}
+          {error && !fieldError && (
+            <p className="text-[#F81A0C] text-[12px] mt-1">{error}</p>
           )}
 
           <div className="mt-[196px]">

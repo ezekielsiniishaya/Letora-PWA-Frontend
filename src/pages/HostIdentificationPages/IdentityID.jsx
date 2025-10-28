@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHostProfile } from "../../contexts/HostProfileContext";
 import Button from "../../components/Button";
+import Alert from "../../components/utils/Alerts.jsx"; // Adjust path as needed
 
 export default function IdentityVerification() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldError, setFieldError] = useState("");
+  const [alert, setAlert] = useState(null);
   const navigate = useNavigate();
 
   const {
@@ -23,9 +26,15 @@ export default function IdentityVerification() {
   useEffect(() => {
     setFile(null);
     setError("");
+    setFieldError("");
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) fileInput.value = "";
   }, []);
+
+  const showAlert = (type, message) => {
+    setAlert({ type, message });
+    setTimeout(() => setAlert(null), 3000);
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0];
@@ -34,6 +43,7 @@ export default function IdentityVerification() {
       return;
     }
 
+    // Client-side validation - use setError instead of showAlert
     if (e.target.files.length > 1) {
       setError("Please upload only one PDF file.");
       e.target.value = "";
@@ -53,15 +63,21 @@ export default function IdentityVerification() {
     }
 
     setError("");
+    setFieldError("");
     setFile(selectedFile);
+    // No alert for successful file selection - this is client-side
   };
 
-  // In your IdentityId component's handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Clear previous errors
+    setFieldError("");
+    setError("");
+
+    // Client-side validation - use fieldError instead of alert
     if (!file && !existingIdCard) {
-      setError("Please select an ID document to continue.");
+      setFieldError("This field is required.");
       return;
     }
 
@@ -99,12 +115,17 @@ export default function IdentityVerification() {
           addVerificationDocument(documentData);
         }
       }
-
+      // Navigate to next step
       setCurrentStep(2);
       navigate("/identity-selfie");
     } catch (err) {
       console.error("Error saving ID card:", err);
-      setError("Failed to save ID card. Please try again.");
+
+      // ✅ Only use alert for actual backend errors
+      const errorMessage =
+        err.response?.data?.message ||
+        "Failed to save ID card. Please try again.";
+      showAlert("error", errorMessage);
     } finally {
       setUploading(false);
     }
@@ -134,7 +155,7 @@ export default function IdentityVerification() {
           alt="Upload"
           className="w-[24px] h-[28px] mb-2"
         />
-        <span className="text-center w-[187px] leading-tight">
+        <span className="text-center w-[137px] leading-tight">
           NIN Slip / Int. Passport / Driver's License
         </span>
       </>
@@ -165,14 +186,25 @@ export default function IdentityVerification() {
           Upload your government ID card
         </p>
 
+        {/* ✅ Alert display - ONLY for backend responses */}
+        {alert && (
+          <div className="mt-4">
+            <Alert type={alert.type} message={alert.message} />
+          </div>
+        )}
+
         <form className="mt-[45px] flex flex-col" onSubmit={handleSubmit}>
           <label className="block text-[14px] font-medium text-[#333333]">
             Upload Valid Government ID Card{" "}
             <span className="text-red-500">*</span>
           </label>
 
-          <div className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9]">
-            <label className="w-full h-[200px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
+          <div className="mt-[10px] bg-white rounded-lg">
+            <label
+              className={`w-full h-[200px] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] border-[3px] border-dashed ${
+                fieldError ? "border-[#F81A0C]" : "border-[#D1D0D0]"
+              }`}
+            >
               <input
                 type="file"
                 accept=".pdf,application/pdf"
@@ -182,11 +214,17 @@ export default function IdentityVerification() {
               {getUploadBoxContent()}
             </label>
           </div>
-          {error && (
-            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
+
+          {/* ✅ Field error message - for client-side validation */}
+          {fieldError && (
+            <p className="text-[#F81A0C] text-[12px] mt-1">{fieldError}</p>
           )}
+
+          {/* ✅ Client-side validation errors (file type, size, etc.) */}
+          {error && !fieldError && (
+            <p className="text-[#F81A0C] text-[12px] mt-1">{error}</p>
+          )}
+
           <div className="mt-[173px]">
             <Button
               text={uploading ? "Please wait..." : "Next"}

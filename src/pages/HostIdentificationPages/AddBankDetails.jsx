@@ -5,12 +5,18 @@ import ShowSuccess from "../../components/ShowSuccess";
 import Dropdown from "../../components/dashboard/Dropdown";
 import { useHostProfile } from "../../contexts/HostProfileContext";
 import { createHostProfileAPI } from "../../services/hostApi.js";
+import Alert from "../../components/utils/Alerts.jsx"; // Adjust path as needed
 
 export default function BankAccount() {
   const [selectedBank, setSelectedBank] = useState(null);
   const [accountNumber, setAccountNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    bank: "",
+    accountNumber: "",
+    documents: "",
+  });
+  const [alert, setAlert] = useState(null);
   const navigate = useNavigate();
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -144,6 +150,20 @@ export default function BankAccount() {
     ],
     []
   );
+
+  const showAlert = (type, message) => {
+    setAlert({ type, message });
+    setTimeout(() => setAlert(null), 3000);
+  };
+
+  const clearFieldErrors = () => {
+    setFieldErrors({
+      bank: "",
+      accountNumber: "",
+      documents: "",
+    });
+  };
+
   // Load existing banking info from context
   useEffect(() => {
     if (
@@ -190,19 +210,30 @@ export default function BankAccount() {
 
     return new File([ab], filename, { type: mimeType });
   };
+
   const handleCreateAccount = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
+    // Clear previous errors
+    clearFieldErrors();
+    setAlert(null);
+
+    const newErrors = {
+      bank: "",
+      accountNumber: "",
+      documents: "",
+    };
+
     // Validation
     if (!selectedBank) {
-      setError("Please select a bank");
-      return;
+      newErrors.bank = "Please select a bank";
     }
 
-    if (!accountNumber || accountNumber.length !== 10) {
-      setError("Please enter a valid 10-digit account number");
-      return;
+    if (!accountNumber) {
+      newErrors.accountNumber = "This field is required";
+    } else if (accountNumber.length !== 10) {
+      newErrors.accountNumber = "Account number must be 10 digits";
     }
 
     // Check if we have BOTH required documents
@@ -216,22 +247,19 @@ export default function BankAccount() {
     console.log("Found ID Card:", idCard);
     console.log("Found ID Photograph:", idPhotograph);
 
-    if (!idCard) {
-      setError(
-        "ID Card document is missing. Please complete the ID card upload step first."
-      );
-      return;
+    if (!idCard || !idPhotograph) {
+      newErrors.documents = "Please complete both ID verification steps first";
     }
 
-    if (!idPhotograph) {
-      setError(
-        "ID Photograph document is missing. Please complete the selfie upload step first."
-      );
+    // Check if there are any errors
+    const hasErrors = Object.values(newErrors).some((error) => error !== "");
+
+    if (hasErrors) {
+      setFieldErrors(newErrors);
       return;
     }
 
     setIsLoading(true);
-    setError("");
 
     try {
       // Create banking info object
@@ -306,23 +334,28 @@ export default function BankAccount() {
         );
       }
 
-      // Call API
+      // Call API - ✅ This is where we interact with the database
       const response = await createHostProfileAPI(formData);
       console.log("Host profile created successfully:", response);
 
       // Clear the local storage draft after successful submission
       clearHostProfileData();
+
       setIsSuccessOpen(true);
     } catch (err) {
       console.error("Error creating host profile:", err);
-      setError(
-        err.message || "Failed to create host profile. Please try again."
-      );
+
+      // ✅ Only use alert for actual backend/database errors
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to create host profile. Please try again.";
+      showAlert("error", errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
-  // ... rest of your component remains the same
+
   const handleOkay = () => {
     console.log("Closing success modal");
     setIsSuccessOpen(false);
@@ -331,18 +364,22 @@ export default function BankAccount() {
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
-    setError("");
+    clearFieldErrors();
   };
 
   const handleAccountNumberChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
     setAccountNumber(value);
-    setError("");
+    if (fieldErrors.accountNumber) {
+      setFieldErrors((prev) => ({ ...prev, accountNumber: "" }));
+    }
   };
 
   const handleBankSelect = (bank) => {
     setSelectedBank(bank);
-    setError("");
+    if (fieldErrors.bank) {
+      setFieldErrors((prev) => ({ ...prev, bank: "" }));
+    }
   };
 
   return (
@@ -367,17 +404,17 @@ export default function BankAccount() {
           Yeah, We need to pay you 😏
         </p>
 
+        {/* ✅ Alert display - ONLY for backend responses */}
+        {alert && (
+          <div className="mt-4">
+            <Alert type={alert.type} message={alert.message} />
+          </div>
+        )}
+
         <form
           className="mt-[32px] flex flex-col"
           onSubmit={handleCreateAccount}
         >
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
-              {error}
-            </div>
-          )}
-
           {/* Bank Name Dropdown */}
           <div className="mb-[20px]">
             <Dropdown
@@ -391,7 +428,14 @@ export default function BankAccount() {
               multiple={false}
               selected={selectedBank}
               setSelected={handleBankSelect}
+              hasError={!!fieldErrors.bank}
             />
+            {/* ✅ Inline error for bank selection */}
+            {fieldErrors.bank && (
+              <p className="text-[#F81A0C] text-[12px] mt-1">
+                {fieldErrors.bank}
+              </p>
+            )}
           </div>
 
           {/* Account Number */}
@@ -405,15 +449,25 @@ export default function BankAccount() {
               value={accountNumber}
               onChange={handleAccountNumberChange}
               maxLength={10}
-              className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none"
+              className={`border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none ${
+                fieldErrors.accountNumber ? "border-[#F81A0C]" : "border-[#CCC]"
+              }`}
               placeholder="Enter account number"
             />
-            {accountNumber && accountNumber.length !== 10 && (
-              <p className="text-red-500 text-xs mt-1">
-                Account number must be 10 digits
+            {/* ✅ Inline error for account number */}
+            {fieldErrors.accountNumber && (
+              <p className="text-[#F81A0C] text-[12px] mt-1">
+                {fieldErrors.accountNumber}
               </p>
             )}
           </div>
+
+          {/* ✅ Documents error message */}
+          {fieldErrors.documents && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md text-sm">
+              {fieldErrors.documents}
+            </div>
+          )}
 
           {/* Info Box */}
           <div className="flex items-start gap-2 font-regular bg-[#feeffa] text-[#500450] text-[12px] p-3 rounded-md mb-[98px]">

@@ -5,43 +5,71 @@ import { getUserProfile } from "../services/userApi";
 import { toggleFavoriteAPI } from "../services/apartmentApi";
 import { markNotificationAsRead } from "../services/userApi";
 
+// ✅ Use "token" consistently everywhere
+const AUTH_TOKEN_KEY = "token";
+
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Get token helper
+  const getToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
+
+  // Set token helper
+  const setToken = (token) => {
+    if (token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+    }
+  };
+
   useEffect(() => {
     const initializeUser = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("authToken");
+        const token = getToken();
+
+        console.log("🔄 Initializing user, token found:", !!token);
 
         if (token) {
           try {
+            console.log("🔄 Fetching user profile with token...");
             const response = await getUserProfile();
-            console.log("Profile API response:", response); // Debug log
+            console.log("Profile API response:", response);
 
             // Extract the actual user data from the response
-            // The API returns { success: true, data: userObject }
             const userData = response.data || response;
 
-            console.log("Extracted user data:", userData); // Debug log
-
+            console.log("✅ User initialized successfully:", userData);
             setUser(userData);
+            setError(null);
           } catch (err) {
-            console.warn(
-              "Could not fetch user profile, but user remains authenticated:",
-              err.message
-            );
-            // Set basic authenticated state
-            setUser({ isAuthenticated: true });
+            console.error("❌ Error fetching user profile:", err);
+
+            // Check if it's an authentication error
+            if (err.response?.status === 401) {
+              console.warn("Authentication failed, clearing token");
+              setToken(null); // Clear invalid token
+              setUser(null);
+              setError("Session expired. Please login again.");
+            } else {
+              // For other errors, keep user as authenticated but show warning
+              console.warn("Could not fetch user profile, but token is valid");
+              setUser({ isAuthenticated: true });
+              setError("Could not load user profile");
+            }
           }
         } else {
           // No token, user is not authenticated
+          console.log("No token found, user is not authenticated");
           setUser(null);
+          setError(null);
         }
       } catch (err) {
-        console.error("Unexpected error:", err);
+        console.error("Unexpected error during initialization:", err);
+        setError("Failed to initialize user");
       } finally {
         setLoading(false);
       }
@@ -54,55 +82,99 @@ const UserProvider = ({ children }) => {
   const login = async (userData, token) => {
     try {
       setLoading(true);
-
-      // Store token first
-      localStorage.setItem("authToken", token);
-
-      // Fetch complete user profile with notifications
-      const profileResponse = await getUserProfile();
-      const completeUserData = profileResponse.data || profileResponse;
-
-      console.log("Complete user data after login:", completeUserData); // Debug log
-
-      setUser(completeUserData);
       setError(null);
-    } catch (err) {
-      console.error("Error fetching user profile after login:", err);
 
-      // Fallback: use the basic user data from login
-      const actualUserData = userData.data || userData;
-      setUser(actualUserData);
-      setError("Logged in but could not load complete profile");
+      // ✅ Store token as "token"
+      setToken(token);
+      console.log("✅ Token stored as 'token':", token ? "Yes" : "No");
+
+      try {
+        // Fetch complete user profile with notifications
+        console.log("🔄 Fetching user profile after login...");
+        const profileResponse = await getUserProfile();
+        const completeUserData = profileResponse.data || profileResponse;
+
+        console.log("✅ Complete user data after login:", completeUserData);
+        setUser(completeUserData);
+        setError(null);
+      } catch (profileErr) {
+        console.error(
+          "❌ Error fetching user profile after login:",
+          profileErr
+        );
+
+        // Fallback: use the basic user data from login
+        const actualUserData = userData.data || userData;
+        console.log("🔄 Using fallback user data:", actualUserData);
+        setUser(actualUserData);
+        setError("Logged in but could not load complete profile");
+      }
+    } catch (err) {
+      console.error("❌ Error during login process:", err);
+      setError("Login failed");
+      // Clear the token if login fails
+      setToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
   const logout = () => {
+    console.log("🚪 Logging out user...");
+
     // Clear search history for this user
     const userId = user?.id || "anonymous";
     const storageKey = `apartmentSearchHistory_${userId}`;
     localStorage.removeItem(storageKey);
 
+    // Clear token and user state
+    setToken(null);
     setUser(null);
-    localStorage.removeItem("authToken");
     setError(null);
+
+    console.log("✅ User logged out successfully");
   };
 
   const updateUser = (updatedData) => {
-    setUser((prev) => ({ ...prev, ...updatedData }));
+    setUser((prev) => {
+      if (!prev) return updatedData;
+      return { ...prev, ...updatedData };
+    });
   };
 
   // Refresh user data
   const refreshUser = useCallback(async () => {
     try {
+      console.log("🔄 Refreshing user data...");
+      const token = getToken();
+
+      if (!token) {
+        console.warn("No token available for refresh");
+        setUser(null);
+        return;
+      }
+
       const response = await getUserProfile();
       const userData = response.data || response;
+
+      console.log("✅ User data refreshed:", userData);
       setUser(userData);
+      setError(null);
+      return userData;
     } catch (err) {
-      console.error("Error refreshing user:", err);
-      setError("Failed to refresh user data");
+      console.error("❌ Error refreshing user:", err);
+
+      if (err.response?.status === 401) {
+        console.warn("Authentication failed during refresh, logging out");
+        logout();
+        setError("Session expired. Please login again.");
+      } else {
+        setError("Failed to refresh user data");
+      }
+      throw err;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Get user notifications
@@ -122,7 +194,7 @@ const UserProvider = ({ children }) => {
       : 0;
   }, [user]);
 
-  // In UserProvider.jsx - add a check to prevent unnecessary API calls
+  // Mark notification as read
   const markAsRead = useCallback(
     async (notificationId) => {
       try {
@@ -132,11 +204,11 @@ const UserProvider = ({ children }) => {
         );
 
         if (currentNotification?.isRead) {
-          console.log("Notification already read, skipping API call");
+          console.log("📭 Notification already read, skipping API call");
           return { success: true };
         }
 
-        console.log("Marking notification as read:", notificationId);
+        console.log("📬 Marking notification as read:", notificationId);
 
         // Call API to mark as read
         const response = await markNotificationAsRead(notificationId);
@@ -169,17 +241,18 @@ const UserProvider = ({ children }) => {
           };
         });
 
+        console.log("✅ Notification marked as read");
         return { success: true };
       } catch (err) {
-        console.error("Error marking notification as read:", err);
+        console.error("❌ Error marking notification as read:", err);
         setError("Failed to mark notification as read");
         return { success: false, error: err.message };
       }
     },
     [user]
-  ); // Add user to dependencies
+  );
 
-  // MARK ALL NOTIFICATIONS AS READ
+  // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
     try {
       // You'll need to create this API function
@@ -200,15 +273,16 @@ const UserProvider = ({ children }) => {
         },
       }));
 
+      console.log("✅ All notifications marked as read");
       return { success: true };
     } catch (err) {
-      console.error("Error marking all notifications as read:", err);
+      console.error("❌ Error marking all notifications as read:", err);
       setError("Failed to mark all notifications as read");
       return { success: false, error: err.message };
     }
   }, []);
 
-  // ADD NEW NOTIFICATION (for real-time updates)
+  // Add new notification (for real-time updates)
   const addNotification = useCallback((notification) => {
     setUser((prev) => ({
       ...prev,
@@ -218,9 +292,10 @@ const UserProvider = ({ children }) => {
         items: [notification, ...(prev.notifications?.items || [])],
       },
     }));
+    console.log("✅ New notification added");
   }, []);
 
-  // REMOVE NOTIFICATION
+  // Remove notification
   const removeNotification = useCallback((notificationId) => {
     setUser((prev) => {
       const notificationToRemove = prev.notifications?.items?.find(
@@ -228,7 +303,7 @@ const UserProvider = ({ children }) => {
       );
       const wasUnread = notificationToRemove?.isRead === false;
 
-      return {
+      const updatedUser = {
         ...prev,
         notifications: {
           total: Math.max(0, (prev.notifications?.total || 0) - 1),
@@ -240,22 +315,27 @@ const UserProvider = ({ children }) => {
             [],
         },
       };
+
+      console.log("✅ Notification removed");
+      return updatedUser;
     });
   }, []);
 
-  // FAVORITE FUNCTIONS (existing)
+  // Favorite functions
   const addToFavorites = useCallback(
     async (apartmentId) => {
       try {
+        console.log("❤️ Adding to favorites:", apartmentId);
         const response = await toggleFavoriteAPI(apartmentId);
         if (response.success) {
           await refreshUser();
+          console.log("✅ Added to favorites successfully");
           return { success: true };
         } else {
           throw new Error(response.message || "Failed to add to favorites");
         }
       } catch (err) {
-        console.error("Error adding to favorites:", err);
+        console.error("❌ Error adding to favorites:", err);
         setError("Failed to add to favorites");
         return { success: false, error: err.message };
       }
@@ -266,9 +346,11 @@ const UserProvider = ({ children }) => {
   const removeFromFavorites = useCallback(
     async (apartmentId) => {
       try {
+        console.log("💔 Removing from favorites:", apartmentId);
         const response = await toggleFavoriteAPI(apartmentId);
         if (response.success) {
           await refreshUser();
+          console.log("✅ Removed from favorites successfully");
           return { success: true };
         } else {
           throw new Error(
@@ -276,7 +358,7 @@ const UserProvider = ({ children }) => {
           );
         }
       } catch (err) {
-        console.error("Error removing from favorites:", err);
+        console.error("❌ Error removing from favorites:", err);
         setError("Failed to remove from favorites");
         return { success: false, error: err.message };
       }
@@ -284,22 +366,26 @@ const UserProvider = ({ children }) => {
     [refreshUser]
   );
 
-  // FIXED: Use refreshUser instead of getUserProfile
+  // Refresh favorites
   const refreshFavorites = useCallback(async () => {
     try {
-      await refreshUser(); // This reuses the existing refreshUser function
+      console.log("🔄 Refreshing favorites...");
+      await refreshUser();
+      console.log("✅ Favorites refreshed");
       return user?.favorites || [];
     } catch (err) {
-      console.error("Error refreshing favorites:", err);
+      console.error("❌ Error refreshing favorites:", err);
       setError("Failed to refresh favorites");
       return [];
     }
   }, [refreshUser, user?.favorites]);
 
-  // Other existing functions...
+  // Authentication and role helpers
   const isAuthenticated = useCallback(() => {
-    const token = localStorage.getItem("authToken");
-    return !!token && !!user;
+    const token = getToken();
+    const authenticated = !!token && !!user;
+    console.log(`🔐 Authentication check: ${authenticated ? "Yes" : "No"}`);
+    return authenticated;
   }, [user]);
 
   const isHost = user?.role === "HOST";
@@ -328,14 +414,12 @@ const UserProvider = ({ children }) => {
   const getUserDocuments = useCallback(() => {
     return user?.documents || [];
   }, [user]);
-  // Add these helper functions to your UserProvider:
 
-  // Check if guest is verified and can book
+  // Guest verification functions
   const isGuestVerified = useCallback(() => {
     return user?.guestVerification?.canBook || false;
   }, [user]);
 
-  // Get guest verification status
   const getGuestVerificationStatus = useCallback(() => {
     return (
       user?.guestVerification || {
@@ -347,12 +431,10 @@ const UserProvider = ({ children }) => {
     );
   }, [user]);
 
-  // Check if guest has uploaded documents (pending verification)
   const hasPendingGuestDocuments = useCallback(() => {
     return user?.guestDocumentStatus === "PENDING";
   }, [user]);
 
-  // Get guest-specific documents
   const getGuestDocuments = useCallback(() => {
     return (
       user?.guestVerification?.documents ||
@@ -362,6 +444,12 @@ const UserProvider = ({ children }) => {
       []
     );
   }, [user]);
+
+  // Clear error function
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   const value = {
     user,
     loading,
@@ -391,9 +479,13 @@ const UserProvider = ({ children }) => {
     getUserNotifications,
     getUnreadNotificationsCount,
     markAsRead,
-    markAllAsRead, // Add this too
+    markAllAsRead,
     addNotification,
     removeNotification,
+    // Error handling
+    clearError,
+    // Token helpers (for debugging)
+    getToken,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

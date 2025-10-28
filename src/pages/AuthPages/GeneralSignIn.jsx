@@ -7,6 +7,7 @@ import { loginAPI } from "../../services/authApi";
 import { useUser } from "../../hooks/useUser";
 import { useHostProfile } from "../../contexts/HostProfileContext";
 import { useApartmentListing } from "../../hooks/useApartmentListing";
+import Alert from "../../components/utils/Alerts";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -14,43 +15,60 @@ export default function SignIn() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
+
   const navigate = useNavigate();
-  const { login, logout } = useUser(); // Get the login function from user context
+  const { login, logout } = useUser();
   const { clearHostProfileData } = useHostProfile();
   const { clearApartments } = useApartmentListing();
 
   const clearAllUserData = () => {
-    // Clear localStorage
     localStorage.clear();
+    logout();
+    clearHostProfileData();
+    clearApartments();
+  };
 
-    // Clear all context states
-    logout(); // From UserProvider
-    clearHostProfileData(); // From HostProfileProvider
-    clearApartments(); // From ApartmentListingProvider (after you add it)
+  const validateEmail = (value) => {
+    // ✅ Simple email format regex
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailPattern.test(value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
-    // Clear previous user data firts
+    setFieldErrors({});
     clearAllUserData();
+
+    const newFieldErrors = {};
+
+    // ✅ Field validations
+    if (!email.trim()) {
+      newFieldErrors.email = "This field is required.";
+    } else if (!validateEmail(email)) {
+      newFieldErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!password.trim()) {
+      newFieldErrors.password = "This field is required.";
+    }
+
+    if (Object.keys(newFieldErrors).length > 0) {
+      setFieldErrors(newFieldErrors);
+      return;
+    }
+
+    setLoading(true);
     try {
       const result = await loginAPI(email, password);
 
-      // ✅ Use the user context login function instead of localStorage
       login(result.user, result.accessToken);
-
-      // Store token for API requests
       localStorage.setItem("token", result.accessToken);
 
-      if (rememberMe) {
-        localStorage.setItem("rememberMe", "true");
-      } else {
-        localStorage.removeItem("rememberMe");
-      }
+      if (rememberMe) localStorage.setItem("rememberMe", "true");
+      else localStorage.removeItem("rememberMe");
 
-      // Store verification info for identity-id page if needed
       if (result.requiresIdentityVerification) {
         localStorage.setItem("requiresIdentityVerification", "true");
         localStorage.setItem(
@@ -59,13 +77,21 @@ export default function SignIn() {
         );
       }
 
-      console.log("Login successful, redirecting to:", result.redirectPath);
-
-      // Use the redirect path from backend
       navigate(result.redirectPath);
     } catch (err) {
       console.error("Login error:", err);
-      setError(err.message || "Login failed. Please check your credentials.");
+
+      // ✅ Show appropriate alerts
+      if (err.message?.toLowerCase().includes("network")) {
+        setError("network");
+      } else if (
+        err.message?.toLowerCase().includes("credential") ||
+        err.message?.toLowerCase().includes("unauthorized")
+      ) {
+        setError("credentials");
+      } else {
+        setError("server");
+      }
     } finally {
       setLoading(false);
     }
@@ -81,30 +107,58 @@ export default function SignIn() {
           Sign in if you already have an account
         </p>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+        {/* ✅ Alerts */}
+        {error === "network" && (
+          <div className="mt-4">
+            <Alert
+              type="network"
+              message="Network issues. Get better reception and try again."
+            />
+          </div>
+        )}
+        {error === "credentials" && (
+          <div className="mt-4">
+            <Alert
+              type="error"
+              message="Wrong credentials. Please check your details and try again."
+            />
+          </div>
+        )}
+        {error === "server" && (
+          <div className="mt-4">
+            <Alert
+              type="error"
+              message="Server or database error. Please try again later."
+            />
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           {/* Email */}
           <div>
             <label className="block text-[14px] font-medium text-[#686464] mt-[32px]">
               Email Address
             </label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                setError(""); // Clear error when user types
+                setFieldErrors((prev) => ({ ...prev, email: "" }));
               }}
-              className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none disabled:opacity-50"
-              required
+              className={`border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm outline-none disabled:opacity-50
+                ${
+                  fieldErrors.email
+                    ? "border-[#F81A0C]"
+                    : "focus:ring-[#A20BA2] focus:border-[#A20BA2]"
+                }`}
               disabled={loading}
             />
+            {fieldErrors.email && (
+              <p className="text-[#F81A0C] text-[12px] mt-1">
+                {fieldErrors.email}
+              </p>
+            )}
           </div>
 
           {/* Password */}
@@ -113,9 +167,11 @@ export default function SignIn() {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              setError(""); // Clear error when user types
+              setFieldErrors((prev) => ({ ...prev, password: "" }));
             }}
             disabled={loading}
+            hasError={!!fieldErrors.password} // ✅ shows red border
+            errorMessage={fieldErrors.password}
           />
 
           {/* Remember / Forgot */}
@@ -132,7 +188,6 @@ export default function SignIn() {
               <span className="absolute left-4 text-white text-xs hidden peer-checked:block">
                 ✔
               </span>
-
               <span className="text-[#999999]">Remember me</span>
             </label>
             <Link
@@ -161,7 +216,7 @@ export default function SignIn() {
         {/* Sign up button */}
         <Link to="/choose-type">
           <button
-            className="w-full bg-[#E6E6E6 ] py-3 rounded-[10px] text-[#666666] mb-[140px] h-[56px] text-[16px] font-regular disabled:opacity-50"
+            className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] mb-[140px] h-[56px] text-[16px] font-regular disabled:opacity-50"
             disabled={loading}
           >
             Sign up
