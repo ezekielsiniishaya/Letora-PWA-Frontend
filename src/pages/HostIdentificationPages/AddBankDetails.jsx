@@ -345,17 +345,102 @@ export default function BankAccount() {
     } catch (err) {
       console.error("Error creating host profile:", err);
 
-      // ✅ Only use alert for actual backend/database errors
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        "Failed to create host profile. Please try again.";
+      // ✅ Enhanced error handler with user-friendly messages
+      const getErrorMessage = (error) => {
+        // Network errors
+        if (!error.response) {
+          return "Network issues. Get better reception and try again";
+        }
+
+        const status = error.response.status;
+        const backendMsg =
+          error.response.data?.error || error.response.data?.message || "";
+        const errorMsg = String(backendMsg).toLowerCase();
+
+        console.log("Backend error:", backendMsg);
+        console.log("Status code:", status);
+
+        // Database errors - provide generic message
+        if (
+          errorMsg.includes("database") ||
+          errorMsg.includes("prisma") ||
+          errorMsg.includes("query") ||
+          errorMsg.includes("orm") ||
+          errorMsg.includes("connection") ||
+          errorMsg.includes("neon.tech") ||
+          errorMsg.includes("sql") ||
+          errorMsg.includes("constraint") ||
+          errorMsg.includes("unique constraint") ||
+          errorMsg.includes("foreign key") ||
+          errorMsg.includes("timeout") ||
+          errorMsg.includes("connection pool") ||
+          errorMsg.includes("transaction") ||
+          errorMsg.includes("deadlock")
+        ) {
+          return "Server temporarily unavailable. Please try again in a moment.";
+        }
+
+        // Cloudinary/File upload errors
+        if (
+          errorMsg.includes("cloudinary") ||
+          errorMsg.includes("upload") ||
+          errorMsg.includes("file") ||
+          errorMsg.includes("storage")
+        ) {
+          return "File upload failed. Please try uploading your documents again.";
+        }
+
+        // Server errors (5xx)
+        if (status >= 500) {
+          return "Server temporarily unavailable. Please try again later.";
+        }
+
+        // Client errors (4xx) - show user-friendly backend messages
+        if (status >= 400 && status < 500) {
+          // Map common backend errors to user-friendly messages
+          const errorMappings = {
+            "user not found":
+              "Account not found. Please verify your email first.",
+            "both id card and id photograph are required":
+              "Please complete both ID verification steps first.",
+            "failed to upload documents":
+              "Document upload failed. Please try uploading your documents again.",
+            "missing required documents":
+              "Please complete both ID verification steps first.",
+            "invalid account number": "Please enter a valid account number.",
+            "bank name and account number are required":
+              "Please fill in all bank details.",
+          };
+
+          // Check if we have a mapped message for this error
+          for (const [key, message] of Object.entries(errorMappings)) {
+            if (errorMsg.includes(key)) {
+              return message;
+            }
+          }
+
+          // Fallback: use backend message if it's user-friendly, otherwise generic message
+          if (
+            backendMsg &&
+            backendMsg.length < 100 &&
+            !backendMsg.includes("prisma")
+          ) {
+            return backendMsg;
+          }
+
+          return "Request failed. Please check your information and try again.";
+        }
+
+        // Default fallback
+        return "Something went wrong. Please try again.";
+      };
+
+      const errorMessage = getErrorMessage(err);
       showAlert("error", errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
-
   const handleOkay = () => {
     console.log("Closing success modal");
     setIsSuccessOpen(false);
