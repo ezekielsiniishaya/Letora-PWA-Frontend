@@ -5,7 +5,7 @@ import ShowSuccess from "../../components/ShowSuccess";
 import Dropdown from "../../components/dashboard/Dropdown";
 import { updateBankingInfoAPI } from "../../services/apartmentApi";
 import { UserContext } from "../../contexts/UserContext";
-import bankOptions from "./BankingOptions.js";
+import bankOptions from "../../components/dashboard/BankingOptions.js";
 
 export default function BankAccount() {
   const [selectedBank, setSelectedBank] = useState(null);

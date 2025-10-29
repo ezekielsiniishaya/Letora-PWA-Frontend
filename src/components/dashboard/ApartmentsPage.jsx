@@ -4,10 +4,12 @@ import { Link } from "react-router-dom";
 import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useContext, useEffect } from "react";
 import { UserContext } from "../../contexts/UserContext";
+import { useUser } from "../../hooks/useUser";
 
 export default function ApartmentsPage() {
   const navigate = useNavigate();
   const { refreshUser } = useContext(UserContext);
+  const { getUserLocation } = useUser(); // ✅ Properly call the hook
 
   // Use the apartment listing context to get actual apartments
   const { nearbyApartments, nearbyApartmentsLoading, error } =
@@ -27,6 +29,12 @@ export default function ApartmentsPage() {
     refreshUserData();
   }, [refreshUser]);
 
+  // Get location for the header (use first apartment's location or default)
+  const location = getUserLocation();
+
+  // Extract state from location object
+  const locationState = location?.state || "your area"; // ✅ Extract the state property
+
   if (nearbyApartmentsLoading) {
     return (
       <div className="bg-[#F9F9F9] min-h-screen flex items-center justify-center">
@@ -43,10 +51,6 @@ export default function ApartmentsPage() {
     );
   }
 
-  // Get location for the header (use first apartment's location or default)
-  const location =
-    nearbyApartments.length > 0 ? nearbyApartments[0]?.state : "Lagos";
-
   return (
     <div className="bg-[#F9F9F9] min-h-screen">
       {/* Top Nav */}
@@ -57,7 +61,8 @@ export default function ApartmentsPage() {
             <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-4" />
           </button>
           <h1 className="text-[14px] font-medium text-[#000000]">
-            {nearbyApartments.length} apartments available in {location}
+            {nearbyApartments.length} apartments available in {locationState}{" "}
+            {/* ✅ Use locationState instead of location object */}
           </h1>
         </div>
 

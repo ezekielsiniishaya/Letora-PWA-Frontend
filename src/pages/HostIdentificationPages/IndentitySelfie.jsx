@@ -230,9 +230,14 @@ export default function IdentitySelfie() {
           {/* Updated upload box with dashed border and red border for errors */}
           <div className="mt-[10px] bg-white rounded-lg">
             <label
-              className={`w-full h-[200px] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] border-[2.3px] border-dashed ${
+              className={`w-full h-[200px] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] ${
                 fieldError ? "border-[#F81A0C]" : "border-[#D1D0D0]"
               }`}
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%23${
+                  fieldError ? "F81A0C" : "D1D0D0"
+                }' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e")`,
+              }}
             >
               <input
                 type="file"
@@ -246,7 +251,7 @@ export default function IdentitySelfie() {
 
           {/* ✅ Field error message - for client-side validation */}
           {fieldError && (
-            <p className="text-[#F81A0C] text-[12px] mt-1">{fieldError}</p>
+            <p className="text-[#F81A0C] text-[10px] mt-[8px]">{fieldError}</p>
           )}
 
           {/* ✅ Client-side validation errors (file type, size, etc.) */}

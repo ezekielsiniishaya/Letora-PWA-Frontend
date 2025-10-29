@@ -8,7 +8,7 @@ export default function ChooseType() {
       {/* Greeting */}
       <div className="flex flex-col items-center mt-[79.42px] text-center">
         <img
-          src="/icons/hands.svg"
+          src="/icons/greeting.png"
           alt="Letora Logo"
           className="w-[95px] h-[95px] mb-[14px]"
         />
@@ -26,10 +26,10 @@ export default function ChooseType() {
             <img
               src="/icons/landlord.png"
               alt="Letora Logo"
-              className="w-[32px] h-[34px]"
+              className="w-[34px] h-[34px]"
             />
             <span className="text-[#666666] font-regular text-[14px]">
-              I want to list my apartment as Shortlet
+              I Want to List my Apartment as Shortlet{" "}
             </span>
           </button>
         </Link>
@@ -39,10 +39,10 @@ export default function ChooseType() {
             <img
               src="/icons/guests.png"
               alt="Letora Logo"
-              className="w-[32px] h-[34px]"
+              className="w-[34px] h-[34px]"
             />
             <span className="text-[#666666] font-regular text-[14px]">
-              I want to book a Shortlet apartment
+              I Want to Book a Shortlet Apartment{" "}
             </span>
           </button>
         </Link>

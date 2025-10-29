@@ -88,12 +88,48 @@ export default function SignUpForm() {
       navigate("/verify-email", { state: { email: formData.email } });
     } catch (err) {
       console.error("Error registering user:", err);
-      const message = err.message?.toLowerCase() || "";
 
-      if (message.includes("network")) setError("network");
-      else if (message.includes("exists") || message.includes("duplicate"))
+      // Enhanced error handling - check the actual API response structure
+      const errorResponse = err.response?.data || {};
+      const errorMessage =
+        errorResponse.message?.toLowerCase() ||
+        errorResponse.error?.toLowerCase() ||
+        err.message?.toLowerCase() ||
+        "";
+
+      console.log("Error response data:", errorResponse);
+      console.log("Error message:", errorMessage);
+
+      // Check for specific error patterns from your API
+      if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+        setError("network");
+      } else if (
+        errorMessage.includes("exists") ||
+        errorMessage.includes("duplicate") ||
+        errorMessage.includes("already") ||
+        errorResponse.error?.toLowerCase().includes("exists") ||
+        errorResponse.error?.toLowerCase().includes("duplicate") ||
+        errorResponse.error?.toLowerCase().includes("already") ||
+        err.response?.status === 409 // Conflict status code for existing user
+      ) {
         setError("email");
-      else setError("server");
+      } else if (err.response?.status === 400) {
+        // Handle validation errors from server
+        if (errorResponse.errors) {
+          // Map server validation errors to field errors
+          const serverFieldErrors = {};
+          Object.keys(errorResponse.errors).forEach((field) => {
+            serverFieldErrors[field] = errorResponse.errors[field][0];
+          });
+          setFieldErrors(serverFieldErrors);
+        } else {
+          setError("validation");
+        }
+      } else if (err.response?.status >= 500) {
+        setError("server");
+      } else {
+        setError("unknown");
+      }
     } finally {
       setLoading(false);
     }
@@ -132,7 +168,7 @@ export default function SignUpForm() {
               disabled={loading}
             />
             {fieldErrors.firstName && (
-              <p className="text-[#F81A0C] text-[12px] mt-1">
+              <p className="text-[#F81A0C] text-[10px] mt-1">
                 {fieldErrors.firstName}
               </p>
             )}
@@ -158,7 +194,7 @@ export default function SignUpForm() {
               disabled={loading}
             />
             {fieldErrors.lastName && (
-              <p className="text-[#F81A0C] text-[12px] mt-1">
+              <p className="text-[#F81A0C] text-[10px] mt-1">
                 {fieldErrors.lastName}
               </p>
             )}
@@ -175,7 +211,7 @@ export default function SignUpForm() {
               disabled={loading}
             />
             {fieldErrors.gender && (
-              <p className="text-[#F81A0C] text-[12px] mt-1">
+              <p className="text-[#F81A0C] text-[10px] mt-1">
                 {fieldErrors.gender}
               </p>
             )}
@@ -192,7 +228,7 @@ export default function SignUpForm() {
               disabled={loading}
             />
             {fieldErrors.stateOrigin && (
-              <p className="text-[#F81A0C] text-[12px] mt-1">
+              <p className="text-[#F81A0C] text-[10px] mt-1">
                 {fieldErrors.stateOrigin}
               </p>
             )}
@@ -218,7 +254,7 @@ export default function SignUpForm() {
               disabled={loading}
             />
             {fieldErrors.email && (
-              <p className="text-[#F81A0C] text-[12px] mt-1">
+              <p className="text-[#F81A0C] text-[10px] mt-1">
                 {fieldErrors.email}
               </p>
             )}
@@ -257,14 +293,14 @@ export default function SignUpForm() {
               />
             </div>
             {fieldErrors.phone && (
-              <p className="text-[#F81A0C] text-[12px] mt-1">
+              <p className="text-[#F81A0C] text-[10px] mt-1">
                 {fieldErrors.phone}
               </p>
             )}
           </div>
 
           {/* Alternate Phone */}
-          <div className="pt-[18px] pb-[62px]">
+          <div className="pt-[18px]">
             <label className="block text-[14px] font-medium text-[#686464] mb-2">
               Alternate Valid Phone Number (optional)
             </label>
@@ -290,7 +326,7 @@ export default function SignUpForm() {
           </div>
           {/* ✅ Alerts */}
           {error === "network" && (
-            <div className="mt-4">
+            <div className="mt-4  pb-[62px]">
               <Alert
                 type="network"
                 message="Network issues. Get better reception and try again."
@@ -298,7 +334,7 @@ export default function SignUpForm() {
             </div>
           )}
           {error === "email" && (
-            <div className="mt-4">
+            <div className="mt-4  pb-[62px]">
               <Alert
                 type="error"
                 message="Email already exists. Please use another one or sign in."
@@ -306,7 +342,7 @@ export default function SignUpForm() {
             </div>
           )}
           {error === "server" && (
-            <div className="mt-4">
+            <div className="mt-4  pb-[62px]">
               <Alert
                 type="error"
                 message="Server error. Please try again later."

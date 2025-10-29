@@ -1,9 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
-import { useUser } from "../../hooks/useUser"; // Adjust path as needed
+import { useUser } from "../../hooks/useUser";
 
 export default function Navigation() {
   const location = useLocation();
-  const { user } = useUser(); // Get user data from context
+  const { user } = useUser();
 
   // Only show "New Listing" if user is a verified host
   const navItems = [
@@ -26,7 +26,11 @@ export default function Navigation() {
       : []),
     {
       name: "Bookings",
-      paths: user?.role === "HOST" ? ["/host-dashboard"] : ["/bookings"],
+      // Only show host dashboard for verified hosts, otherwise show guest bookings
+      paths:
+        user?.role === "HOST" && user?.hostProfile?.isVerified
+          ? ["/host-dashboard"]
+          : ["/bookings"],
       icon: "/icons/booking.svg",
       activeIcon: "/icons/booking-purple.svg",
     },
@@ -43,10 +47,10 @@ export default function Navigation() {
       activeIcon: "/icons/profile-purple.svg",
     },
   ];
+
   // Function to determine the correct home path based on user role
   const getHomePath = () => {
-    // Use user role from localStorage if available
-    if (user?.role === "HOST") {
+    if (user?.role === "HOST" && user?.hostProfile?.isVerified) {
       return "/host-homepage";
     }
 

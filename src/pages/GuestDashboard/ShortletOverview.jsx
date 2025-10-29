@@ -7,8 +7,10 @@ import { Link } from "react-router-dom";
 import Button from "../../components/Button";
 import ButtonWhite from "../../components/ButtonWhite";
 import { requestAvailability } from "../../services/userApi";
-import { useUser } from "../../hooks/useUser"; // Import the user context
+import { useUser } from "../../hooks/useUser";
 import { useBooking } from "../../hooks/useBooking";
+import Alert from "../../components/utils/Alerts";
+import ShowSuccess from "../../components/ShowSuccess";
 
 export default function ShortletOverviewPage() {
   const { id } = useParams();
@@ -17,13 +19,25 @@ export default function ShortletOverviewPage() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [isRequesting, setIsRequesting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const { getGuestVerificationStatus, getGuestDocuments } = useUser(); // Get user context
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "error",
+    message: "",
+  });
+  const { getGuestVerificationStatus, getGuestDocuments } = useUser();
   const { setApartmentDetails, clearBookingData } = useBooking();
 
+  // Show alert function
+  const showAlert = (type, message) => {
+    setAlert({ show: true, type, message });
+    // Auto hide after 5 seconds
+    setTimeout(() => {
+      setAlert({ show: false, type: "error", message: "" });
+    }, 5000);
+  };
+
   useEffect(() => {
-    // Only set apartment details when apartment data is available
     clearBookingData();
     if (apartment && apartment.id) {
       setApartmentDetails(
@@ -33,16 +47,6 @@ export default function ShortletOverviewPage() {
       );
     }
   }, [apartment, clearBookingData, setApartmentDetails]);
-  useEffect(() => {
-    if (successMessage || errorMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage("");
-        setErrorMessage("");
-      }, 5000); // Clear after 5 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage, errorMessage]);
 
   useEffect(() => {
     const fetchApartment = async () => {
@@ -50,18 +54,19 @@ export default function ShortletOverviewPage() {
         setLoading(true);
         const res = await getApartmentById(id);
 
-        console.log("API Response:", res); // Debug log
+        console.log("API Response:", res);
 
         if (res && res.data) {
-          // Transform the API response to match ApartmentDisplay expected structure
           const transformedApartment = transformApartmentData(res.data);
           setApartment(transformedApartment);
           setHost(res.data.host);
         } else {
           console.log("No apartment data received");
+          showAlert("error", "Failed to load apartment details");
         }
       } catch (error) {
         console.error("Failed to load apartment:", error);
+        showAlert("error", "Failed to load apartment details");
       } finally {
         setLoading(false);
       }
@@ -71,6 +76,7 @@ export default function ShortletOverviewPage() {
       fetchApartment();
     } else {
       console.error("No apartment ID provided");
+      showAlert("error", "No apartment ID provided");
       setLoading(false);
     }
   }, [id]);
@@ -110,7 +116,6 @@ export default function ShortletOverviewPage() {
       legalDocuments: {
         documents: apiData.documents || [],
       },
-      // Include other fields that might be needed
       status: apiData.status,
       isListed: apiData.isListed,
       isAvailable: apiData.isAvailable,
@@ -130,7 +135,7 @@ export default function ShortletOverviewPage() {
       return {
         status: "NO_DOCUMENTS",
         message: "Please upload your ID documents to book an apartment",
-        action: () => navigate("/id-check"), // Replace with your actual upload documents route
+        action: () => navigate("/id-check"),
       };
     }
 
@@ -157,7 +162,7 @@ export default function ShortletOverviewPage() {
       return {
         status: "VERIFIED",
         message: "",
-        action: () => navigate(`/booking-dates/${id}`), // Replace with your actual booking dates route
+        action: () => navigate(`/booking-dates/${id}`),
       };
     }
 
@@ -179,13 +184,14 @@ export default function ShortletOverviewPage() {
         guestStatus.action();
         break;
       case "PENDING_VERIFICATION":
-        setErrorMessage(guestStatus.message);
+        showAlert("success", guestStatus.message);
         break;
       case "VERIFIED":
         guestStatus.action();
         break;
       default:
-        setErrorMessage(
+        showAlert(
+          "error",
           "Please complete your verification to book an apartment"
         );
     }
@@ -194,21 +200,35 @@ export default function ShortletOverviewPage() {
   const handleRequestAvailability = async () => {
     try {
       setIsRequesting(true);
-      // Clear any previous messages
-      setSuccessMessage("");
-      setErrorMessage("");
+
+      // Clear any previous alerts
+      setAlert({ show: false, type: "error", message: "" });
 
       const res = await requestAvailability(id);
 
       if (res.success) {
-        setSuccessMessage("Availability request sent to host successfully!");
+        // Show success popup instead of alert
+        setShowSuccess(true);
+      } else {
+        showAlert(
+          "error",
+          res.message || "Failed to send availability request"
+        );
       }
     } catch (error) {
       console.error("Failed to send availability request:", error);
-      setErrorMessage(error.message || "Failed to send availability request");
+      showAlert(
+        "error",
+        error.message || "Failed to send availability request"
+      );
     } finally {
       setIsRequesting(false);
     }
+  };
+
+  const handleBrowseAround = () => {
+    setShowSuccess(false);
+    navigate("/apartments");
   };
 
   // Show loading spinner like in dashboard
@@ -222,12 +242,37 @@ export default function ShortletOverviewPage() {
 
   if (!apartment) {
     return (
-      <div className="text-center mt-10 text-red-500">Apartment not found.</div>
+      <div className="w-full min-h-screen bg-white flex flex-col items-center justify-center px-4 text-center">
+        <img
+          src="/icons/unconfirmed-payment.png"
+          alt="Error"
+          className="w-[60px] h-[60px] rounded-full mb-4"
+        />
+        <h3 className="text-[#505050] font-semibold mb-2 text-[14px]">
+          Oops! Something went wrong.
+        </h3>
+        <p className="text-[#777] text-[12px] mb-4 max-w-[240px]">
+          We couldn't load the apartment details right now.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 rounded-lg bg-[#A20BA2] text-white text-[12px] font-medium hover:bg-[#8E0A8E] transition"
+        >
+          Refresh Page
+        </button>
+      </div>
     );
   }
 
   return (
     <div className="bg-white min-h-screen">
+      {/* Alert Display */}
+      {alert.show && (
+        <div className="fixed top-4 ml-2 w-full left-1/2 transform -translate-x-1/2 z-50">
+          <Alert type={alert.type} message={alert.message} />
+        </div>
+      )}
+
       <div className="flex items-center mb-[10px] p-4">
         <button onClick={() => navigate(-1)} className="hover:bg-gray-200 p-1">
           <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
@@ -289,20 +334,6 @@ export default function ShortletOverviewPage() {
           </p>
         </div>
 
-        {/* Success Message */}
-        {successMessage && (
-          <div className="p-2 mt-2 bg-green-100 border border-green-400 text-green-700 rounded">
-            {successMessage}
-          </div>
-        )}
-
-        {/* Error Message */}
-        {errorMessage && (
-          <div className="p-2 mt-2 bg-red-100 border border-red-400 text-red-700 rounded">
-            {errorMessage}
-          </div>
-        )}
-
         {/* Booking Button */}
         <ButtonWhite
           text={isRequesting ? "Sending Request..." : "Request Availability"}
@@ -318,6 +349,18 @@ export default function ShortletOverviewPage() {
           onClick={handleBookNow}
         />
       </div>
+
+      {/* Success Popup for Availability Request */}
+      {showSuccess && (
+        <ShowSuccess
+          image="/icons/success.svg"
+          heading="Apartment Availability Request Sent"
+          message="Your request has been sent to the host to confirm availability of this apartment. Check notification for updates"
+          buttonText="Browse Around"
+          onClose={handleBrowseAround}
+          height="auto"
+        />
+      )}
     </div>
   );
 }

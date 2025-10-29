@@ -325,7 +325,7 @@ export default function VerifyEmail() {
 
         {/* ✅ Inline small red text for incomplete code */}
         {inlineError && (
-          <p className="text-[#F81A0C] text-[12px] mt-1">{inlineError}</p>
+          <p className="text-[#F81A0C] text-[10px] mt-1">{inlineError}</p>
         )}
 
         {/* Resend */}

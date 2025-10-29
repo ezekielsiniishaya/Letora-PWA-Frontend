@@ -286,7 +286,7 @@ export default function CreatePassword() {
               hasError={!!fieldErrors.password}
             />
             {fieldErrors.password && (
-              <p className="text-[#F81A0C] text-[12px] mt-1">
+              <p className="text-[#F81A0C] text-[10px] mt-1">
                 {fieldErrors.password}
               </p>
             )}
@@ -301,7 +301,7 @@ export default function CreatePassword() {
               hasError={!!fieldErrors.confirmPassword}
             />
             {fieldErrors.confirmPassword && (
-              <p className="text-[#F81A0C] text-[12px] mt-1">
+              <p className="text-[#F81A0C] text-[10px] mt-1">
                 {fieldErrors.confirmPassword}
               </p>
             )}
@@ -336,7 +336,7 @@ export default function CreatePassword() {
 
       {fieldErrors.agreement && (
         <div className="w-full max-w-sm -mt-[37px] mb-[86px]">
-          <p className="text-[#F81A0C] text-[12px]">{fieldErrors.agreement}</p>
+          <p className="text-[#F81A0C] text-[10px]">{fieldErrors.agreement}</p>
         </div>
       )}
 

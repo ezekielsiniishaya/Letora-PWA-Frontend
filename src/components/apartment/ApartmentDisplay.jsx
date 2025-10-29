@@ -4,6 +4,10 @@ import PropertyDetails from "../dashboard/PropertyDetails";
 import Facilities from "../dashboard/Facilities";
 import HouseRules from "../dashboard/HouseRules";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useCallback } from "react";
+import { toggleFavoriteAPI } from "../../services/apartmentApi";
+import { useUser } from "../../hooks/useUser";
+
 import {
   parkingSpaceMap,
   guestNumberMap,
@@ -87,7 +91,81 @@ export const ApartmentDisplay = ({
   backToHostDashboard = false,
 }) => {
   const [showGallery, setShowGallery] = useState(false);
+  const [favorites, setFavorites] = useState({});
+  const [loadingStates, setLoadingStates] = useState({});
+
+  const { user: currentUser, refreshUser } = useUser();
   const navigate = useNavigate();
+
+  // Initialize favorite state from user's favorites
+  useEffect(() => {
+    if (apartment && currentUser) {
+      const initialFavorites = {};
+      // Check if this apartment is in user's favorites
+      const isFavorited = currentUser.favorites?.some(
+        (fav) => fav.apartmentId === apartment.id
+      );
+      initialFavorites[apartment.id] = isFavorited || false;
+      setFavorites(initialFavorites);
+    }
+  }, [apartment, currentUser]);
+  const getApartmentId = useCallback(() => {
+    return apartment?.securityDeposit?.apartmentId;
+  }, [apartment?.securityDeposit?.apartmentId]);
+  useEffect(() => {
+    const apartmentId = getApartmentId();
+    console.log("🎯 Found apartment ID:", apartmentId);
+    console.log(
+      "📍 From securityDeposit:",
+      apartment?.securityDeposit?.apartmentId
+    );
+  }, [apartment, getApartmentId]);
+
+  // Update toggleFavorite function
+  const toggleFavorite = async (e) => {
+    e.stopPropagation();
+
+    const apartmentId = getApartmentId();
+    console.log("Toggling favorite for apartment ID:", apartmentId);
+
+    if (!apartmentId) {
+      console.error("No apartment ID found!");
+      return;
+    }
+
+    setLoadingStates((prev) => ({ ...prev, [apartmentId]: true }));
+
+    try {
+      const response = await toggleFavoriteAPI(apartmentId);
+
+      if (response.success) {
+        setFavorites((prev) => ({
+          ...prev,
+          [apartmentId]: response.isFavorited,
+        }));
+      }
+      await refreshUser();
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [apartmentId]: false }));
+    }
+  };
+
+  // Update favorite initialization
+  useEffect(() => {
+    if (apartment && currentUser) {
+      const apartmentId = getApartmentId();
+      const initialFavorites = {};
+
+      const isFavorited = currentUser.favorites?.some(
+        (fav) => fav.apartmentId === apartmentId
+      );
+      initialFavorites[apartmentId] = isFavorited || false;
+      setFavorites(initialFavorites);
+    }
+  }, [apartment, currentUser, getApartmentId]);
+
   if (!apartment) {
     return <div>Loading apartment details...</div>;
   }
@@ -200,7 +278,27 @@ export const ApartmentDisplay = ({
       )}
 
       {/* Apartment Images */}
-      <div className="flex h-[249px] flex-row gap-x-[7px] md:hidden">
+      <div className="flex h-[249px] flex-row gap-x-[7px] md:hidden relative">
+        {/* Favorite Heart Button - positioned on top right of main image */}
+        <button
+          className="absolute top-3 right-3 w-[29px] h-[29px] bg-white rounded-full px-1 flex items-center justify-center disabled:opacity-50 z-10"
+          onClick={toggleFavorite} // Remove parameter since we get ID inside
+          disabled={loadingStates[getApartmentId()]}
+        >
+          {loadingStates[getApartmentId()] ? (
+            <div className="w-3 h-3 border-2 border-[#A20BA2] border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <img
+              src={
+                favorites[getApartmentId()]
+                  ? "/icons/heart-purple.svg"
+                  : "/icons/heart-gray2.svg"
+              }
+              alt="heart"
+              className="w-[19px] h-[16px]"
+            />
+          )}
+        </button>
         <div className="flex-1">
           <img
             src={displayImages[0]}
@@ -236,8 +334,8 @@ export const ApartmentDisplay = ({
         </div>
       </div>
 
-      {/* Host info & price */}
-      <div className="flex flex-col mt-4">
+      {/* Host info & price - Fixed positioning */}
+      <div className="flex flex-col mt-4 relative">
         <div className="flex flex-col items-start">
           <img
             src={hostInfo.avatar}

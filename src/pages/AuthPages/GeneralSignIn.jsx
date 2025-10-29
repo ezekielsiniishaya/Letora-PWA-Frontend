@@ -79,16 +79,54 @@ export default function SignIn() {
 
       navigate(result.redirectPath);
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Login error details:", {
+        fullError: err,
+        message: err?.message,
+        response: err?.response?.data,
+        status: err?.response?.status,
+        name: err?.name, // Add this to check error type
+      });
 
-      // ✅ Show appropriate alerts
-      if (err.message?.toLowerCase().includes("network")) {
+      // Enhanced error handling for network errors
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        err?.toString() ||
+        "";
+      const lowerCaseMsg = errorMessage.toLowerCase();
+
+      // Network error detection - check for specific patterns
+      if (
+        lowerCaseMsg.includes("network") ||
+        lowerCaseMsg.includes("offline") ||
+        lowerCaseMsg.includes("fetch") ||
+        lowerCaseMsg.includes("failed to fetch") ||
+        err?.name === "TypeError" || // Common for network errors
+        err?.name === "NetworkError" ||
+        !navigator.onLine // Check if browser is actually offline
+      ) {
         setError("network");
       } else if (
-        err.message?.toLowerCase().includes("credential") ||
-        err.message?.toLowerCase().includes("unauthorized")
+        lowerCaseMsg.includes("credential") ||
+        lowerCaseMsg.includes("unauthorized") ||
+        lowerCaseMsg.includes("invalid") ||
+        lowerCaseMsg.includes("incorrect") ||
+        err?.response?.status === 401
       ) {
-        setError("credentials");
+        // Check if email format is valid first
+        if (!validateEmail(email)) {
+          setFieldErrors({
+            email: "",
+            password: "",
+          });
+        } else {
+          // If email format is valid, assume password is wrong
+          setFieldErrors({
+            email: "Wrong or incorrect email address",
+            password: "Wrong or incorrect password",
+          });
+        }
       } else {
         setError("server");
       }
@@ -113,22 +151,19 @@ export default function SignIn() {
             <Alert
               type="network"
               message="Network issues. Get better reception and try again."
+              onDismiss={() => setError("")}
+              timeout={5000}
             />
           </div>
         )}
-        {error === "credentials" && (
-          <div className="mt-4">
-            <Alert
-              type="error"
-              message="Wrong credentials. Please check your details and try again."
-            />
-          </div>
-        )}
+
         {error === "server" && (
           <div className="mt-4">
             <Alert
               type="error"
               message="Server or database error. Please try again later."
+              onDismiss={() => setError("")}
+              timeout={5000}
             />
           </div>
         )}
@@ -155,7 +190,7 @@ export default function SignIn() {
               disabled={loading}
             />
             {fieldErrors.email && (
-              <p className="text-[#F81A0C] text-[12px] mt-1">
+              <p className="text-[#F81A0C] text-[10px] mt-1">
                 {fieldErrors.email}
               </p>
             )}
@@ -186,7 +221,7 @@ export default function SignIn() {
              checked:bg-[#A20BA2] checked:border-[#A20BA2] disabled:opacity-50"
               />
               <span className="absolute left-4 text-white text-xs hidden peer-checked:block">
-                ✔
+                ✓
               </span>
               <span className="text-[#999999]">Remember me</span>
             </label>

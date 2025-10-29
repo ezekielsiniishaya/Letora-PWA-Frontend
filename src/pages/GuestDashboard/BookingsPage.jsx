@@ -144,17 +144,17 @@ export default function BookingsPage() {
             {/* Image stack */}
             <div className="relative w-full h-[180px]">
               <img
-                src="/icons/Rectangle1.svg"
+                src="/icons/Rectangle1.png"
                 alt="Back"
                 className="absolute top-0 left-[70px] w-[131.37px] h-[151.83px] z-30"
               />
               <img
-                src="/icons/rectangle3.svg"
+                src="/icons/Rectangle2.png"
                 alt="Back"
                 className="absolute top-2 right-[82px] w-[111.37px] h-[141.83px] border-[2.5px] border-white z-20"
               />
               <img
-                src="/icons/rectangle2.jpg"
+                src="/icons/Rectangle3.png"
                 alt="Back"
                 className="absolute top-7 right-[132px] w-[111.37px] h-[141.83px] rounded-[10px] border-[2.5px] border-white z-40"
               />

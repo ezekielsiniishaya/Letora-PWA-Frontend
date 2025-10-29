@@ -7,6 +7,7 @@ import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
 import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useUser } from "../../hooks/useUser";
+import Button from "../../components/Button";
 
 export default function Dashboard() {
   const [showSuccess, setShowSuccess] = useState(false);
@@ -69,16 +70,14 @@ export default function Dashboard() {
             ? "We couldn’t load your profile right now."
             : "We couldn’t reach the server or load apartment data."}
         </p>
-        <button
+        <Button
+          text="Retry"
           onClick={() => {
             window.location.reload();
             refetchUser?.();
             refetchApartments?.();
           }}
-          className="px-4 py-2 rounded-lg bg-[#A20BA2] text-white text-[12px] font-medium hover:bg-[#8E0A8E] transition"
-        >
-          Retry
-        </button>
+        />
       </div>
     );
   }
@@ -96,14 +95,11 @@ export default function Dashboard() {
         <div className="absolute inset-0 bg-black opacity-75"></div>
 
         {/* Profile + Notifications */}
-        <div className="relative flex flex-row justify-between items-center z-10">
-          <img
-            src={user?.profilePic || "/images/profile-image.png"}
-            alt={user?.firstName || "Guest"}
-            className="w-[43.77px] h-[43.77px] rounded-full object-cover"
-          />
 
-          <Link to="/notifications">
+        <div className="flex items-center">
+          {/* Your other elements on the left */}
+
+          <Link to="/notifications" className="ml-auto">
             <div className="relative w-[30px] h-[30px] bg-[#1A1A1A] rounded-full flex items-center justify-center">
               <img
                 src="/icons/notification.svg"
@@ -120,7 +116,7 @@ export default function Dashboard() {
         </div>
 
         {/* Guest name */}
-        <div className="relative mt-[20px] z-10">
+        <div className="relative mt-[30px] z-10">
           <h2 className="text-[16px] font-semibold">
             {user ? `${user.firstName} ${user.lastName}` : "Guest User"}
           </h2>
@@ -132,14 +128,14 @@ export default function Dashboard() {
           to="/search"
           className="absolute left-1/2 -translate-x-1/2 bottom-[32px] w-[90%] h-[42.91px] z-10"
         >
-          <div className="bg-white rounded-full flex items-center px-[17px] py-[13px] shadow cursor-pointer">
+          <div className="bg-white rounded-full flex px-[17px] py-[13px] shadow cursor-pointer">
             <img
               src="/icons/search.svg"
               alt="Search"
-              className="w-[14px] h-[14px] mr-[14.3px]"
+              className="w-[14.3px]mt-1 h-[14.3px] mr-[14.3px]"
             />
-            <div className="flex-1 text-[11px] text-[#666666]">
-              Search Apartments, Apartment type, Location...
+            <div className="flex-1 text-[12px]  text-[#666666]">
+              Search Apartments, Type, Location....
             </div>
           </div>
         </Link>

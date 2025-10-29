@@ -158,7 +158,7 @@ export default function ApartmentSlider() {
 
               {/* Favorite (heart) button */}
               <button
-                className="absolute top-3 right-3 w-[19.82px] h-[19.82px] bg-white rounded-full px-1 flex items-center justify-center disabled:opacity-50"
+                className="absolute top-3 right-3 w-[22.82px] h-[22.82px] bg-white rounded-full px-1 flex items-center justify-center disabled:opacity-50"
                 onClick={(e) => toggleFavorite(apartment.id, e)}
                 disabled={loadingStates[apartment.id]}
               >
@@ -172,7 +172,7 @@ export default function ApartmentSlider() {
                         : "/icons/heart-gray.svg"
                     }
                     alt="heart"
-                    className="w-[13.1px] h-[11.27px]"
+                    className="w-[14.1px] h-[14.27px]"
                   />
                 )}
               </button>

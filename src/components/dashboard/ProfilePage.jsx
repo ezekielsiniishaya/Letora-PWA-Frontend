@@ -9,10 +9,13 @@ export default function ProfilePage() {
   const [showLogout, setShowLogout] = useState(false);
   const navigate = useNavigate();
   const { user, logout, isHost } = useUser();
+
+  // Check if user is a verified host
+  const isVerifiedHost =
+    user?.hostStatus === "VERIFIED" || user?.isVerifiedHost;
+
   const handleLogout = () => {
     logout();
-
-    // redirect to login (using react-router)
     navigate("/sign-in");
   };
 
@@ -54,6 +57,20 @@ export default function ProfilePage() {
               />
               <span>{user?.email || "Email not available"}</span>
             </div>
+
+            {/* Show verification status badge */}
+            {isVerifiedHost && (
+              <div className="flex items-center gap-1 mt-2">
+                <span className="bg-green-500 text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1">
+                  <img
+                    src="/icons/tick-white.svg"
+                    alt="Verified"
+                    className="w-3 h-3"
+                  />
+                  Verified Host
+                </span>
+              </div>
+            )}
           </div>
           <Link to="/edit-profile">
             <button className="w-[33px] h-[33px] bg-[#A20BA2] rounded-full flex items-center justify-center">
@@ -67,7 +84,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Become a Host Card - Only show for guests */}
+      {/* Become a Host Card - Only show for non-hosts */}
       {showBecomeHost && !isHost && (
         <div className="relative mx-5 mt-3">
           <button
@@ -113,41 +130,44 @@ export default function ProfilePage() {
       )}
 
       {/* Dashboard Options */}
-      <div className="bg-white rounded-lg shadow-sm mt-3 mx-5">
-        {/* Show only for hosts */}
-        {isHost && (
-          <OptionItem
-            icon="/icons/my-dashboard.svg"
-            text="My Dashboard"
-            link="/host-dashboard"
-          />
+      <div className="bg-white rounded-lg mt-3 mx-5">
+        {/* Show only for VERIFIED hosts */}
+        {isVerifiedHost && (
+          <>
+            <OptionItem
+              icon="/icons/my-dashboard.svg"
+              text="My Dashboard"
+              link="/host-dashboard"
+            />
+            <OptionItem
+              icon="/icons/my-revenue.svg"
+              text="My Revenue History"
+              link="/revenue"
+            />
+          </>
         )}
-
+        {/* Show revenue history for all users (including non-verified hosts) */}
+        {isVerifiedHost && (
+          <OptionItem
+            icon="/icons/my-revenue.svg"
+            text="My Revenue History"
+            link="/revenue"
+          />
+        )}{" "}
         <OptionItem
-          icon="/icons/my-revenue.svg"
-          text="My Revenue History"
-          link="/revenue"
+          icon="/icons/change-bank.svg"
+          text="Change Bank Details"
+          link="/change-bank-details"
         />
-        {/* Show Change Bank Details only for hosts */}
-        {isHost && (
-          <OptionItem
-            icon="/icons/change-bank.svg"
-            text="Change Bank Details"
-            link="/change-bank-details"
-          />
-        )}
-        {/* Show Reviews only for hosts */}
-        {isHost && (
-          <OptionItem
-            icon="/icons/review.svg"
-            text="Reviews"
-            link="/host-reviews"
-          />
-        )}
+        <OptionItem
+          icon="/icons/review.svg"
+          text="Reviews"
+          link="/host-reviews"
+        />
       </div>
 
-      {/* Account Options */}
-      <div className="bg-white rounded-lg shadow-sm mt-3 mb-10 mx-5">
+      {/* Account Options (Available for all users) */}
+      <div className="bg-white rounded-lg mt-3 mb-10 mx-5">
         <OptionItem
           icon="/icons/change-password.svg"
           text="Change Password"
@@ -178,6 +198,7 @@ export default function ProfilePage() {
     </div>
   );
 }
+
 function OptionItem({ icon, text, link, noArrow, onClick }) {
   const content = (
     <div className="flex items-center justify-between px-4 py-6">

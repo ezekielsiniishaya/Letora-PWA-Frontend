@@ -5,7 +5,8 @@ import ShowSuccess from "../../components/ShowSuccess";
 import Dropdown from "../../components/dashboard/Dropdown";
 import { useHostProfile } from "../../contexts/HostProfileContext";
 import { createHostProfileAPI } from "../../services/hostApi.js";
-import Alert from "../../components/utils/Alerts.jsx"; // Adjust path as needed
+import Alert from "../../components/utils/Alerts.jsx";
+import bankOptions from "../../components/dashboard/BankingOptions.js";
 
 export default function BankAccount() {
   const [selectedBank, setSelectedBank] = useState(null);
@@ -25,131 +26,7 @@ export default function BankAccount() {
   const { hostProfileData, updateBankingInfo, clearHostProfileData } =
     useHostProfile();
 
-  const bankOptions = useMemo(
-    () => [
-      {
-        label: "Access Bank",
-        value: "access_bank",
-        code: "044",
-        icon: "/icons/access.svg",
-      },
-      {
-        label: "Citibank Nigeria",
-        value: "citibank_nigeria",
-        code: "023",
-        icon: "/icons/citibank.svg",
-      },
-      {
-        label: "Ecobank Nigeria",
-        value: "ecobank_nigeria",
-        code: "050",
-        icon: "/icons/eco.svg",
-      },
-      {
-        label: "Fidelity Bank",
-        value: "fidelity_bank",
-        code: "070",
-        icon: "/icons/fidelity.svg",
-      },
-      {
-        label: "First Bank of Nigeria",
-        value: "first_bank_nigeria",
-        code: "011",
-        icon: "/icons/firstbank.svg",
-      },
-      {
-        label: "First City Monument Bank",
-        value: "first_city_monument_bank",
-        code: "214",
-        icon: "/icons/fcmb.svg",
-      },
-      {
-        label: "Globus Bank",
-        value: "globus_bank",
-        code: "00103",
-        icon: "/icons/globus.svg",
-      },
-      {
-        label: "Guaranty Trust Bank",
-        value: "guaranty_trust_bank",
-        code: "058",
-        icon: "/icons/gt.svg",
-      },
-      {
-        label: "Keystone Bank",
-        value: "keystone_bank",
-        code: "082",
-        icon: "/icons/keystone.svg",
-      },
-      {
-        label: "Polaris Bank",
-        value: "polaris_bank",
-        code: "076",
-        icon: "/icons/polaris.svg",
-      },
-      {
-        label: "Providos Bank",
-        value: "providos_bank",
-        code: "101",
-        icon: "/icons/providos.svg",
-      },
-      {
-        label: "Stanbic IBTC Bank",
-        value: "stanbic_ibtc_bank",
-        code: "221",
-        icon: "/icons/stanbic.svg",
-      },
-      {
-        label: "Standard Chartered Bank Nigeria",
-        value: "standard_chartered_nigeria",
-        code: "068",
-        icon: "/icons/standard.svg",
-      },
-      {
-        label: "Sterling Bank",
-        value: "sterling_bank",
-        code: "232",
-        icon: "/icons/sterling.svg",
-      },
-      {
-        label: "SunTrust Bank Nigeria",
-        value: "suntrust_bank_nigeria",
-        code: "100",
-        icon: "/icons/suntrust.svg",
-      },
-      {
-        label: "Union Bank of Nigeria",
-        value: "union_bank_nigeria",
-        code: "032",
-        icon: "/icons/union.svg",
-      },
-      {
-        label: "United Bank for Africa (UBA)",
-        value: "uba",
-        code: "033",
-        icon: "/icons/uba.svg",
-      },
-      {
-        label: "Unity Bank",
-        value: "unity_bank",
-        code: "215",
-        icon: "/icons/unity.svg",
-      },
-      {
-        label: "Wema Bank",
-        value: "wema_bank",
-        code: "035",
-        icon: "/icons/wema.svg",
-      },
-      {
-        label: "Zenith Bank",
-        value: "zenith_bank",
-        code: "057",
-        icon: "/icons/zenith.svg",
-      },
-    ],
-    []
-  );
+  const memoizedBankOptions = useMemo(() => bankOptions, []);
 
   const showAlert = (type, message) => {
     setAlert({ type, message });
@@ -178,7 +55,7 @@ export default function BankAccount() {
       }
       setAccountNumber(hostProfileData.bankingInfo.accountNo);
     }
-  }, [bankOptions, hostProfileData.bankingInfo]);
+  }, [hostProfileData.bankingInfo]);
 
   // Debug: Check what documents we have
   useEffect(() => {
@@ -441,6 +318,7 @@ export default function BankAccount() {
       setIsLoading(false);
     }
   };
+
   const handleOkay = () => {
     console.log("Closing success modal");
     setIsSuccessOpen(false);
@@ -505,7 +383,7 @@ export default function BankAccount() {
             <Dropdown
               label="Select Bank"
               placeholder="Choose your bank"
-              options={bankOptions}
+              options={memoizedBankOptions} 
               required={true}
               heading="Select Bank"
               isOpen={isDropdownOpen}

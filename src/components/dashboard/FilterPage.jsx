@@ -10,6 +10,7 @@ export default function FilterPage() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Add state for each dropdown
   const [apartmentType, setApartmentType] = useState(null);
@@ -166,13 +167,71 @@ export default function FilterPage() {
     setBudget(30000);
     setLocation("");
     setError("");
+    setFieldErrors({});
   };
+  // Validate all required filters
+  const validateFilters = () => {
+    const newErrors = {};
 
+    // Check required dropdowns
+    if (!apartmentType)
+      newErrors.apartmentType = "Please select apartment type";
+    if (!ratings) newErrors.ratings = "Please select ratings";
+    if (!bedrooms) newErrors.bedrooms = "Please select number of bedrooms";
+    if (!bathrooms) newErrors.bathrooms = "Please select number of bathrooms";
+    if (!electricity)
+      newErrors.electricity = "Please select electricity choice";
+    if (!guests) newErrors.guests = "Please select guest number";
+    if (!kitchenSize) newErrors.kitchenSize = "Please select kitchen size";
+    if (!parkingSpace) newErrors.parkingSpace = "Please select parking space";
+
+    // Check multiple select dropdowns
+    if (facilities.length === 0)
+      newErrors.facilities = "Please select at least one facility";
+    if (houseRules.length === 0)
+      newErrors.houseRules = "Please select at least one house rule";
+
+    // Check location
+    if (!location.trim()) newErrors.location = "Please enter a location";
+
+    // Check budget is above minimum
+    if (budget <= 30000) newErrors.budget = "Please set a budget above ₦30,000";
+
+    console.log("Validation errors found:", newErrors);
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
   // Handle filter submission
   const handleProceed = async () => {
     try {
       setLoading(true);
       setError("");
+      setFieldErrors({});
+
+      console.log("Current form state:", {
+        apartmentType,
+        ratings,
+        bedrooms,
+        bathrooms,
+        electricity,
+        guests,
+        kitchenSize,
+        parkingSpace,
+        facilities: facilities.length,
+        houseRules: houseRules.length,
+        location,
+        budget,
+      });
+
+      // Validate all required filters
+      const isValid = validateFilters();
+      console.log("Validation result:", isValid);
+
+      if (!isValid) {
+        console.log("Validation errors:", fieldErrors);
+        setLoading(false);
+        return;
+      }
 
       // Prepare filters for API call - only include selected filters
       const filters = {
@@ -272,7 +331,7 @@ export default function FilterPage() {
             </span>
           </div>
           <span
-            className="text-[#A20BA2] font-medium text-[12px] cursor-pointer"
+            className="text-[#A20BA2] font-medium text-[13.8px] cursor-pointer"
             onClick={handleReset}
           >
             Reset
@@ -300,34 +359,55 @@ export default function FilterPage() {
       <div className="flex-1 px-[20px] mt-[17px]">
         <form className="space-y-9" onSubmit={(e) => e.preventDefault()}>
           {/* Apartment Type */}
-          <Dropdown
-            label="Apartment Type"
-            placeholder="Choose Option"
-            heading="Select Apartment Type"
-            options={apartmentOptions}
-            required
-            isOpen={openDropdown === "apartment"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "apartment" ? null : "apartment")
-            }
-            selected={apartmentType}
-            setSelected={setApartmentType}
-          />
+          <div>
+            <Dropdown
+              label="Apartment Type"
+              placeholder="Choose Option"
+              heading="Select Apartment Type"
+              options={apartmentOptions}
+              required
+              isOpen={openDropdown === "apartment"}
+              onToggle={() =>
+                setOpenDropdown(
+                  openDropdown === "apartment" ? null : "apartment"
+                )
+              }
+              selected={apartmentType}
+              setSelected={(value) => {
+                setApartmentType(value);
+                setFieldErrors((prev) => ({ ...prev, apartmentType: "" }));
+              }}
+            />
+            {fieldErrors.apartmentType && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.apartmentType}
+              </p>
+            )}
+          </div>
 
           {/* Location */}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-medium mb-2">
-              Location
+              Location <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               placeholder="Ikorodu, Lagos"
-              className="w-full text-[#686464] text-[14px] rounded-lg px-3 py-2"
+              className={`w-full text-[#686464] text-[14px] rounded-lg px-3 py-2 border ${
+                fieldErrors.location ? "border-[#F81A0C]" : "border-gray-300"
+              }`}
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, location: "" }));
+              }}
             />
+            {fieldErrors.location && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.location}
+              </p>
+            )}
           </div>
-
           {/* Budget Slider */}
           <div>
             <label className="block text-[14px] font-medium text-[#333333]">
@@ -343,163 +423,261 @@ export default function FilterPage() {
               max={1000000}
               step={5000}
               value={budget}
-              onChange={(e) => setBudget(Number(e.target.value))}
+              onChange={(e) => {
+                setBudget(Number(e.target.value));
+                setFieldErrors((prev) => ({ ...prev, budget: "" }));
+              }}
               className="w-full mt-3 slider-custom"
               style={{
                 background: `linear-gradient(
-                  to right, 
-                  #A20BA2 0%, 
-                  #A20BA2 ${((budget - 30000) / (1000000 - 30000)) * 100}%, 
-                  #FBD0FB ${((budget - 30000) / (1000000 - 30000)) * 100}%, 
-                  #FBD0FB 100%
-                )`,
+        to right, 
+        #A20BA2 0%, 
+        #A20BA2 ${((budget - 30000) / (1000000 - 30000)) * 100}%, 
+        #FBD0FB ${((budget - 30000) / (1000000 - 30000)) * 100}%, 
+        #FBD0FB 100%
+      )`,
               }}
             />
+            {fieldErrors.budget && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.budget}
+              </p>
+            )}
+          </div>
+          {/* Ratings */}
+          <div>
+            <Dropdown
+              label="Ratings"
+              placeholder="Choose Ratings"
+              heading="Select Rating"
+              options={ratingOptions}
+              required
+              isOpen={openDropdown === "ratings"}
+              onToggle={() =>
+                setOpenDropdown(openDropdown === "ratings" ? null : "ratings")
+              }
+              selected={ratings}
+              setSelected={(value) => {
+                setRatings(value);
+                setFieldErrors((prev) => ({ ...prev, ratings: "" }));
+              }}
+            />
+            {fieldErrors.ratings && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.ratings}
+              </p>
+            )}
           </div>
 
-          {/* Ratings */}
-          <Dropdown
-            label="Ratings"
-            placeholder="Choose Ratings"
-            heading="Select Rating"
-            options={ratingOptions}
-            required
-            isOpen={openDropdown === "ratings"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "ratings" ? null : "ratings")
-            }
-            selected={ratings}
-            setSelected={setRatings}
-          />
-
           {/* Bedrooms */}
-          <Dropdown
-            label="Bedrooms"
-            placeholder="Choose Number"
-            heading="Select Number of Bedrooms"
-            options={numberOptions}
-            required
-            isOpen={openDropdown === "bedrooms"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "bedrooms" ? null : "bedrooms")
-            }
-            selected={bedrooms}
-            setSelected={setBedrooms}
-          />
+          <div>
+            <Dropdown
+              label="Bedrooms"
+              placeholder="Choose Number"
+              heading="Select Number of Bedrooms"
+              options={numberOptions}
+              required
+              isOpen={openDropdown === "bedrooms"}
+              onToggle={() =>
+                setOpenDropdown(openDropdown === "bedrooms" ? null : "bedrooms")
+              }
+              selected={bedrooms}
+              setSelected={(value) => {
+                setBedrooms(value);
+                setFieldErrors((prev) => ({ ...prev, bedrooms: "" }));
+              }}
+            />
+            {fieldErrors.bedrooms && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.bedrooms}
+              </p>
+            )}
+          </div>
 
           {/* Bathrooms */}
-          <Dropdown
-            label="Bathroom Number"
-            placeholder="Choose Number"
-            heading="Select Number of Bathrooms"
-            options={numberOptions}
-            required
-            isOpen={openDropdown === "bathrooms"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "bathrooms" ? null : "bathrooms")
-            }
-            selected={bathrooms}
-            setSelected={setBathrooms}
-          />
+          <div>
+            <Dropdown
+              label="Bathroom Number"
+              placeholder="Choose Number"
+              heading="Select Number of Bathrooms"
+              options={numberOptions}
+              required
+              isOpen={openDropdown === "bathrooms"}
+              onToggle={() =>
+                setOpenDropdown(
+                  openDropdown === "bathrooms" ? null : "bathrooms"
+                )
+              }
+              selected={bathrooms}
+              setSelected={(value) => {
+                setBathrooms(value);
+                setFieldErrors((prev) => ({ ...prev, bathrooms: "" }));
+              }}
+            />
+            {fieldErrors.bathrooms && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.bathrooms}
+              </p>
+            )}
+          </div>
 
           {/* Electricity Choice */}
-          <Dropdown
-            label="Electricity Choice"
-            placeholder="Select Electricity"
-            heading="Select Electricity Choice"
-            options={electricityOptions}
-            required
-            isOpen={openDropdown === "electricity"}
-            onToggle={() =>
-              setOpenDropdown(
-                openDropdown === "electricity" ? null : "electricity"
-              )
-            }
-            selected={electricity}
-            setSelected={setElectricity}
-          />
+          <div>
+            <Dropdown
+              label="Electricity Choice"
+              placeholder="Select Electricity"
+              heading="Select Electricity Choice"
+              options={electricityOptions}
+              required
+              isOpen={openDropdown === "electricity"}
+              onToggle={() =>
+                setOpenDropdown(
+                  openDropdown === "electricity" ? null : "electricity"
+                )
+              }
+              selected={electricity}
+              setSelected={(value) => {
+                setElectricity(value);
+                setFieldErrors((prev) => ({ ...prev, electricity: "" }));
+              }}
+            />
+            {fieldErrors.electricity && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.electricity}
+              </p>
+            )}
+          </div>
 
           {/* Guest Number */}
-          <Dropdown
-            label="Guest Number"
-            placeholder="Choose Number"
-            heading="Guest Number"
-            options={guestOptions}
-            required
-            isOpen={openDropdown === "guests"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "guests" ? null : "guests")
-            }
-            selected={guests}
-            setSelected={setGuests}
-          />
+          <div>
+            <Dropdown
+              label="Guest Number"
+              placeholder="Choose Number"
+              heading="Guest Number"
+              options={guestOptions}
+              required
+              isOpen={openDropdown === "guests"}
+              onToggle={() =>
+                setOpenDropdown(openDropdown === "guests" ? null : "guests")
+              }
+              selected={guests}
+              setSelected={(value) => {
+                setGuests(value);
+                setFieldErrors((prev) => ({ ...prev, guests: "" }));
+              }}
+            />
+            {fieldErrors.guests && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.guests}
+              </p>
+            )}
+          </div>
 
           {/* Kitchen Size */}
-          <Dropdown
-            label="Kitchen Size"
-            placeholder="Choose Option"
-            heading="Select Choice"
-            options={kitchenOptions}
-            required
-            isOpen={openDropdown === "kitchen"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "kitchen" ? null : "kitchen")
-            }
-            selected={kitchenSize}
-            setSelected={setKitchenSize}
-          />
+          <div>
+            <Dropdown
+              label="Kitchen Size"
+              placeholder="Choose Option"
+              heading="Select Choice"
+              options={kitchenOptions}
+              required
+              isOpen={openDropdown === "kitchen"}
+              onToggle={() =>
+                setOpenDropdown(openDropdown === "kitchen" ? null : "kitchen")
+              }
+              selected={kitchenSize}
+              setSelected={(value) => {
+                setKitchenSize(value);
+                setFieldErrors((prev) => ({ ...prev, kitchenSize: "" }));
+              }}
+            />
+            {fieldErrors.kitchenSize && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.kitchenSize}
+              </p>
+            )}
+          </div>
 
           {/* Parking Space */}
-          <Dropdown
-            label="Parking Space"
-            placeholder="Choose Option"
-            heading="Select Choice"
-            options={parkingOptions}
-            required
-            isOpen={openDropdown === "parking"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "parking" ? null : "parking")
-            }
-            selected={parkingSpace}
-            setSelected={setParkingSpace}
-          />
+          <div>
+            <Dropdown
+              label="Parking Space"
+              placeholder="Choose Option"
+              heading="Select Choice"
+              options={parkingOptions}
+              required
+              isOpen={openDropdown === "parking"}
+              onToggle={() =>
+                setOpenDropdown(openDropdown === "parking" ? null : "parking")
+              }
+              selected={parkingSpace}
+              setSelected={(value) => {
+                setParkingSpace(value);
+                setFieldErrors((prev) => ({ ...prev, parkingSpace: "" }));
+              }}
+            />
+            {fieldErrors.parkingSpace && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.parkingSpace}
+              </p>
+            )}
+          </div>
 
           {/* Facilities & Services */}
-          <Dropdown
-            label="Facilities & Services"
-            placeholder="Select Options"
-            heading="Select Facilities & Services"
-            options={facilitiesOptions}
-            required
-            multiple={true}
-            isOpen={openDropdown === "facilities"}
-            onToggle={() =>
-              setOpenDropdown(
-                openDropdown === "facilities" ? null : "facilities"
-              )
-            }
-            selected={facilities}
-            setSelected={setFacilities}
-          />
+          <div>
+            <Dropdown
+              label="Facilities & Services"
+              placeholder="Select Options"
+              heading="Select Facilities & Services"
+              options={facilitiesOptions}
+              required
+              multiple={true}
+              isOpen={openDropdown === "facilities"}
+              onToggle={() =>
+                setOpenDropdown(
+                  openDropdown === "facilities" ? null : "facilities"
+                )
+              }
+              selected={facilities}
+              setSelected={(value) => {
+                setFacilities(value);
+                setFieldErrors((prev) => ({ ...prev, facilities: "" }));
+              }}
+            />
+            {fieldErrors.facilities && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.facilities}
+              </p>
+            )}
+          </div>
 
           {/* House Rules */}
-          <Dropdown
-            label="House Rules"
-            placeholder="Select Options"
-            heading="Select House Rules"
-            options={houseRulesOptions}
-            required
-            multiple={true}
-            isOpen={openDropdown === "houseRules"}
-            onToggle={() =>
-              setOpenDropdown(
-                openDropdown === "houseRules" ? null : "houseRules"
-              )
-            }
-            selected={houseRules}
-            setSelected={setHouseRules}
-          />
-
+          <div>
+            <Dropdown
+              label="House Rules"
+              placeholder="Select Options"
+              heading="Select House Rules"
+              options={houseRulesOptions}
+              required
+              multiple={true}
+              isOpen={openDropdown === "houseRules"}
+              onToggle={() =>
+                setOpenDropdown(
+                  openDropdown === "houseRules" ? null : "houseRules"
+                )
+              }
+              selected={houseRules}
+              setSelected={(value) => {
+                setHouseRules(value);
+                setFieldErrors((prev) => ({ ...prev, houseRules: "" }));
+              }}
+            />
+            {fieldErrors.houseRules && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.houseRules}
+              </p>
+            )}
+          </div>
           {/* Proceed Button */}
           <div className="pt-[67px] pb-10">
             <Button

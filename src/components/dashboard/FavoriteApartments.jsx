@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../hooks/useUser";
-import { useEffect, useState } from "react"; // Add useState import
+import { useEffect, useState } from "react";
 
 export default function ApartmentList() {
   const navigate = useNavigate();
   const { loading: userLoading, error } = useUser();
-  const [loadingStates, setLoadingStates] = useState({}); // Add loading states for each apartment
+  const [loadingStates, setLoadingStates] = useState({});
 
   const apartmentsLoading = userLoading;
   const { getUserFavorites, addToFavorites, removeFromFavorites, refreshUser } =
@@ -72,6 +72,19 @@ export default function ApartmentList() {
     return `₦${price.toLocaleString()}`;
   };
 
+  // Helper function to format rating safely
+  const formatRating = (rating) => {
+    if (typeof rating === "number") {
+      return rating.toFixed(1);
+    }
+    // Try to convert string to number if needed
+    const numericRating = parseFloat(rating);
+    if (!isNaN(numericRating)) {
+      return numericRating.toFixed(1);
+    }
+    return "0.0";
+  };
+
   if (apartmentsLoading) {
     return (
       <div className="w-full min-h-screen bg-[#F9F9F9] flex items-center justify-center">
@@ -96,7 +109,7 @@ export default function ApartmentList() {
           favoriteApartments.map((apartment) => (
             <div
               key={apartment.id}
-              onClick={() => navigate(`/apartments/${apartment.id}`)}
+              onClick={() => navigate(`/shortlet-overview/${apartment.id}`)}
               className="relative rounded-[5px] overflow-hidden cursor-pointer group"
             >
               <img
@@ -124,7 +137,7 @@ export default function ApartmentList() {
                       className="w-[17.47px] h-[17.47px]"
                     />
                     <span className="text-[14.3px] font-medium">
-                      {apartment.averageRating?.toFixed(1) || "0.0"}
+                      {formatRating(apartment.averageRating)}
                     </span>
                   </span>
                 </div>

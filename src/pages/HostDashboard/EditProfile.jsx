@@ -5,6 +5,7 @@ import ShowSuccess from "../../components/ShowSuccess";
 import Header2 from "../../components/Header2";
 import { useUser } from "../../hooks/useUser";
 import { updateUserProfile } from "../../services/userApi";
+import Alert from "../../components/utils/Alerts";
 
 export default function EditProfilePage() {
   const [showModal, setShowModal] = useState(false);
@@ -18,10 +19,9 @@ export default function EditProfilePage() {
   });
   const [profileImage, setProfileImage] = useState(null);
   const [idDocuments, setIdDocuments] = useState([]);
-  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { user, updateUser } = useUser();
-
+  const [alert, setAlert] = useState({ show: false, message: "", type: "" });
   // Check if user has existing date of birth
   const hasExistingDOB = user?.dateOfBirth;
 
@@ -36,7 +36,7 @@ export default function EditProfilePage() {
         dateOfBirth: user.dateOfBirth || "",
       });
       setProfileImage(user.profilePic || "/images/profile-image.png");
-      setIdDocuments(user.idDocuments || []);
+      setIdDocuments(user.documents || []);
     }
   }, [user]);
 
@@ -106,14 +106,17 @@ export default function EditProfilePage() {
       setIdDocuments((prev) => [...prev, ...newDocuments]);
 
       if (files.length > availableSlots) {
-        alert(`You can only upload up to ${MAX_DOCUMENTS} documents`);
+        setAlert({
+          show: true,
+          message: `You can only upload up to ${MAX_DOCUMENTS} documents`,
+          type: "error",
+        });
       }
     }
   };
 
   const handleSave = async () => {
     setLoading(true);
-    setError(""); // Clear previous errors
     try {
       // Prepare user data - use exact field names backend expects
       const userData = {
@@ -199,7 +202,11 @@ export default function EditProfilePage() {
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      setError(error.message || "Failed to update profile. Please try again.");
+      setAlert({
+        show: true,
+        message: error.message || "Failed to update profile. Please try again.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -453,23 +460,16 @@ export default function EditProfilePage() {
             </div>
           )}
         </form>
+        {/* Alert Component */}
+        {alert.show && (
+          <Alert
+            message={alert.message}
+            type={alert.type}
+            onDismiss={() => setAlert({ show: false, message: "", type: "" })}
+            timeout={5000} // Optional - defaults to 5000ms
+          />
+        )}
       </div>
-
-      {/* Error Message */}
-      {error && (
-        <div className="px-5">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
-            <div className="flex items-center">
-              <img
-                src="/icons/error.svg"
-                alt="Error"
-                className="w-4 h-4 mr-2"
-              />
-              <span className="text-sm">{error}</span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Save Button */}
       <div className="px-5 py-6">

@@ -88,12 +88,25 @@ export default function Dropdown({
               >
                 <div className="flex items-center space-x-2">
                   {opt.icon && (
-                    <img src={opt.icon} className="w-[17px] h-[17px]" alt="" />
+                    <img src={opt.icon} className="w-[30px] h-[30px]" alt="" />
                   )}
                   <span className="text-[14px]">{opt.label}</span>
                 </div>
 
-                {multiple && (
+                {/* Selection indicator for both single and multiple */}
+                {multiple ? (
+                  <span
+                    className={`w-2 h-2 rounded-full border-2 flex items-center justify-center ${
+                      isSelected
+                        ? "border-[#A20BA2] bg-[#A20BA2]"
+                        : "border-gray-400 bg-white"
+                    }`}
+                  >
+                    {isSelected && (
+                      <div className="w-[5px] h-[5px] rounded-full bg-white"></div>
+                    )}
+                  </span>
+                ) : (
                   <span
                     className={`w-2 h-2 rounded-full border-2 flex items-center justify-center ${
                       isSelected

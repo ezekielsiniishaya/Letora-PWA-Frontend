@@ -120,7 +120,7 @@ const UserProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     console.log("🚪 Logging out user...");
 
     // Clear search history for this user
@@ -134,8 +134,7 @@ const UserProvider = ({ children }) => {
     setError(null);
 
     console.log("✅ User logged out successfully");
-  };
-
+  }, [user?.id]); // Add user.id as dependency since it's used in the function
   const updateUser = (updatedData) => {
     setUser((prev) => {
       if (!prev) return updatedData;
@@ -174,8 +173,7 @@ const UserProvider = ({ children }) => {
       }
       throw err;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [logout]);
 
   // Get user notifications
   const getUserNotifications = useCallback(() => {
