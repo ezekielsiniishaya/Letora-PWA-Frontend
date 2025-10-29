@@ -190,7 +190,7 @@ export default function SignIn() {
               disabled={loading}
             />
             {fieldErrors.email && (
-              <p className="text-[#F81A0C] text-[10px] mt-1">
+              <p className="text-[#F81A0C] text-[12px] mt-1">
                 {fieldErrors.email}
               </p>
             )}

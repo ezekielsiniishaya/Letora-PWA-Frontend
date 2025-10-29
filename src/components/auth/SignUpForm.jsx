@@ -349,12 +349,13 @@ export default function SignUpForm() {
               />
             </div>
           )}
-
-          <Button
-            type="submit"
-            text={loading ? "Creating Account..." : "Proceed"}
-            disabled={loading}
-          />
+          <div className="pt-[60px]">
+            <Button
+              type="submit"
+              text={loading ? "Creating Account..." : "Proceed"}
+              disabled={loading}
+            />
+          </div>
         </form>
 
         {/* Divider */}
