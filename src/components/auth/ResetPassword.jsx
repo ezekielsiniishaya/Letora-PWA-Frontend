@@ -4,7 +4,7 @@ import Button from "../Button";
 import Header from "../Header";
 import PasswordInput from "./PasswordInput";
 import ShowSuccess from "../ShowSuccess";
-import { resetPasswordAPI } from "../../services/authApi"; // Import the API function
+import { resetPasswordAPI } from "../../services/authApi";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -12,6 +12,10 @@ export default function ResetPassword() {
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    password: "",
+    confirmPassword: "",
+  });
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,25 +23,38 @@ export default function ResetPassword() {
   const resetToken = location.state?.resetCode;
   const userEmail = location.state?.email;
 
+  const validateForm = () => {
+    const newFieldErrors = {
+      password: "",
+      confirmPassword: "",
+    };
+
+    // Password validation
+    if (!password.trim()) {
+      newFieldErrors.password = "This field is required.";
+    } else if (password.length < 6) {
+      newFieldErrors.password = "Password must be at least 6 characters long";
+    }
+
+    // Confirm password validation
+    if (!confirmPassword.trim()) {
+      newFieldErrors.confirmPassword = "This field is required.";
+    } else if (password !== confirmPassword) {
+      newFieldErrors.confirmPassword = "Passwords do not match";
+    }
+
+    setFieldErrors(newFieldErrors);
+    return Object.values(newFieldErrors).every((error) => error === "");
+  };
+
   const handleResetPassword = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    setError(""); // Clear previous errors
+    setError(""); // Clear previous general errors
 
-    // Validation
-    if (!password || !confirmPassword) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    // Validate form
+    if (!validateForm()) {
       return;
     }
 
@@ -60,7 +77,35 @@ export default function ResetPassword() {
       }
     } catch (error) {
       console.error("Error resetting password:", error);
-      setError(error.message || "Failed to reset password. Please try again.");
+
+      // Enhanced error handling
+      const errorMessage =
+        error?.message || "Failed to reset password. Please try again.";
+      const lowerCaseMsg = errorMessage.toLowerCase();
+
+      // Network error detection
+      if (
+        lowerCaseMsg.includes("network") ||
+        lowerCaseMsg.includes("offline") ||
+        lowerCaseMsg.includes("fetch") ||
+        lowerCaseMsg.includes("failed to fetch") ||
+        error?.name === "TypeError" ||
+        error?.name === "NetworkError" ||
+        !navigator.onLine
+      ) {
+        setError("network");
+      } else if (
+        lowerCaseMsg.includes("token") ||
+        lowerCaseMsg.includes("expired") ||
+        lowerCaseMsg.includes("invalid") ||
+        error?.response?.status === 400
+      ) {
+        setError(
+          "Reset token is invalid or has expired. Please request a new reset code."
+        );
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -77,6 +122,13 @@ export default function ResetPassword() {
     navigate("/verify-reset-code", { state: { email: userEmail } });
   };
 
+  const clearFieldError = (fieldName) => {
+    setFieldErrors((prev) => ({
+      ...prev,
+      [fieldName]: "",
+    }));
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-[#F9F9F9] px-[20px] relative">
       <Header />
@@ -89,7 +141,7 @@ export default function ResetPassword() {
           Please enter your new password
         </p>
 
-        {/* Error Display */}
+        {/* General Error Display */}
         {error && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
             <div className="flex items-center gap-2">
@@ -114,26 +166,34 @@ export default function ResetPassword() {
         <form
           className="space-y-[30px] mt-[21px]"
           onSubmit={handleResetPassword}
+          noValidate
         >
           <PasswordInput
             label="Create Password"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              setError(""); // Clear error when user types
+              clearFieldError("password");
+              setError(""); // Clear general error when user types
             }}
             placeholder="Enter your new password"
             disabled={isLoading}
+            hasError={!!fieldErrors.password}
+            errorMessage={fieldErrors.password}
           />
+
           <PasswordInput
             label="Confirm Password"
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);
-              setError(""); // Clear error when user types
+              clearFieldError("confirmPassword");
+              setError(""); // Clear general error when user types
             }}
             placeholder="Confirm your new password"
             disabled={isLoading}
+            hasError={!!fieldErrors.confirmPassword}
+            errorMessage={fieldErrors.confirmPassword}
           />
 
           {/* Submit Button */}

@@ -1,3 +1,4 @@
+// Updated Dashboard component (simplified version)
 import { useState } from "react";
 import ApartmentSlider from "../../components/dashboard/ApartmentSlider";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
@@ -5,6 +6,7 @@ import ShowSuccess from "../../components/ShowSuccess";
 import { Link } from "react-router-dom";
 import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
+import BecomeHostBanner from "./BecomeHostBanner"; // Import the new component
 import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useUser } from "../../hooks/useUser";
 import Button from "../../components/Button";
@@ -19,7 +21,7 @@ export default function Dashboard() {
     hotApartmentsLoading,
     nearbyApartmentsLoading,
     error,
-    refetch: refetchApartments, // assume your hook supports refetch
+    refetch: refetchApartments,
   } = useApartmentListing();
 
   const {
@@ -27,7 +29,7 @@ export default function Dashboard() {
     loading: userLoading,
     isAuthenticated,
     error: userError,
-    refetch: refetchUser, // assume your hook supports refetch
+    refetch: refetchUser,
     getUserBookings,
     getUnreadNotificationsCount,
   } = useUser();
@@ -67,8 +69,8 @@ export default function Dashboard() {
         </h3>
         <p className="text-[#777] text-[12px] mb-4 max-w-[240px]">
           {userError
-            ? "We couldn’t load your profile right now."
-            : "We couldn’t reach the server or load apartment data."}
+            ? "We couldn't load your profile right now."
+            : "We couldn't reach the server or load apartment data."}
         </p>
         <Button
           text="Retry"
@@ -95,7 +97,6 @@ export default function Dashboard() {
         <div className="absolute inset-0 bg-black opacity-75"></div>
 
         {/* Profile + Notifications */}
-
         <div className="flex items-center">
           {/* Your other elements on the left */}
 
@@ -115,9 +116,19 @@ export default function Dashboard() {
           </Link>
         </div>
 
+        {/* Select Guest Current Location */}
+        <div className="flex items-center justify-center bg-[#1A1A1A] w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10">
+          <img
+            src="/icons/location-white.svg"
+            alt="Search"
+            className="w-[9px] h-[12.5px] mr-[7px]"
+          />
+          <span className="text-[#FFFFFF] text-[11px]">Select Location</span>
+        </div>
+
         {/* Guest name */}
-        <div className="relative mt-[30px] z-10">
-          <h2 className="text-[16px] font-semibold">
+        <div className="relative mb-[15px] z-10">
+          <h2 className="text-[17px] font-semibold">
             {user ? `${user.firstName} ${user.lastName}` : "Guest User"}
           </h2>
           <p className="text-[12.02px]">Discover wonderful Apartments</p>
@@ -198,44 +209,8 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Become a Host */}
-      {user?.role === "GUEST" && (
-        <Link to="/identity-id">
-          <div className="px-[22px]">
-            <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-[8px] px-[12px] flex items-center justify-between overflow-hidden h-[106.04px]">
-              <div className="text-white max-w-[70%] z-10">
-                <h3 className="font-semibold text-[16px] mb-1">
-                  Become a Host
-                </h3>
-                <p className="text-[12px] leading-snug">
-                  Ready to cash in on your space? <br />
-                  Verify your identity and list today.
-                </p>
-                <button className="mt-2 text-[10px]">
-                  Click here to begin
-                </button>
-              </div>
-              <div className="absolute right-[-10px] bottom-0 h-full flex items-end justify-end">
-                <img
-                  src="/images/background/become-host.png"
-                  alt="Become a Host"
-                  className="h-[117px] object-contain transform scale-x-[-1] relative z-10"
-                />
-                <img
-                  src="/icons/star.svg"
-                  alt="star"
-                  className="absolute top-[15px] right-[114.3px] w-[9px] h-[9px] z-20"
-                />
-                <img
-                  src="/icons/doodle.svg"
-                  alt="doodle"
-                  className="absolute bottom-[12.27px] right-[121.73px] w-[6.3px] h-[5.4px] z-20"
-                />
-              </div>
-            </div>
-          </div>
-        </Link>
-      )}
+      {/* Become a Host Banner - Now self-contained */}
+      <BecomeHostBanner />
 
       {/* Nearby Apartments */}
       <div className="px-[22px]">

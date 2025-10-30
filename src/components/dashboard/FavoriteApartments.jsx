@@ -105,7 +105,7 @@ export default function ApartmentList() {
     <div className="bg-[#F9F9F9] min-h-screen">
       {/* Apartments list */}
       <div className="w-full space-y-[10px] px-[21px] pb-[100px]">
-        {favoriteApartments.length > 0 ? (
+        {favoriteApartments.length < 0 ? (
           favoriteApartments.map((apartment) => (
             <div
               key={apartment.id}
@@ -173,15 +173,15 @@ export default function ApartmentList() {
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 rounded-lg">
             <img
-              src="/icons/no-apartment-location.png"
+              src="/icons/no-favorite.png"
               alt="No apartments"
-              className="w-[44px] h-[44px] mb-2 grayscale"
+              className="w-[44px] h-[44px] grayscale mb-2"
             />
             <p className="text-[#505050] mt-2 text-[14px] font-medium w-[250px] text-center">
-              No Available Apartments
+              No Favorites Yet.{" "}
             </p>
             <p className="text-[#807F7F] mt-2 text-[12px] w-[250px] text-center">
-              Check back soon for new apartment listings in your area!
+              Your saved apartments will appear here once you start adding them.
             </p>
           </div>
         )}
