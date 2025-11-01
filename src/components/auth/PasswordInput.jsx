@@ -23,7 +23,7 @@ export default function PasswordInput({
         className={`flex items-center rounded-md bg-white h-[48px] px-3 border ${
           hasError
             ? "border-[#F81A0C] text-[10px]"
-            : "border-[#CCC] focus-within:ring-[#A20BA2] focus-within:border-[#A20BA2]"
+            : "border focus-within:ring-[#A20BA2] focus-within:border-[#A20BA2]"
         } ${disabled ? "opacity-50" : ""}`}
       >
         <input

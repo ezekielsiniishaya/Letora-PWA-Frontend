@@ -69,7 +69,7 @@ export default function ApartmentList() {
   // Helper function to format price
   const formatPrice = (price) => {
     if (!price) return "N/A";
-    return `₦${price.toLocaleString()}`;
+    return `₦${Number(price).toLocaleString()}`;
   };
 
   // Helper function to format rating safely
@@ -105,7 +105,7 @@ export default function ApartmentList() {
     <div className="bg-[#F9F9F9] min-h-screen">
       {/* Apartments list */}
       <div className="w-full space-y-[10px] px-[21px] pb-[100px]">
-        {favoriteApartments.length < 0 ? (
+        {favoriteApartments.length > 0 ? (
           favoriteApartments.map((apartment) => (
             <div
               key={apartment.id}

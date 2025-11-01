@@ -346,12 +346,12 @@ export default function EditProfilePage() {
           <div className="flex space-x-4">
             <div className="flex-1">
               <label className="block text-sm text-[#686464] font-medium">
-                Gender<span className="text-red-500 mr-1">*</span>
+                Gender
               </label>
               <input
                 value={user.gender || "Male"}
                 disabled
-                className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-white text-[#807F7F]"
+                className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-gray-100  text-[#807F7F]"
               />
             </div>
             <div className="flex-1">
@@ -363,7 +363,7 @@ export default function EditProfilePage() {
                 <input
                   value={formatDateOfBirth(user.dateOfBirth)}
                   disabled
-                  className="mt-2 border w-full h-[48px] rounded-md px-3 text-[14px] bg-white text-[#807F7F]"
+                  className="mt-2 border w-full h-[48px] rounded-md px-3 text-[14px] bg-gray-100  text-[#807F7F]"
                 />
               ) : (
                 // Show date input if no DOB exists
@@ -386,7 +386,7 @@ export default function EditProfilePage() {
             <input
               value={user.nationality || "Nigerian"}
               disabled
-              className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-white text-[#686464]"
+              className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-gray-100  text-[#686464]"
             />
           </div>
 
@@ -398,11 +398,11 @@ export default function EditProfilePage() {
             <input
               value={user?.location?.state || "Lagos"}
               disabled
-              className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-white text-[#686464]"
+              className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-gray-100  text-[#686464]"
             />
           </div>
           {/* Upload Means of Identification - Only show for hosts */}
-          {isHost && (
+          {!isHost && (
             <div>
               <label className="block text-sm text-[#686464] font-medium mb-5">
                 Upload Means of Identification
@@ -450,7 +450,7 @@ export default function EditProfilePage() {
                       type="file"
                       className="hidden"
                       multiple
-                      accept="image/*,.pdf,.doc,.docx"
+                      accept="image/jpeg, image/png, image/jpg, application/pdf"
                       onChange={handleDocumentUpload}
                     />
                   </label>

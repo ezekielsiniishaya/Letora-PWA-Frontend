@@ -126,7 +126,7 @@ export default function BookingsPage() {
 
       {/* Main content */}
       <main className="flex-1 mt-[15px] p-4 space-y-4">
-        {filteredBookings.length < 0 ? (
+        {filteredBookings.length > 0 ? (
           filteredBookings.map((booking) => (
             <Bookings
               key={booking.id}

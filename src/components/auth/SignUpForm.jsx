@@ -326,29 +326,56 @@ export default function SignUpForm() {
           </div>
           {/* ✅ Alerts */}
           {error === "network" && (
-            <div className="mt-4  pb-[62px]">
+            <div className="mt-4 pb-[62px]">
               <Alert
                 type="network"
                 message="Network issues. Get better reception and try again."
+                onDismiss={() => setError("")} // This will clear the error
+                timeout={5000} // Optional: specify timeout in milliseconds
               />
             </div>
           )}
           {error === "email" && (
-            <div className="mt-4  pb-[62px]">
+            <div className="mt-4 pb-[62px]">
               <Alert
                 type="error"
-                message="Email already exists. Please use another one or sign in."
+                message="Email already exists."
+                onDismiss={() => setError("")}
+                timeout={5000}
               />
             </div>
           )}
           {error === "server" && (
-            <div className="mt-4  pb-[62px]">
+            <div className="mt-4 pb-[62px]">
               <Alert
                 type="error"
                 message="Server error. Please try again later."
+                onDismiss={() => setError("")}
+                timeout={5000}
               />
             </div>
           )}
+          {error === "validation" && (
+            <div className="mt-4 pb-[62px]">
+              <Alert
+                type="error"
+                message="Please check your input and try again."
+                onDismiss={() => setError("")}
+                timeout={5000}
+              />
+            </div>
+          )}
+          {error === "unknown" && (
+            <div className="mt-4 pb-[62px]">
+              <Alert
+                type="error"
+                message="An unexpected error occurred. Please try again."
+                onDismiss={() => setError("")}
+                timeout={5000}
+              />
+            </div>
+          )}
+
           <div className="pt-[60px]">
             <Button
               type="submit"

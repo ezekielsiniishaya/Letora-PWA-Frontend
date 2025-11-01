@@ -57,7 +57,7 @@ export default function ApartmentCard({ apt, role = "guest" }) {
   return (
     <Link
       to={link}
-      className="bg-white rounded-[5px] p-[8px] flex gap-2 hover:shadow-md transition mb-2 w-full"
+      className="bg-white rounded-[5px] p-[8px] flex gap-2  mb-2 w-full"
     >
       {/* Image */}
       <img

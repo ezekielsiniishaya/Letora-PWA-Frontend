@@ -11,7 +11,7 @@ import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useUser } from "../../hooks/useUser";
 import Button from "../../components/Button";
 import CurrentLocationDropdown from "../dashboard/SelectState";
-import { useApartmentsByLocation } from "../../hooks/useApartmentsByLocation";
+
 export default function Dashboard() {
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -34,20 +34,21 @@ export default function Dashboard() {
     getUserBookings,
     getUnreadNotificationsCount,
   } = useUser();
-  const { refetch } = useApartmentsByLocation();
+
   const unreadCount = getUnreadNotificationsCount();
   const userBookings = getUserBookings();
 
   const currentBooking = userBookings.find(
     (booking) => booking.status?.toLowerCase() !== "pending" || null
   );
+  // In Dashboard component
+
   const handleLocationChange = (newLocation) => {
     console.log("📍 Location changed to:", newLocation);
-    // The useApartmentsByLocation hook will automatically refetch due to the dependency
-    // But you can also manually trigger if needed:
-    refetch();
-  };
 
+    // Just reload - the page will refetch all data automatically
+    window.location.reload();
+  };
   // --- Loading state ---
   if (userLoading || hotApartmentsLoading || nearbyApartmentsLoading) {
     return (

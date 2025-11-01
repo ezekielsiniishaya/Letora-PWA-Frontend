@@ -638,6 +638,8 @@ export default function FilterPage() {
                   openDropdown === "facilities" ? null : "facilities"
                 )
               }
+              height="20px"
+              width="20px"
               selected={facilities}
               setSelected={(value) => {
                 setFacilities(value);
@@ -666,6 +668,7 @@ export default function FilterPage() {
                   openDropdown === "houseRules" ? null : "houseRules"
                 )
               }
+              width="20px"
               selected={houseRules}
               setSelected={(value) => {
                 setHouseRules(value);

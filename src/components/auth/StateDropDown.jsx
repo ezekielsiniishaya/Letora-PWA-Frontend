@@ -5,7 +5,7 @@ export default function StateDropdown({
   placeholder = "Select state",
   required = true,
   onChange,
-  value = "", // Add value prop to receive selected value from parent
+  value = "",
   color = "#686464",
 }) {
   const [open, setOpen] = useState(false);
@@ -51,6 +51,24 @@ export default function StateDropdown({
     "FCT",
   ];
 
+  // Scroll to dropdown when it opens - more aggressive version
+  useEffect(() => {
+    if (open && dropdownRef.current) {
+      setTimeout(() => {
+        const element = dropdownRef.current;
+        const elementRect = element.getBoundingClientRect();
+        const absoluteElementTop = elementRect.top + window.pageYOffset;
+
+        // Scroll to position the dropdown about 1/4 from the top
+        const targetScroll = absoluteElementTop - window.innerHeight * 0.30;
+
+        window.scrollTo({
+          top: targetScroll,
+          behavior: "smooth",
+        });
+      }, 50);
+    }
+  }, [open]);
   // Close dropdown if clicked outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -58,13 +76,21 @@ export default function StateDropdown({
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [open]);
 
   const handleSelect = (state) => {
     setOpen(false);
-    if (onChange) onChange(state); // pass selection back to parent
+    if (onChange) onChange(state);
+  };
+
+  const handleToggle = () => {
+    setOpen(!open);
   };
 
   return (
@@ -79,14 +105,14 @@ export default function StateDropdown({
       <button
         type="button"
         className="w-full h-[48px] border rounded-md px-4 bg-white flex items-center justify-between text-sm text-[#666666]"
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
       >
-        {value || placeholder} {/* Use value prop instead of internal state */}
-        <span className="ml-2">&#9662;</span> {/* Down arrow */}
+        {value || placeholder}
+        <span className="ml-2">&#9662;</span>
       </button>
 
       {open && (
-        <div className="fixed bottom-0 left-0 w-full bg-white rounded-t-[20px] shadow-lg border-t z-50 max-h-[70vh] overflow-y-auto">
+        <div className="fixed bottom-0 left-0 w-full bg-white rounded-t-[20px] shadow-lg border-t z-50 max-h-[60vh] overflow-y-auto">
           <div className="px-5 py-4 text-[16px] font-medium text-black">
             Select State
           </div>

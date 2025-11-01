@@ -8,12 +8,8 @@ export default function CurrentLocationDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const {
-    getUserLocation,
-    setUserLocation,
-    refreshUser,
-    refreshApartmentsByLocation,
-  } = useContext(UserContext);
+  const { getUserLocation, setUserLocation, refreshUser } =
+    useContext(UserContext);
 
   const states = [
     "Abia",
@@ -79,9 +75,6 @@ export default function CurrentLocationDropdown({
 
       // Refresh user data with new location
       await refreshUser();
-
-      // Refresh apartments for the new location
-      await refreshApartmentsByLocation(state);
 
       console.log("✅ Location saved and data refreshed");
 

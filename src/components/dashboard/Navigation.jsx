@@ -92,7 +92,11 @@ export default function Navigation() {
                 alt={item.name}
                 className="w-5 h-5"
               />
-              <span className="text-[12px] mt-1">{item.name}</span>
+              <span
+                className={`text-[12px] mt-1 ${isActive ? "font-medium" : ""}`}
+              >
+                {item.name}
+              </span>
             </Link>
           );
         })}

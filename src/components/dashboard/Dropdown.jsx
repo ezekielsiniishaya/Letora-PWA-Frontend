@@ -11,6 +11,8 @@ export default function Dropdown({
   multiple = false,
   selected, // Receive selected value from parent
   setSelected, // Receive setter from parent
+  width = "30px",
+  height = "30px",
 }) {
   const dropdownRef = useRef(null);
 
@@ -26,7 +28,24 @@ export default function Dropdown({
       onToggle(); // close dropdown on single select
     }
   };
+  // Add this useEffect right after the handleSelect function
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      setTimeout(() => {
+        const element = dropdownRef.current;
+        const elementRect = element.getBoundingClientRect();
+        const absoluteElementTop = elementRect.top + window.pageYOffset;
 
+        // Scroll to position the dropdown about 1/4 from the top
+        const targetScroll = absoluteElementTop - window.innerHeight * 0.20;
+
+        window.scrollTo({
+          top: targetScroll,
+          behavior: "smooth",
+        });
+      }, 50);
+    }
+  }, [isOpen]);
   const displayText = () => {
     if (multiple) {
       return selected.length > 0 ? `${selected.length} selected` : placeholder;
@@ -88,7 +107,7 @@ export default function Dropdown({
               >
                 <div className="flex items-center space-x-2">
                   {opt.icon && (
-                    <img src={opt.icon} className="w-[30px] h-[30px]" alt="" />
+                    <img src={opt.icon} className={`${width} ${height}`} />
                   )}
                   <span className="text-[14px]">{opt.label}</span>
                 </div>
