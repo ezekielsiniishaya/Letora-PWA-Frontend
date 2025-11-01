@@ -1,3 +1,4 @@
+// Updated Dashboard component (Host version - corrected)
 import { useState, useEffect } from "react";
 import ApartmentSlider from "../../components/dashboard/ApartmentSlider";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
@@ -8,15 +9,16 @@ import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
 import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useUser } from "../../hooks/useUser";
+import CurrentLocationDropdown from "../../components/dashboard/SelectState";
 
 export default function Dashboard() {
   const [showBalance, setShowBalance] = useState(true);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
   // Get time-based greeting
   const getTimeBasedGreeting = () => {
     const currentHour = new Date().getHours();
-
     if (currentHour >= 5 && currentHour < 12) {
       return "Good morning";
     } else if (currentHour >= 12 && currentHour < 17) {
@@ -25,6 +27,7 @@ export default function Dashboard() {
       return "Good evening";
     }
   };
+
   // Use the apartment listing context
   const {
     hotApartments,
@@ -43,12 +46,14 @@ export default function Dashboard() {
     refreshUser,
   } = useUser();
 
+  const handleLocationChange = (newLocation) => {
+    console.log("📍 Location changed to:", newLocation);
+    window.location.reload();
+  };
+
   // Get user's actual bookings and apartments
   const userBookings = getUserBookings();
-  // const userApartments = getUserApartments();
   const unreadCount = getUnreadNotificationsCount();
-
-  // Use first booking or fallback
   const currentBooking = userBookings.length > 0 ? userBookings[0] : null;
 
   // Get account balance from host profile
@@ -60,7 +65,7 @@ export default function Dashboard() {
           minimumFractionDigits: 1,
           maximumFractionDigits: 2,
         });
-  // Refresh user data when component mounts
+
   useEffect(() => {
     const refreshUserData = async () => {
       if (isAuthenticated() && !userLoading) {
@@ -74,8 +79,8 @@ export default function Dashboard() {
     };
 
     refreshUserData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - run only once
   // Show loading state for user data
   if (userLoading) {
     return (
@@ -97,15 +102,22 @@ export default function Dashboard() {
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] overflow-x-hidden pb-[80px]">
       {/* Header */}
-      <div className="relative bg-[#8C068C] h-[252px] text-white px-[20px] pt-[14px]">
+      <div className="relative bg-[#8C068C] h-[298px] text-white px-[20px] pt-[14px]">
+        {/* FIX: Move CurrentLocationDropdown to the top */}
+        <div className="relative z-20 pt-[70px] mb-[-20px]">
+          {" "}
+          {/* Added pt-4 and higher z-index */}
+          <CurrentLocationDropdown
+            onLocationChange={handleLocationChange}
+            className="host-location-dropdown" // Optional: for custom styling
+          />
+        </div>
+
         {/* Header Row */}
         <div className="flex flex-row justify-between items-center">
+          {" "}
+          {/* Reduced mt */}
           <div className="flex items-center gap-3">
-            <img
-              src={user?.profilePic || "/images/profile-image.png"}
-              alt={user?.firstName || "Host"}
-              className="w-[40px] h-[40px] rounded-full object-cover"
-            />
             <div>
               <h2 className="text-[16px] font-semibold">
                 {user ? `${user.firstName} ${user.lastName}` : "Host"}
@@ -128,10 +140,10 @@ export default function Dashboard() {
                 <img
                   src="/icons/notification.svg"
                   alt="Notifications"
-                  className="w-[18.65px] h-[18.65px] cursor-pointer"
+                  className="w-[20.65px] h-[20.65px] cursor-pointer"
                 />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-[6px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[16px] h-[16px] flex items-center justify-center shadow">
+                  <span className="absolute -top-1 -right-[8px] bg-white text-purple-600 text-[8.69px] font-medium rounded-full w-[16px] h-[16px] flex items-center justify-center shadow">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
@@ -140,8 +152,9 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Rest of your host dashboard content... */}
         {/* Balance Section */}
-        <div className="mt-[26px] flex flex-col items-center">
+        <div className="mt-[16px] flex flex-col items-center">
           <div className="flex items-center gap-2">
             <p className="text-[14px] font-medium text-[#FBD0FB]">
               Current Balance
@@ -159,7 +172,7 @@ export default function Dashboard() {
               <>
                 {formattedBalance.split(".")[0]}.
                 <span className="text-[#FBD0FB] text-[25px] font-medium">
-                  {formattedBalance.split(".")[2] || "00"}
+                  {formattedBalance.split(".")[1] || "00"}
                 </span>
               </>
             ) : (
@@ -191,7 +204,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* My Booking Section - Show empty state when no booking */}
+      {/* Rest of your dashboard content remains the same... */}
+      {/* My Booking Section */}
       <div className="px-[21px] mt-[25px]">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
@@ -242,7 +256,7 @@ export default function Dashboard() {
           <div className="flex flex-col items-center justify-center py-8 rounded-lg">
             <img
               src="/icons/no-hot-apartment.png"
-              alt="No bookings"
+              alt="No hot apartments"
               className="w-[42px] h-[42px] mb-2 grayscale"
             />
             <p className="text-[#505050] mt-2 text-[12px] font-medium w-[125px] text-center">
@@ -277,7 +291,7 @@ export default function Dashboard() {
             <div className="flex flex-col items-center justify-center py-8 rounded-lg">
               <img
                 src="/icons/no-apartment-location.png"
-                alt="No bookings"
+                alt="No apartments"
                 className="w-[42px] h-[42px] mb-2 grayscale"
               />
               <p className="text-[#505050] mt-2 text-[12px] font-medium w-[125px] text-center">

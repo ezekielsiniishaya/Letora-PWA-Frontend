@@ -97,7 +97,7 @@ export default function CurrentLocationDropdown({
     >
       {/* Location Trigger Button */}
       <div
-        className="flex items-center justify-center bg-[#1A1A1A] w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10 cursor-pointer hover:bg-[#2A2A2A] transition-colors"
+        className="flex items-center justify-center bg-[#5F065F] w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10 cursor-pointer hover:bg-[#2A2A2A] transition-colors"
         onClick={() => setOpen(!open)}
       >
         <img
