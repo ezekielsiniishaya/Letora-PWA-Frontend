@@ -109,22 +109,23 @@ export const uploadGuestDocuments = async (formData) => {
 };
 
 // ========== PAYMENT APIS ==========
-export const createPayment = async (amount, email, bookingId) => {
+// In services/userApi.js - Update the createPayment function
+export const createPayment = async (bookingId) => {
   try {
     const response = await apiRequest("/api/vant/checkout", {
       method: "POST",
       body: {
-        bookingId, // VANT controller expects bookingId, not amount, email, etc.
+        bookingId: bookingId, // Make sure this is being passed correctly
       },
     });
 
     return response;
   } catch (error) {
     console.error("Create payment error:", error);
+    // Re-throw the error so it can be caught in the component
     throw error;
   }
 };
-
 // FIXED: confirmPayment should accept bookingId and handle reference lookup
 export const confirmPayment = async (bookingId) => {
   try {

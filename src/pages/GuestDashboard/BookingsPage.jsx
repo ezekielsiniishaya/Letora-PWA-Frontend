@@ -126,7 +126,7 @@ export default function BookingsPage() {
 
       {/* Main content */}
       <main className="flex-1 mt-[15px] p-4 space-y-4">
-        {filteredBookings.length > 0 ? (
+        {filteredBookings.length < 0 ? (
           filteredBookings.map((booking) => (
             <Bookings
               key={booking.id}
@@ -161,10 +161,10 @@ export default function BookingsPage() {
             </div>
 
             {/* Text below */}
-            <h2 className="mt-3 text-center text-[14px] font-medium text-[#505050]">
+            <h2 className="mt-3 ml-2 text-center text-[14px] font-medium text-[#505050]">
               {emptyMessages[activeTab].title}
             </h2>
-            <p className="text-[12px] text-[#807F7F] mx-auto text-center mt-2 w-[240px]">
+            <p className="text-[12px] text-[#807F7F] ml-2 text-center mt-2 w-[240px]">
               {emptyMessages[activeTab].subtitle}
             </p>
           </div>

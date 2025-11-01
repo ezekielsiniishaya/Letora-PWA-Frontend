@@ -15,7 +15,7 @@ const BookingProvider = ({ children }) => {
     totalAmount: 0,
   });
 
-  // Save aparment details
+  // Save apartment details
   const setApartmentDetails = useCallback(
     (apartmentId, apartmentPrice, securityDeposit = 0) => {
       if (!apartmentId || !apartmentPrice) {
@@ -33,7 +33,7 @@ const BookingProvider = ({ children }) => {
     []
   );
 
-  // Set booking dates and calculate duration
+  // Set booking dates and calculate duration with automatic fee calculation
   const setBookingDates = useCallback((checkinDate, checkoutDate) => {
     if (!checkinDate || !checkoutDate) return;
 
@@ -49,30 +49,30 @@ const BookingProvider = ({ children }) => {
     }));
   }, []);
 
-  // Calculate and set fees
-  const calculateFees = useCallback(
-    (apartmentPrice, duration, securityDeposit = 0) => {
-      if (!apartmentPrice || duration <= 0) return;
+  // Calculate and set fees - FIXED: No dependencies to avoid loops
+  const calculateFees = useCallback(() => {
+    setBookingData((prev) => {
+      const { apartmentPrice, duration, securityDeposit = 0 } = prev;
+
+      if (!apartmentPrice || !duration || duration <= 0) {
+        return prev;
+      }
 
       const baseAmount = apartmentPrice * duration;
+      const bookingFee = baseAmount; // apartment price per night x number of nights
+      const convenienceFee = 2500; // Fixed ₦2500 convenience fee
+      const totalAmount = bookingFee + convenienceFee + securityDeposit;
 
-      const bookingFee = Math.max(500, baseAmount * 0.02); // 2%
-      const convenienceFee = Math.max(300, baseAmount * 0.01); // 1%
-
-      const totalAmount =
-        baseAmount + bookingFee + convenienceFee + securityDeposit;
-
-      setBookingData((prev) => ({
+      return {
         ...prev,
         baseAmount,
         bookingFee,
         convenienceFee,
         totalAmount,
-      }));
-    },
-    [setBookingData]
-  );
-  // No dependencies needed now!
+      };
+    });
+  }, []); // No dependencies - uses functional update
+
   // Update all booking data at once
   const updateBookingData = useCallback((newData) => {
     setBookingData((prev) => ({
@@ -105,12 +105,11 @@ const BookingProvider = ({ children }) => {
       securityDeposit,
       convenienceFee,
       totalAmount,
+      baseAmount,
     } = bookingData;
 
-    const baseAmount = apartmentPrice * duration;
-
     return {
-      baseAmount,
+      baseAmount: baseAmount || apartmentPrice * duration,
       bookingFee,
       securityDeposit,
       convenienceFee,

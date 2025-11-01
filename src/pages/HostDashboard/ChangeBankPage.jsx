@@ -6,18 +6,35 @@ import Dropdown from "../../components/dashboard/Dropdown";
 import { updateBankingInfoAPI } from "../../services/apartmentApi";
 import { UserContext } from "../../contexts/UserContext";
 import bankOptions from "../../components/dashboard/BankingOptions.js";
+import Alert from "../../components/utils/Alerts.jsx";
 
 export default function BankAccount() {
   const [selectedBank, setSelectedBank] = useState(null);
   const [accountNumber, setAccountNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    bank: "",
+    accountNumber: "",
+  });
+  const [alert, setAlert] = useState(null);
   const navigate = useNavigate();
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Get user data from context
   const { user, loading, refreshUser } = useContext(UserContext);
+
+  const showAlert = (type, message) => {
+    setAlert({ type, message });
+    setTimeout(() => setAlert(null), 3000);
+  };
+
+  const clearFieldErrors = () => {
+    setFieldErrors({
+      bank: "",
+      accountNumber: "",
+    });
+  };
 
   // Pre-populate form with existing bank data when user context is available
   useEffect(() => {
@@ -44,15 +61,32 @@ export default function BankAccount() {
   const handleCreateAccount = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setError(""); // Clear previous errors
 
-    if (!selectedBank || !accountNumber) {
-      setError("Please fill in all required fields");
-      return;
+    // Clear previous errors
+    clearFieldErrors();
+    setAlert(null);
+
+    const newErrors = {
+      bank: "",
+      accountNumber: "",
+    };
+
+    // Validation
+    if (!selectedBank) {
+      newErrors.bank = "Please select a bank";
     }
 
-    if (accountNumber.length !== 10) {
-      setError("Please enter a valid 10-digit account number");
+    if (!accountNumber) {
+      newErrors.accountNumber = "This field is required";
+    } else if (accountNumber.length !== 10) {
+      newErrors.accountNumber = "Account number must be 10 digits";
+    }
+
+    // Check if there are any errors
+    const hasErrors = Object.values(newErrors).some((error) => error !== "");
+
+    if (hasErrors) {
+      setFieldErrors(newErrors);
       return;
     }
 
@@ -75,11 +109,89 @@ export default function BankAccount() {
       } else {
         throw new Error(response.message || "Failed to update bank account");
       }
-    } catch (error) {
-      console.error("Error updating bank account:", error);
-      const errorMessage =
-        error.message || "Failed to update bank account. Please try again.";
-      setError(errorMessage);
+    } catch (err) {
+      console.error("Error updating bank account:", err);
+
+      // ✅ Enhanced error handler with user-friendly messages
+      const getErrorMessage = (error) => {
+        // Network errors
+        if (!error.response) {
+          return "Network issues. Get better reception and try again";
+        }
+
+        const status = error.response.status;
+        const backendMsg =
+          error.response.data?.error || error.response.data?.message || "";
+        const errorMsg = String(backendMsg).toLowerCase();
+
+        console.log("Backend error:", backendMsg);
+        console.log("Status code:", status);
+
+        // Database errors - provide generic message
+        if (
+          errorMsg.includes("database") ||
+          errorMsg.includes("prisma") ||
+          errorMsg.includes("query") ||
+          errorMsg.includes("orm") ||
+          errorMsg.includes("connection") ||
+          errorMsg.includes("neon.tech") ||
+          errorMsg.includes("sql") ||
+          errorMsg.includes("constraint") ||
+          errorMsg.includes("unique constraint") ||
+          errorMsg.includes("foreign key") ||
+          errorMsg.includes("timeout") ||
+          errorMsg.includes("connection pool") ||
+          errorMsg.includes("transaction") ||
+          errorMsg.includes("deadlock")
+        ) {
+          return "Server error, Please try again in a moment.";
+        }
+
+        // Server errors (5xx)
+        if (status >= 500) {
+          return "Server temporarily unavailable. Please try again later.";
+        }
+
+        // Client errors (4xx) - show user-friendly backend messages
+        if (status >= 400 && status < 500) {
+          // Map common backend errors to user-friendly messages
+          const errorMappings = {
+            "user not found":
+              "Account not found. Please verify your email first.",
+            "invalid account number": "Please enter a valid account number.",
+            "bank name and account number are required":
+              "Please fill in all bank details.",
+            "account update not allowed":
+              "Account details cannot be modified yet. Please wait until the lock period ends.",
+            "bank verification failed":
+              "Bank account verification failed. Please check your details.",
+          };
+
+          // Check if we have a mapped message for this error
+          for (const [key, message] of Object.entries(errorMappings)) {
+            if (errorMsg.includes(key)) {
+              return message;
+            }
+          }
+
+          // Fallback: use backend message if it's user-friendly, otherwise generic message
+          if (
+            backendMsg &&
+            backendMsg.length < 100 &&
+            !backendMsg.includes("prisma")
+          ) {
+            return backendMsg;
+          }
+
+          return "Request failed. Please check your information and try again.";
+        }
+
+        // Default fallback
+        return "Something went wrong. Please try again.";
+      };
+
+      const errorMessage = getErrorMessage(err);
+      showAlert("error", errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -93,6 +205,22 @@ export default function BankAccount() {
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
+    clearFieldErrors();
+  };
+
+  const handleAccountNumberChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setAccountNumber(value);
+    if (fieldErrors.accountNumber) {
+      setFieldErrors((prev) => ({ ...prev, accountNumber: "" }));
+    }
+  };
+
+  const handleBankSelect = (bank) => {
+    setSelectedBank(bank);
+    if (fieldErrors.bank) {
+      setFieldErrors((prev) => ({ ...prev, bank: "" }));
+    }
   };
 
   if (loading) {
@@ -143,6 +271,13 @@ export default function BankAccount() {
             : "Yeah, We need to pay you 😏"}
         </p>
 
+        {/* ✅ Alert display - ONLY for backend responses */}
+        {alert && (
+          <div className="mt-4">
+            <Alert type={alert.type} message={alert.message} />
+          </div>
+        )}
+
         <form
           className="mt-[32px] flex flex-col"
           onSubmit={handleCreateAccount}
@@ -159,8 +294,15 @@ export default function BankAccount() {
               onToggle={toggleDropdown}
               multiple={false}
               selected={selectedBank}
-              setSelected={setSelectedBank}
+              setSelected={handleBankSelect}
+              hasError={!!fieldErrors.bank}
             />
+            {/* ✅ Inline error for bank selection */}
+            {fieldErrors.bank && (
+              <p className="text-[#F81A0C] text-[12px] mt-1">
+                {fieldErrors.bank}
+              </p>
+            )}
           </div>
 
           {/* Account Number */}
@@ -172,19 +314,17 @@ export default function BankAccount() {
             <input
               type="text"
               value={accountNumber}
-              onChange={(e) => {
-                // Only allow numbers and limit to 10 digits
-                const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                setAccountNumber(value);
-                setError(""); // Clear error when user types
-              }}
-              className="border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none"
-              placeholder="Enter your account number"
+              onChange={handleAccountNumberChange}
               maxLength={10}
+              className={`border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none ${
+                fieldErrors.accountNumber ? "border-[#F81A0C]" : "border-[#CCC]"
+              }`}
+              placeholder="Enter account number"
             />
-            {accountNumber.length > 0 && accountNumber.length !== 10 && (
-              <p className="text-red-500 text-xs mt-1">
-                Account number must be exactly 10 digits
+            {/* ✅ Inline error for account number */}
+            {fieldErrors.accountNumber && (
+              <p className="text-[#F81A0C] text-[12px] mt-1">
+                {fieldErrors.accountNumber}
               </p>
             )}
           </div>
@@ -201,22 +341,6 @@ export default function BankAccount() {
               months.
             </span>
           </div>
-
-          {/* Error Display */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <div className="flex items-center gap-2">
-                <img
-                  src="/icons/error.svg"
-                  alt="Error"
-                  className="w-4 h-4 text-red-500"
-                />
-                <span className="text-red-700 text-sm font-medium">
-                  {error}
-                </span>
-              </div>
-            </div>
-          )}
 
           {/* Terms */}
           <p className="text-[12px] text-[#666666] font-medium text-center mb-[20px] leading-snug">

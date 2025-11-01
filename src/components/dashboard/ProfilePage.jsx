@@ -3,12 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import Navigation from "./Navigation";
 import LogoutConfirmPopup from "./LogoutConfirmPopup";
 import { useUser } from "../../hooks/useUser";
+import BecomeHostBanner from "./BecomeHostBanner";
 
 export default function ProfilePage() {
-  const [showBecomeHost, setShowBecomeHost] = useState(true);
   const [showLogout, setShowLogout] = useState(false);
   const navigate = useNavigate();
-  const { user, logout, isHost } = useUser();
+  const { user, logout } = useUser();
 
   // Check if user is a verified host
   const isVerifiedHost =
@@ -55,7 +55,9 @@ export default function ProfilePage() {
                 alt="Email"
                 className="w-[12px] h-[11px]"
               />
-              <span>{user?.email || "Email not available"}</span>
+              <span className="no-underline" style={{ textDecoration: "none" }}>
+                {user?.email || "Email not available"}
+              </span>
             </div>
 
             {/* Show verification status badge */}
@@ -84,50 +86,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Become a Host Card - Only show for non-hosts */}
-      {showBecomeHost && !isHost && (
-        <div className="relative mx-5 mt-3">
-          <button
-            onClick={() => setShowBecomeHost(false)}
-            className="absolute top-2 right-2 text-white w-5 h-5 flex items-center justify-center text-xs z-20"
-          >
-            ✕
-          </button>
-          <Link to="/identity-id">
-            <div className="relative bg-gradient-to-r from-[#910A91] to-[#F711F7] rounded-lg px-3 flex items-center justify-between overflow-hidden h-[106px]">
-              <div className="text-white max-w-[70%] z-10">
-                <h3 className="font-semibold text-[16px] mb-1">
-                  Become a Host
-                </h3>
-                <p className="text-[12px] leading-snug">
-                  Ready to cash in on your space? <br />
-                  Verify your identity and list today.
-                </p>
-                <button className="mt-2 text-[10px]">
-                  Click here to begin
-                </button>
-              </div>
-              <div className="absolute right-[-10px] bottom-0 h-full flex items-end justify-end">
-                <img
-                  src="/images/background/become-host.png"
-                  alt="Become a Host"
-                  className="h-[117px] object-contain transform scale-x-[-1] relative z-10"
-                />
-                <img
-                  src="/icons/star.svg"
-                  alt="star"
-                  className="absolute top-[15px] right-[114px] w-[9px] h-[9px] z-20"
-                />
-                <img
-                  src="/icons/doodle.svg"
-                  alt="doodle"
-                  className="absolute bottom-[12px] right-[122px] w-[6px] h-[5px] z-20"
-                />
-              </div>
-            </div>
-          </Link>
-        </div>
-      )}
+      <div className="relative mt-3">
+        {/* Become a Host Banner - Now self-contained */}
+        <BecomeHostBanner />
+      </div>
 
       {/* Dashboard Options */}
       <div className="bg-white rounded-lg mt-3 mx-5">

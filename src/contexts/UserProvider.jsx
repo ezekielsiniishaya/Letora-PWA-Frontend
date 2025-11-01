@@ -5,13 +5,14 @@ import { getUserProfile } from "../services/userApi";
 import { toggleFavoriteAPI } from "../services/apartmentApi";
 import { markNotificationAsRead } from "../services/userApi";
 
-// ✅ Use "token" consistently everywhere
 const AUTH_TOKEN_KEY = "token";
+const USER_LOCATION_KEY = "userLocation";
 
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState(null);
 
   // Get token helper
   const getToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
@@ -24,6 +25,19 @@ const UserProvider = ({ children }) => {
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
   };
+
+  // Initialize user location from localStorage
+  useEffect(() => {
+    const savedLocation = localStorage.getItem(USER_LOCATION_KEY);
+    if (savedLocation) {
+      try {
+        setCurrentLocation(JSON.parse(savedLocation));
+      } catch (err) {
+        console.error("Error parsing saved location:", err);
+        localStorage.removeItem(USER_LOCATION_KEY);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const initializeUser = async () => {
@@ -78,6 +92,47 @@ const UserProvider = ({ children }) => {
     initializeUser();
   }, []);
 
+  // Set user location function
+  const setUserLocation = useCallback((location) => {
+    console.log("📍 Setting user location:", location);
+
+    // Save to state
+    setCurrentLocation(location);
+
+    // Save to localStorage
+    localStorage.setItem(USER_LOCATION_KEY, JSON.stringify(location));
+
+    // Update user context if user is logged in
+    setUser((prev) => (prev ? { ...prev, currentLocation: location } : prev));
+
+    console.log("✅ Location saved to localStorage and state");
+  }, []);
+
+  // Get user location function
+  const getUserLocation = useCallback(() => {
+    // Priority: 1. Current location state, 2. User profile location, 3. Default
+    if (currentLocation) {
+      return currentLocation;
+    }
+
+    if (user?.currentLocation) {
+      return user.currentLocation;
+    }
+
+    if (user?.location?.state) {
+      return { state: user.location.state, town: user.location.town };
+    }
+
+    return null;
+  }, [currentLocation, user]);
+
+  // Clear user location
+  const clearUserLocation = useCallback(() => {
+    setCurrentLocation(null);
+    localStorage.removeItem(USER_LOCATION_KEY);
+    console.log("📍 User location cleared");
+  }, []);
+
   // Login function
   const login = async (userData, token) => {
     try {
@@ -128,21 +183,18 @@ const UserProvider = ({ children }) => {
     const storageKey = `apartmentSearchHistory_${userId}`;
     localStorage.removeItem(storageKey);
 
+    // Clear location
+    clearUserLocation();
+
     // Clear token and user state
     setToken(null);
     setUser(null);
     setError(null);
 
     console.log("✅ User logged out successfully");
-  }, [user?.id]); // Add user.id as dependency since it's used in the function
-  const updateUser = (updatedData) => {
-    setUser((prev) => {
-      if (!prev) return updatedData;
-      return { ...prev, ...updatedData };
-    });
-  };
+  }, [user?.id, clearUserLocation]);
 
-  // Refresh user data
+  // Update the refreshUser function to handle location updates
   const refreshUser = useCallback(async () => {
     try {
       console.log("🔄 Refreshing user data...");
@@ -157,10 +209,15 @@ const UserProvider = ({ children }) => {
       const response = await getUserProfile();
       const userData = response.data || response;
 
-      console.log("✅ User data refreshed:", userData);
-      setUser(userData);
+      // Merge with current location if it exists
+      const updatedUserData = currentLocation
+        ? { ...userData, currentLocation }
+        : userData;
+
+      console.log("✅ User data refreshed with location:", updatedUserData);
+      setUser(updatedUserData);
       setError(null);
-      return userData;
+      return updatedUserData;
     } catch (err) {
       console.error("❌ Error refreshing user:", err);
 
@@ -173,7 +230,14 @@ const UserProvider = ({ children }) => {
       }
       throw err;
     }
-  }, [logout]);
+  }, [logout, currentLocation]); // Add currentLocation as dependency
+  // Update user function
+  const updateUser = useCallback((updatedData) => {
+    setUser((prev) => {
+      if (!prev) return updatedData;
+      return { ...prev, ...updatedData };
+    });
+  }, []);
 
   // Get user notifications
   const getUserNotifications = useCallback(() => {
@@ -382,20 +446,12 @@ const UserProvider = ({ children }) => {
   const isAuthenticated = useCallback(() => {
     const token = getToken();
     const authenticated = !!token && !!user;
-    console.log(`🔐 Authentication check: ${authenticated ? "Yes" : "No"}`);
     return authenticated;
   }, [user]);
 
   const isHost = user?.role === "HOST";
   const isGuest = user?.role === "GUEST";
   const isAdmin = user?.role === "ADMIN";
-
-  const getUserLocation = () => {
-    return {
-      state: user?.location?.state || user?.stateOrigin,
-      town: user?.location?.town || user?.townOrigin,
-    };
-  };
 
   const getUserBookings = useCallback(() => {
     return user?.bookings || [];
@@ -464,6 +520,8 @@ const UserProvider = ({ children }) => {
     addToFavorites,
     removeFromFavorites,
     getUserLocation,
+    setUserLocation,
+    clearUserLocation,
     getUserBookings,
     getUserFavorites,
     getUserApartments,

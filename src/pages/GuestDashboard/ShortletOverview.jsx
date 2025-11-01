@@ -25,7 +25,7 @@ export default function ShortletOverviewPage() {
     type: "error",
     message: "",
   });
-  const { getGuestVerificationStatus, getGuestDocuments } = useUser();
+  const { user } = useUser();
   const { setApartmentDetails, clearBookingData } = useBooking();
 
   // Show alert function
@@ -122,16 +122,102 @@ export default function ShortletOverviewPage() {
     };
   };
 
-  // Check guest verification status
+  // Updated: Check guest verification status based on new backend data structure
   const checkGuestStatus = () => {
-    const guestStatus = getGuestVerificationStatus();
-    const guestDocs = getGuestDocuments();
+    if (!user) {
+      return {
+        status: "NO_USER",
+        message: "Please log in to book an apartment",
+        action: () => navigate("/login"),
+      };
+    }
 
-    console.log("Guest Status:", guestStatus);
-    console.log("Guest Documents:", guestDocs);
+    console.log("User data for verification:", {
+      verificationStatus: user.verificationStatus,
+      guestDocumentStatus: user.guestDocumentStatus,
+      documents: user.documents,
+      guestVerification: user.guestVerification,
+    });
 
-    // If no documents uploaded
-    if (guestDocs.length === 0) {
+    // First check the guestVerification object - this is the main authority
+    if (user.guestVerification) {
+      if (user.guestVerification.canBook) {
+        // User can book according to guestVerification
+        return {
+          status: "VERIFIED",
+          message: "",
+          action: () => navigate(`/booking-dates/${id}`),
+        };
+      } else {
+        // Check why canBook is false
+        if (user.guestVerification.status !== "VERIFIED") {
+          return {
+            status: "GUEST_VERIFICATION_PENDING",
+            message: "Your guest verification is pending approval",
+            action: null,
+          };
+        }
+
+        // If status is VERIFIED but canBook is false, check documents
+        if (!user.guestVerification.hasRequiredDocuments) {
+          return {
+            status: "DOCUMENTS_REQUIRED",
+            message: "Please upload your ID documents to book an apartment",
+            action: () => navigate("/id-check"),
+          };
+        }
+      }
+    }
+
+    // Fallback checks if guestVerification is not available
+    // Check user verification status
+    if (user.verificationStatus !== "VERIFIED") {
+      return {
+        status: "USER_NOT_VERIFIED",
+        message: "Your account needs to be verified to book an apartment",
+        action: () => navigate("/profile"),
+      };
+    }
+
+    // Check guest document status
+    if (user.guestDocumentStatus !== "VERIFIED") {
+      // Check if documents exist but are pending
+      if (user.documents && user.documents.length > 0) {
+        const hasPendingDocuments = user.documents.some(
+          (doc) => doc.status === "PENDING"
+        );
+        if (hasPendingDocuments) {
+          return {
+            status: "PENDING_VERIFICATION",
+            message:
+              "Your documents are under review. Please wait for verification.",
+            action: null,
+          };
+        }
+
+        const hasRejectedDocuments = user.documents.some(
+          (doc) => doc.status === "REJECTED"
+        );
+        if (hasRejectedDocuments) {
+          return {
+            status: "DOCUMENTS_REJECTED",
+            message:
+              "Your documents were rejected. Please upload new documents.",
+            action: () => navigate("/id-check"),
+          };
+        }
+      }
+
+      // No documents or documents not verified
+      return {
+        status: "DOCUMENTS_REQUIRED",
+        message: "Please upload your ID documents to book an apartment",
+        action: () => navigate("/id-check"),
+      };
+    }
+
+    // Check individual document statuses
+    if (!user.documents || user.documents.length === 0) {
       return {
         status: "NO_DOCUMENTS",
         message: "Please upload your ID documents to book an apartment",
@@ -139,41 +225,46 @@ export default function ShortletOverviewPage() {
       };
     }
 
-    // If documents are pending verification
-    if (guestStatus.status === "PENDING") {
-      return {
-        status: "PENDING_VERIFICATION",
-        message: "Please wait, your documents are undergoing review",
-        action: null,
-      };
-    }
+    // Check for both required document types with VERIFIED status
+    const hasVerifiedIDCard = user.documents.some(
+      (doc) => doc.type === "ID_CARD" && doc.status === "VERIFIED"
+    );
 
-    // If documents are rejected
-    if (guestStatus.status === "REJECTED") {
+    const hasVerifiedIDPhotograph = user.documents.some(
+      (doc) => doc.type === "ID_PHOTOGRAPH" && doc.status === "VERIFIED"
+    );
+
+    if (!hasVerifiedIDCard || !hasVerifiedIDPhotograph) {
+      console.log("Missing verified documents:", {
+        hasVerifiedIDCard,
+        hasVerifiedIDPhotograph,
+        documents: user.documents,
+      });
+
       return {
-        status: "REJECTED",
-        message: "Your documents were rejected. Please upload new documents.",
+        status: "INCOMPLETE_DOCUMENTS",
+        message: "Please complete both ID verification steps",
         action: () => navigate("/id-check"),
       };
     }
 
-    // If verified and can book
-    if (guestStatus.status === "APPROVED" && guestStatus.canBook) {
+    // If we reach here and guestVerification.canBook is false, show generic message
+    if (user.guestVerification && !user.guestVerification.canBook) {
       return {
-        status: "VERIFIED",
-        message: "",
-        action: () => navigate(`/booking-dates/${id}`),
+        status: "CANNOT_BOOK",
+        message:
+          "Your account is not authorized to make bookings at this time. Please contact support.",
+        action: null,
       };
     }
 
-    // Default case - not verified
+    // All checks passed - user can book
     return {
-      status: "NOT_VERIFIED",
-      message: "Please complete your verification to book an apartment",
-      action: () => navigate("/id-check"),
+      status: "VERIFIED",
+      message: "",
+      action: () => navigate(`/booking-dates/${id}`),
     };
   };
-
   const handleBookNow = () => {
     const guestStatus = checkGuestStatus();
 
@@ -286,6 +377,7 @@ export default function ShortletOverviewPage() {
         showActions={false}
         status={apartment.status}
         showLegalDocuments={false}
+        onPriceButtonClick={handleBookNow}
       />
       <div className="px-[18px]">
         {/* Security Deposit */}

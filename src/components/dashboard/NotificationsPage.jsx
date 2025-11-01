@@ -66,50 +66,54 @@ export default function NotificationsPage() {
     }
   };
 
-const handleNotificationClick = async (section, notificationId, notification) => {
-  // Don't do anything if already marking as read or if notification is already read
-  if (markingRead || notification.isRead) {
-    // Just show the popup for already read notifications without marking as read again
-    const popupConfig = getNotificationConfig(notification, user?.role);
-    setActivePopup(popupConfig);
-    return;
-  }
-
-  try {
-    setMarkingRead(true);
-
-    // Mark as read in backend and update context
-    const result = await markAsRead(notificationId);
-    
-    if (result.success) {
-      // Update local state immediately for better UX
-      setNotifications((prev) => ({
-        ...prev,
-        [section]: prev[section].map((item) =>
-          item.id === notificationId ? { ...item, isRead: true } : item
-        ),
-      }));
-
-      // Get notification config and show popup
+  const handleNotificationClick = async (
+    section,
+    notificationId,
+    notification
+  ) => {
+    // Don't do anything if already marking as read or if notification is already read
+    if (markingRead || notification.isRead) {
+      // Just show the popup for already read notifications without marking as read again
       const popupConfig = getNotificationConfig(notification, user?.role);
       setActivePopup(popupConfig);
-      
-      console.log("Notification marked as read, showing popup:", popupConfig);
-    } else {
-      console.error("Failed to mark notification as read:", result.error);
-      // Still show the popup even if marking read fails
-      const popupConfig = getNotificationConfig(notification, user?.role);
-      setActivePopup(popupConfig);
+      return;
     }
-  } catch (error) {
-    console.error("Error handling notification click:", error);
-    // Still show the popup even if there's an error
-    const popupConfig = getNotificationConfig(notification, user?.role);
-    setActivePopup(popupConfig);
-  } finally {
-    setMarkingRead(false);
-  }
-};
+
+    try {
+      setMarkingRead(true);
+
+      // Mark as read in backend and update context
+      const result = await markAsRead(notificationId);
+
+      if (result.success) {
+        // Update local state immediately for better UX
+        setNotifications((prev) => ({
+          ...prev,
+          [section]: prev[section].map((item) =>
+            item.id === notificationId ? { ...item, isRead: true } : item
+          ),
+        }));
+
+        // Get notification config and show popup
+        const popupConfig = getNotificationConfig(notification, user?.role);
+        setActivePopup(popupConfig);
+
+        console.log("Notification marked as read, showing popup:", popupConfig);
+      } else {
+        console.error("Failed to mark notification as read:", result.error);
+        // Still show the popup even if marking read fails
+        const popupConfig = getNotificationConfig(notification, user?.role);
+        setActivePopup(popupConfig);
+      }
+    } catch (error) {
+      console.error("Error handling notification click:", error);
+      // Still show the popup even if there's an error
+      const popupConfig = getNotificationConfig(notification, user?.role);
+      setActivePopup(popupConfig);
+    } finally {
+      setMarkingRead(false);
+    }
+  };
 
   const handlePopupAction = () => {
     if (!activePopup) return;
@@ -177,7 +181,9 @@ const handleNotificationClick = async (section, notificationId, notification) =>
       className={`flex bg-white h-[59px] rounded-[5px] px-2 items-start gap-2 py-3 cursor-pointer ${
         !notification.isRead ? "border-l-2 border-l-[#008751]" : ""
       } ${markingRead ? "opacity-50 pointer-events-none" : ""}`}
-      onClick={() => handleNotificationClick(section, notification.id, notification)}
+      onClick={() =>
+        handleNotificationClick(section, notification.id, notification)
+      }
     >
       <img
         src="/icons/logo-small.svg"
@@ -234,12 +240,31 @@ const handleNotificationClick = async (section, notificationId, notification) =>
             <img
               src="/icons/bin.svg"
               alt="Delete all"
-              className="w-5 h-5 cursor-pointer"
-              title="Delete all notifications"
+              className={`w-5 h-5 ${
+                notifications.recent.length === 0 &&
+                notifications.lastWeek.length === 0
+                  ? "opacity-40 cursor-not-allowed"
+                  : "cursor-pointer"
+              }`}
+              title={
+                notifications.recent.length === 0 &&
+                notifications.lastWeek.length === 0
+                  ? "No notifications to delete"
+                  : "Delete all notifications"
+              }
+              onClick={() => {
+                if (
+                  notifications.recent.length > 0 ||
+                  notifications.lastWeek.length > 0
+                ) {
+                  // Add your delete logic here
+                  console.log("Delete all notifications");
+                }
+              }}
             />
           </div>
         </div>
-                </div>
+      </div>
 
       {/* Content */}
       <div className="px-[21px]">
@@ -271,12 +296,7 @@ const handleNotificationClick = async (section, notificationId, notification) =>
 
         {notifications.recent.length === 0 &&
           notifications.lastWeek.length === 0 && (
-            <div className="flex flex-col items-center justify-center mt-20">
-              <img
-                src="/icons/empty-notifications.svg"
-                alt="No notifications"
-                className="w-24 h-24 mb-4 opacity-50"
-              />
+            <div className="flex flex-col mt-80 items-center justify-center">
               <p className="text-[#797777] text-[14px]">No notifications yet</p>
               <p className="text-[#686464] text-[12px] mt-2">
                 You'll see important updates here

@@ -10,7 +10,8 @@ import BecomeHostBanner from "./BecomeHostBanner"; // Import the new component
 import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useUser } from "../../hooks/useUser";
 import Button from "../../components/Button";
-
+import CurrentLocationDropdown from "../dashboard/SelectState";
+import { useApartmentsByLocation } from "../../hooks/useApartmentsByLocation";
 export default function Dashboard() {
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -33,13 +34,19 @@ export default function Dashboard() {
     getUserBookings,
     getUnreadNotificationsCount,
   } = useUser();
-
+  const { refetch } = useApartmentsByLocation();
   const unreadCount = getUnreadNotificationsCount();
   const userBookings = getUserBookings();
 
   const currentBooking = userBookings.find(
     (booking) => booking.status?.toLowerCase() !== "pending" || null
   );
+  const handleLocationChange = (newLocation) => {
+    console.log("📍 Location changed to:", newLocation);
+    // The useApartmentsByLocation hook will automatically refetch due to the dependency
+    // But you can also manually trigger if needed:
+    refetch();
+  };
 
   // --- Loading state ---
   if (userLoading || hotApartmentsLoading || nearbyApartmentsLoading) {
@@ -117,14 +124,7 @@ export default function Dashboard() {
         </div>
 
         {/* Select Guest Current Location */}
-        <div className="flex items-center justify-center bg-[#1A1A1A] w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10">
-          <img
-            src="/icons/location-white.svg"
-            alt="Search"
-            className="w-[9px] h-[12.5px] mr-[7px]"
-          />
-          <span className="text-[#FFFFFF] text-[11px]">Select Location</span>
-        </div>
+        <CurrentLocationDropdown onLocationChange={handleLocationChange} />
 
         {/* Guest name */}
         <div className="relative mb-[15px] z-10">

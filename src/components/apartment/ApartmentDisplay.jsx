@@ -89,6 +89,7 @@ export const ApartmentDisplay = ({
   status = "draft",
   showLegalDocuments = true,
   backToHostDashboard = false,
+  onPriceButtonClick,
 }) => {
   const [showGallery, setShowGallery] = useState(false);
   const [favorites, setFavorites] = useState({});
@@ -321,12 +322,18 @@ export const ApartmentDisplay = ({
                   e.target.src = "/images/apartment-dashboard.png";
                 }}
               />
-              {i === 2 && displayImages.length > 4 && (
+              {/* Overlay on ALL images when more than 4 */}
+              {displayImages.length > 4 && (
                 <div
-                  className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center text-white font-semibold text-lg rounded-[3.81px] cursor-pointer"
+                  className="absolute inset-0 bg-black bg-opacity-40 rounded-[3.81px] cursor-pointer"
                   onClick={() => setShowGallery(true)}
                 >
-                  +{displayImages.length - 4}
+                  {/* "+X" text ONLY on the last image */}
+                  {i === 2 && (
+                    <div className="flex items-center justify-center h-full text-white font-semibold text-lg">
+                      +{displayImages.length - 4}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -392,9 +399,12 @@ export const ApartmentDisplay = ({
                   Verified
                 </span>
               )}
-              <p className="text-white py-[6px] px-[6px] bg-[#A20BA2] h-[25px] font-semibold text-[12px] mt-[6px] rounded flex items-center justify-center">
+              <button
+                className="text-white py-[6px] px-[6px] bg-[#A20BA2] h-[25px] font-semibold text-[12px] mt-[19px] rounded flex items-center justify-center"
+                onClick={onPriceButtonClick}
+              >
                 ₦{formatPrice(pricing.pricePerNight)}/Night
-              </p>
+              </button>
             </div>
           </div>
         </div>

@@ -276,36 +276,39 @@ export default function PaymentPage() {
         <img
           src="/icons/money.png"
           alt="Money"
-          className="w-[74px] mt-[14px] h-[74px] mb-4"
+          className="w-[74px] mt-[14px] h-[74px] mb-3"
         />
-        <h2 className="text-[14px] font-semibold mb-4">Payment Details</h2>
+        <h2 className="text-[14px] font-semibold mb-3">Payment Details</h2>
         <p className="text-[12px] mb-[50px] max-w-[267px]">
-          Make payment to the provided bank account to finalize your booking for{" "}
-          <strong>{paymentData.apartmentTitle || "your apartment"}</strong> on
+          Make payment to the provided bank account to finalize your booking on
           Letora
         </p>
 
         {/* Payment Card */}
-        <div className="bg-white rounded-[8px] w-full h-[208px] px-5 py-4 text-left text-[13px] text-[#333333] mb-[200px]">
-          <div className="flex flex-col justify-between space-y-8">
+        <div className="bg-white rounded-[8px] w-full h-[228px] px-5 py-4 text-left text-[13px] text-[#333333] mb-[150px]">
+          <div className="flex flex-col justify-between space-y-10">
             <div className="flex justify-between">
               <span>Account name</span>
               <span className="font-medium">
-                {paymentData.accountName || "Innovault Limited"}
+                {paymentData.accountName || paymentData.account_name || ""}
               </span>
             </div>
 
             <div className="flex justify-between">
               <span>Bank Name</span>
               <span className="font-medium">
-                {paymentData.bankName || "VFD"}
+                {paymentData.bankName || paymentData.bank || ""}
               </span>
             </div>
 
             <div className="flex justify-between">
               <span>Account number</span>
               <span className="font-medium">
-                {paymentData.accountNumber || "5008761178"}
+                <span className="font-medium">
+                  {paymentData.accountNumber ||
+                    paymentData.account_number ||
+                    ""}
+                </span>
               </span>
             </div>
 
@@ -334,15 +337,8 @@ export default function PaymentPage() {
 
         {/* Info Note */}
         <p className="text-[11px] text-[#888888] mb-6 leading-snug max-w-[333px]">
-          Account details are valid for{" "}
-          <span className="font-semibold text-[#333333]">10 minutes</span> only.
-          Do not save or reuse. Proceed to confirm once payment is made.
-          {paymentData.bookingId && (
-            <span>
-              {" "}
-              Booking ID: <strong>{paymentData.bookingId}</strong>
-            </span>
-          )}
+          Account details are valid for 10 minutes only. Do not save or reuse.
+          Please Click on Proceed to confirm once payment is made.
         </p>
 
         {/* Proceed Button */}
@@ -352,12 +348,6 @@ export default function PaymentPage() {
           disabled={confirming || timeLeft === 0}
           className="w-full h-[48px] text-[14px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         />
-
-        {timeLeft === 0 && (
-          <p className="text-red-500 text-sm mt-2">
-            Payment session has expired. Please start over.
-          </p>
-        )}
       </div>
 
       {/* Unconfirmed Payment Modal */}
@@ -367,7 +357,9 @@ export default function PaymentPage() {
           message="Your payment couldn’t be confirmed at the moment. Please double-check your transaction or contact support."
           buttonText="Back"
           onClose={handleSuccessClose}
-          image="/icons/unconfirmed-payment.png"
+          image="/icons/error.png"
+          imgHeight="h-auto"
+          width="w-[56px]"
         />
       )}
 
@@ -378,7 +370,9 @@ export default function PaymentPage() {
           message="Your payment session has expired. Please start the payment process again to get new bank details."
           buttonText="Go Back"
           onClose={handleTimeoutErrorClose}
-          image="/icons/error-icon.png"
+          image="/icons/error.png"
+          imgHeight="h-auto"
+          width="w-[56px]"
         />
       )}
     </div>

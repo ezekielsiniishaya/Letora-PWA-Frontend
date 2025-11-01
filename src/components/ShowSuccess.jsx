@@ -6,6 +6,7 @@ export default function ShowSuccess({
   onClose,
   onConfirm,
   height,
+  imgHeight = "h-[74.93px]",
   width = "w-[141.84px]",
   confirmMode = false,
   button = true,
@@ -24,7 +25,7 @@ export default function ShowSuccess({
           <img
             src={image}
             alt="Modal"
-            className={`${width} h-[74.93px] mx-auto mb-[24px]`}
+            className={`${width} ${imgHeight} mx-auto mb-[24px]`}
             onError={(e) => {
               e.target.style.display = "none";
             }}

@@ -272,8 +272,8 @@ export default function EditProfilePage() {
               type="text"
               name="firstName"
               value={formData.firstName}
-              onChange={handleInputChange}
-              className="mt-2 border w-full h-[48px] text-[#807F7F] rounded-md px-3 text-[14px]"
+              readOnly
+              className="mt-2 border w-full h-[48px] text-[#686464] rounded-md px-3 text-[14px] bg-gray-100 cursor-not-allowed"
               placeholder="Mandy"
             />
           </div>
@@ -287,12 +287,11 @@ export default function EditProfilePage() {
               type="text"
               name="lastName"
               value={formData.lastName}
-              onChange={handleInputChange}
-              className="mt-2 border w-full h-[48px] rounded-md px-3 text-[#807F7F] text-[14px]"
+              readOnly
+              className="mt-2 border w-full h-[48px] rounded-md px-3 text-[#686464] text-[14px] bg-gray-100 cursor-not-allowed"
               placeholder="Jane"
             />
           </div>
-
           {/* Phone Number */}
           <div>
             <label className="block text-sm text-[#686464] font-medium">
@@ -357,7 +356,7 @@ export default function EditProfilePage() {
             </div>
             <div className="flex-1">
               <label className="block text-sm text-[#686464] font-medium">
-                Date of Birth<span className="text-red-500 mr-1">*</span>
+                Date of Birth
               </label>
               {hasExistingDOB ? (
                 // Show disabled input if DOB already exists
@@ -397,7 +396,7 @@ export default function EditProfilePage() {
               State
             </label>
             <input
-              value={user.state || "Lagos"}
+              value={user?.location?.state || "Lagos"}
               disabled
               className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-white text-[#686464]"
             />

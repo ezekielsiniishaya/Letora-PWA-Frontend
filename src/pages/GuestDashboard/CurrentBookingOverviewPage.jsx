@@ -1,82 +1,186 @@
-import { useState, useContext, useEffect, useCallback } from "react";
+import { useState, useCallback, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookingContext } from "../../contexts/BookingContext";
 import { ApartmentListingContext } from "../../contexts/ApartmentListingContext";
 import { UserContext } from "../../contexts/UserContext";
 import Button from "../../components/Button";
 import { createBooking, createPayment } from "../../services/userApi";
+import Alert from "../../components/utils/Alerts";
 
 export default function CurrentBookingOverviewPage() {
   const navigate = useNavigate();
-  const { bookingData, getBookingSummary, updateBookingData } =
-    useContext(BookingContext);
+  const { bookingData, updateBookingData } = useContext(BookingContext);
   const { getApartmentById } = useContext(ApartmentListingContext);
   const { user, isAuthenticated } = useContext(UserContext);
 
   const [loading, setLoading] = useState(true);
   const [apartment, setApartment] = useState(null);
   const [host, setHost] = useState(null);
-  const [error, setError] = useState(null);
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "error",
+    message: "",
+  });
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showTimeoutError, setShowTimeoutError] = useState(false);
 
-  // Enhanced error handler
+  // Constants for fees
+  const CONVENIENCE_FEE = 2500; // Fixed convenience fee
+
+  // Enhanced error handler using Alert
   const handleError = (error, customMessage = null, options = {}) => {
     console.error("Booking Error:", error);
 
-    let errorMessage = customMessage;
+    let userFriendlyMessage = customMessage;
 
-    if (!errorMessage) {
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      } else {
-        errorMessage = "An unexpected error occurred. Please try again.";
+    if (!userFriendlyMessage) {
+      // Check for network errors (no response from server)
+      if (
+        !error.response &&
+        (error.message?.toLowerCase().includes("network") ||
+          error.message?.toLowerCase().includes("internet") ||
+          error.message?.toLowerCase().includes("failed to fetch") ||
+          error.message?.toLowerCase().includes("network request failed") ||
+          error.message?.toLowerCase().includes("axioserror") ||
+          error.code === "NETWORK_ERROR" ||
+          error.code === "ECONNABORTED" ||
+          error.name === "TypeError") // This catches "Failed to fetch"
+      ) {
+        userFriendlyMessage =
+          "Network issues. Get better reception and try again";
+      }
+      // Check if it's the specific backend error we're seeing
+      else if (
+        error.response?.data?.message === "Booking ID is required" ||
+        error.message === "Booking ID is required"
+      ) {
+        userFriendlyMessage =
+          "Booking information is incomplete. Please restart your booking process.";
+      }
+      // Check if error has response data with message from your backend format
+      else if (error.response?.data?.message) {
+        userFriendlyMessage = error.response.data.message;
+
+        // Handle specific backend error codes
+        if (error.response.data.code === "INTERNAL_ERROR") {
+          userFriendlyMessage =
+            "Server error. Please try again in a few moments.";
+        } else if (error.response.data.code === "VALIDATION_ERROR") {
+          userFriendlyMessage =
+            "Please check your booking information and try again.";
+        }
+      }
+      // Check for authentication errors
+      else if (error.response?.status === 401) {
+        userFriendlyMessage = "Session expired. Please log in again.";
+      }
+      // Check for server errors (5xx)
+      else if (error.response?.status >= 500) {
+        userFriendlyMessage =
+          "Server error. Please try again in a few moments.";
+      }
+      // Check for client errors (4xx)
+      else if (error.response?.status >= 400) {
+        userFriendlyMessage =
+          "Request error. Please check your information and try again.";
+      }
+      // Use the error message as fallback
+      else {
+        userFriendlyMessage =
+          error.message || "An unexpected error occurred. Please try again.";
       }
     }
 
-    setError(errorMessage);
+    // Determine alert type based on error
+    let alertType = "error";
+    if (userFriendlyMessage.toLowerCase().includes("network")) {
+      alertType = "network";
+    } else if (error.response?.status === 401) {
+      alertType = "auth";
+    }
 
-    // Auto-clear error if specified
+    // Show alert
+    setAlert({
+      show: true,
+      type: alertType,
+      message: userFriendlyMessage,
+    });
+
+    // Auto-clear alert if specified
     if (options.autoClear !== false) {
       setTimeout(() => {
-        setError(null);
+        setAlert({ show: false, type: "error", message: "" });
       }, 8000);
     }
   };
 
-  // Save booking context to localStorage for persistence
-  const saveBookingContext = useCallback(() => {
-    try {
-      if (bookingData && bookingData.apartmentId) {
-        const contextToSave = {
-          ...bookingData,
-          timestamp: new Date().toISOString(),
-          userEmail: user?.email,
-        };
-        localStorage.setItem(
-          "letora_booking_context",
-          JSON.stringify(contextToSave)
-        );
-        console.log("Booking context saved successfully");
-      }
-    } catch (err) {
-      console.error("Error saving booking context:", err);
-      // Don't show error to user as this is background operation
+  // Helper to clear alert
+  const clearAlert = () => {
+    setAlert({ show: false, type: "error", message: "" });
+  };
+
+  // Calculate fees based on new requirements
+  const calculateFees = useCallback(() => {
+    if (!bookingData?.apartmentPrice || !bookingData?.duration) {
+      return {
+        baseAmount: 0,
+        bookingFee: 0,
+        convenienceFee: CONVENIENCE_FEE,
+        securityDeposit: bookingData?.securityDeposit || 0,
+        totalAmount: 0,
+      };
     }
-  }, [bookingData, user?.email]); // Add dependencies here
+
+    const baseAmount = bookingData.apartmentPrice * bookingData.duration;
+    const bookingFee = baseAmount;
+    const convenienceFee = CONVENIENCE_FEE;
+    const securityDeposit = bookingData.securityDeposit || 0;
+    const totalAmount = bookingFee + convenienceFee + securityDeposit;
+
+    return {
+      baseAmount,
+      bookingFee,
+      convenienceFee,
+      securityDeposit,
+      totalAmount,
+    };
+  }, [
+    bookingData?.apartmentPrice,
+    bookingData?.duration,
+    bookingData?.securityDeposit,
+  ]);
 
   // Load booking data with better error handling
   useEffect(() => {
+    let isMounted = true;
+
+    // Save booking context to localStorage for persistence
+    const saveBookingContext = () => {
+      try {
+        if (bookingData && bookingData.apartmentId) {
+          const contextToSave = {
+            ...bookingData,
+            timestamp: new Date().toISOString(),
+            userEmail: user?.email,
+          };
+          localStorage.setItem(
+            "letora_booking_context",
+            JSON.stringify(contextToSave)
+          );
+          console.log("Booking context saved successfully");
+        }
+      } catch (err) {
+        console.error("Error saving booking context:", err);
+      }
+    };
+
     const fetchBookingData = async () => {
       try {
-        setError(null);
+        if (!isMounted) return;
 
-        if (!bookingData) {
-          throw new Error("No booking data available");
-        }
+        clearAlert();
 
+        // Check if we have the minimum required data
         if (!bookingData?.apartmentId || bookingData?.duration <= 0) {
           throw new Error(
             "Invalid booking data: missing apartment ID or duration"
@@ -95,25 +199,72 @@ export default function CurrentBookingOverviewPage() {
         setApartment(apartmentData);
         setHost(apartmentData.host);
 
+        // Calculate and update fees only if they haven't been set
+        const fees = calculateFees();
+        if (!bookingData.totalAmount || bookingData.totalAmount === 0) {
+          updateBookingData({
+            bookingFee: fees.bookingFee,
+            convenienceFee: fees.convenienceFee,
+            totalAmount: fees.totalAmount,
+          });
+        }
+
         // Save context for persistence
         saveBookingContext();
       } catch (err) {
-        handleError(err, null, { autoClear: false });
+        if (isMounted) {
+          handleError(err, null, { autoClear: false });
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchBookingData();
-  }, [bookingData, getApartmentById, saveBookingContext]);
-  // Enhanced payment handler with better error handling
+    // Only run if we have apartmentId and duration, and we're still loading
+    if (loading && bookingData?.apartmentId && bookingData?.duration > 0) {
+      fetchBookingData();
+    } else if (!bookingData?.apartmentId || bookingData?.duration <= 0) {
+      setLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    loading,
+    bookingData.apartmentId,
+    bookingData?.duration,
+    bookingData.totalAmount,
+    getApartmentById,
+    updateBookingData,
+    user?.email,
+    bookingData,
+    calculateFees,
+  ]);
+
+  // Reset loading state when booking data becomes valid
+  useEffect(() => {
+    if (bookingData?.apartmentId && bookingData?.duration > 0 && loading) {
+      // This will trigger the main useEffect
+      return;
+    }
+  }, [bookingData?.apartmentId, bookingData?.duration, loading]);
+
   // Enhanced payment handler with better error handling
   const handlePayment = async () => {
+    // Prevent multiple clicks
+    if (processingPayment) {
+      console.log("Payment already in progress, ignoring click");
+      return;
+    }
+
     let paymentTimeoutId;
 
     try {
       setProcessingPayment(true);
-      setError(null);
+      clearAlert();
       setShowTimeoutError(false);
 
       // Validate prerequisites
@@ -135,8 +286,8 @@ export default function CurrentBookingOverviewPage() {
         throw new Error("Invalid booking duration. Please check your dates.");
       }
 
-      const bookingSummary = getBookingSummary();
-      if (!bookingSummary.totalAmount || bookingSummary.totalAmount <= 0) {
+      const fees = calculateFees();
+      if (!fees.totalAmount || fees.totalAmount <= 0) {
         throw new Error("Invalid payment amount. Please restart your booking.");
       }
 
@@ -158,7 +309,7 @@ export default function CurrentBookingOverviewPage() {
         apartmentId: bookingData.apartmentId,
         startDate: bookingData.checkinDate,
         endDate: bookingData.checkoutDate,
-        totalPrice: bookingSummary.totalAmount,
+        totalPrice: fees.totalAmount,
         userEmail: user.email,
         duration: bookingData.duration,
       };
@@ -171,129 +322,123 @@ export default function CurrentBookingOverviewPage() {
       }
 
       const bookingId = bookingResponse.data.id;
-      const isResumed = bookingResponse.resumed;
 
-      console.log(
-        `Booking ${isResumed ? "resumed" : "created"} with ID:`,
-        bookingId
-      );
+      console.log("Booking created with ID:", bookingId);
 
       // 2. Store booking ID in context
       updateBookingData({ bookingId });
 
-      // 3. Create payment with user details
-      const paymentResponse = await createPayment(
-        bookingSummary.totalAmount,
-        user.email,
-        bookingId,
-        `Booking for ${getTitle()}`,
-        `${user.firstName} ${user.lastName}`,
-        user.phone
-      );
+      // 3. Create payment with enhanced error handling
+      console.log("Creating payment for booking ID:", bookingId);
+
+      if (!bookingId) {
+        throw new Error("Booking ID is missing. Please try again.");
+      }
+
+      const paymentResponse = await createPayment(bookingId);
+
+      console.log("Payment response:", paymentResponse);
+
+      // Enhanced payment response validation
+      if (paymentResponse?.status === false) {
+        const errorMessage =
+          paymentResponse.message || "Payment creation failed";
+
+        // Check for specific backend error codes
+        if (paymentResponse.code === "INTERNAL_ERROR") {
+          throw new Error(
+            "Payment service is temporarily unavailable. Please try again."
+          );
+        } else {
+          throw new Error(errorMessage);
+        }
+      }
+
+      // Check if we have valid payment data
+      if (!paymentResponse?.data && !paymentResponse?.account_number) {
+        throw new Error("Invalid payment response received from server.");
+      }
 
       // Clear timeout on success
       clearTimeout(paymentTimeoutId);
 
-      // 4. Handle payment response
-      const paymentData = paymentResponse?.data || paymentResponse;
+      // 4. Handle successful payment response
+      const paymentData = paymentResponse.data || paymentResponse;
+      const paymentReference =
+        paymentData.reference || paymentResponse.reference;
 
-      if (paymentData) {
-        // ✅ CRITICAL FIX: Save the payment reference to context
-        const paymentReference =
-          paymentData.reference || paymentResponse.reference;
-
-        // Update booking context with payment reference
-        updateBookingData({
-          bookingId,
-          paymentReference, // Save reference to context
-        });
-
-        // Enhanced payment data storage with error handling
-        const enhancedPaymentData = {
-          bookingId,
-          amount: bookingSummary.totalAmount,
-          apartmentTitle: getTitle(),
-          apartmentId: bookingData.apartmentId,
-          checkinDate: bookingData.checkinDate,
-          checkoutDate: bookingData.checkoutDate,
-          duration: bookingData.duration,
-          userEmail: user.email,
-          userName: `${user.firstName} ${user.lastName}`,
-          timestamp: new Date().toISOString(),
-          reference: paymentReference, // Ensure reference is included
-          ...paymentData,
-        };
-
-        // Debug log to verify the reference
-        console.log("Payment reference saved:", {
-          reference: paymentReference,
-          bookingId: bookingId,
-          fullPaymentData: enhancedPaymentData,
-        });
-
-        try {
-          localStorage.setItem(
-            `paymentData_${bookingId}`,
-            JSON.stringify(enhancedPaymentData)
-          );
-          console.log(
-            "Payment data saved successfully with reference:",
-            paymentReference
-          );
-        } catch (storageError) {
-          console.error("Failed to save payment data:", storageError);
-          // Continue anyway as this is not critical
-        }
-
-        // Navigate to payment page
-        navigate(`/booking-payment/${bookingId}`);
-      } else {
-        throw new Error("No payment data received from payment service");
+      if (!paymentReference) {
+        throw new Error("No payment reference received from payment service");
       }
+
+      // Update booking context with payment reference
+      updateBookingData({
+        bookingId,
+        paymentReference,
+      });
+
+      // Enhanced payment data storage
+      const enhancedPaymentData = {
+        bookingId,
+        amount: fees.totalAmount,
+        apartmentTitle: getTitle(),
+        apartmentId: bookingData.apartmentId,
+        checkinDate: bookingData.checkinDate,
+        checkoutDate: bookingData.checkoutDate,
+        duration: bookingData.duration,
+        userEmail: user.email,
+        userName: `${user.firstName} ${user.lastName}`,
+        timestamp: new Date().toISOString(),
+        reference: paymentReference,
+        account_number: paymentData.account_number,
+        account_name: paymentData.account_name,
+        bank: paymentData.bank,
+        valid_till: paymentData.valid_till,
+        ...paymentData,
+      };
+
+      try {
+        localStorage.setItem(
+          `paymentData_${bookingId}`,
+          JSON.stringify(enhancedPaymentData)
+        );
+        console.log(
+          "Payment data saved successfully with reference:",
+          paymentReference
+        );
+      } catch (storageError) {
+        console.error("Failed to save payment data:", storageError);
+        // Don't throw here - we can still proceed to payment page
+      }
+
+      // Navigate to payment page
+      navigate(`/booking-payment/${bookingId}`);
     } catch (error) {
       console.error("Payment flow failed:", error);
 
-      // Clear timeout on error
       if (paymentTimeoutId) {
         clearTimeout(paymentTimeoutId);
       }
 
-      let userFriendlyMessage = error.response?.data?.message || error.message;
-
-      // Provide more specific messages for common errors
-      if (
-        error.message.includes("network") ||
-        error.message.includes("Internet")
-      ) {
-        userFriendlyMessage =
-          "Network error. Please check your internet connection and try again.";
-      } else if (error.response?.status === 401) {
-        userFriendlyMessage = "Session expired. Please log in again.";
-      } else if (error.response?.status >= 500) {
-        userFriendlyMessage =
-          "Server error. Please try again in a few moments.";
-      }
-
-      handleError(error, userFriendlyMessage, { autoClear: false });
+      // Use the enhanced handleError function
+      handleError(error, null, { autoClear: false });
     } finally {
       setProcessingPayment(false);
     }
   };
-  // Helper functions with enhanced error handling
+  // Helper functions
   const getPrimaryImage = () => {
     try {
       if (!apartment?.images || apartment.images.length === 0) {
         return "/images/default-apartment.jpg";
       }
-
       const primaryImage = apartment.images.find((img) => img.isPrimary);
       return (
         primaryImage?.url ||
         apartment.images[0]?.url ||
         "/images/default-apartment.jpg"
       );
-    } catch (error) {
-      console.error("Error getting primary image:", error);
+    } catch {
       return "/images/default-apartment.jpg";
     }
   };
@@ -424,44 +569,6 @@ export default function CurrentBookingOverviewPage() {
     );
   };
 
-  // Enhanced Error Alert component
-  const ErrorAlert = ({ message, showLogin = false, onRetry = null }) => (
-    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-      <div className="flex items-start">
-        <img
-          src="/icons/error.svg"
-          alt="Error"
-          className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"
-        />
-        <span className="text-red-800 text-sm flex-1">{message}</span>
-      </div>
-      <div className="mt-2 flex space-x-2">
-        {showLogin && (
-          <button
-            onClick={() => navigate("/login")}
-            className="px-3 py-1 bg-[#A20BA2] text-white text-xs rounded hover:bg-[#8a1a8a]"
-          >
-            Log In
-          </button>
-        )}
-        {onRetry && (
-          <button
-            onClick={onRetry}
-            className="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
-          >
-            Try Again
-          </button>
-        )}
-        <button
-          onClick={() => setError(null)}
-          className="px-3 py-1 bg-transparent text-gray-600 text-xs rounded hover:bg-gray-100"
-        >
-          Dismiss
-        </button>
-      </div>
-    </div>
-  );
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -504,17 +611,17 @@ export default function CurrentBookingOverviewPage() {
     );
   }
 
-  if (error && (!bookingData?.apartmentId || bookingData?.duration <= 0)) {
+  if (alert.show && (!bookingData?.apartmentId || bookingData?.duration <= 0)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
         <div className="text-center">
           <img
-            src="/icons/error.svg"
+            src="/icons/error.png"
             alt="Error"
             className="w-16 h-16 mx-auto mb-4 text-red-500"
           />
           <p className="text-gray-500 mb-2">Unable to load booking</p>
-          <p className="text-gray-500 text-sm mb-4">{error}</p>
+          <p className="text-gray-500 text-sm mb-4">{alert.message}</p>
           <div className="space-x-2">
             <button
               className="px-4 py-2 bg-[#A20BA2] text-white rounded hover:bg-[#8a1a8a]"
@@ -566,7 +673,7 @@ export default function CurrentBookingOverviewPage() {
     );
   }
 
-  const bookingSummary = getBookingSummary();
+  const fees = calculateFees();
   const apartmentRating = getApartmentRating();
   const isVerified = isApartmentVerified();
   const pricePerNight = bookingData.apartmentPrice || 0;
@@ -590,15 +697,13 @@ export default function CurrentBookingOverviewPage() {
 
       {/* Content wrapper */}
       <div className="w-full max-w-md space-y-4 px-[21px] pb-[75px]">
-        {/* Error Display */}
-        {error && (
-          <ErrorAlert
-            message={error}
-            showLogin={!isAuthenticated()}
-            onRetry={() => {
-              setError(null);
-              window.location.reload();
-            }}
+        {/* Alert Display */}
+        {alert.show && (
+          <Alert
+            type={alert.type}
+            message={alert.message}
+            onDismiss={clearAlert}
+            timeout={alert.type === "success" ? 5000 : 8000}
           />
         )}
 
@@ -630,7 +735,7 @@ export default function CurrentBookingOverviewPage() {
                   <button
                     onClick={() => {
                       setShowTimeoutError(false);
-                      setError(null);
+                      clearAlert();
                     }}
                     className="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600"
                   >
@@ -641,9 +746,6 @@ export default function CurrentBookingOverviewPage() {
             </div>
           </div>
         )}
-
-        {/* Rest of your JSX remains the same */}
-        {/* ... existing JSX content ... */}
 
         {/* Header (image + host/guest avatar) */}
         <div className="relative overflow-visible">
@@ -673,8 +775,9 @@ export default function CurrentBookingOverviewPage() {
         <div className="pt-[10px] pb-[15px] px-2">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <h2 className="text-[12px] font-medium text-[#333333]">
-                {getHostName()}
+              <h2 className="text-[12px] flex items-center justify-between font-medium text-[#333333]">
+                <span>{getHostName()}</span>
+                <span>{renderStarRating(apartmentRating)}</span>
               </h2>
 
               {/* Title and rating on same line with truncation */}
@@ -687,10 +790,8 @@ export default function CurrentBookingOverviewPage() {
                       className="w-4 h-4 mr-1 flex-shrink-0"
                     />
                   )}
-                  <span className="truncate">{getTitle()}</span>
+                  <span className="truncate max-w-[]">{getTitle()}</span>
                 </div>
-                {/* Rating on the far right */}
-                {renderStarRating(apartmentRating)}
               </div>
 
               {/* Location and price on same line */}
@@ -710,7 +811,7 @@ export default function CurrentBookingOverviewPage() {
             <div className="flex justify-between">
               <span>Booking Date</span>
               <div className="text-right">
-                <span className="whitespace-nowrap">
+                <span className="whitespace-nowrap font-medium ">
                   {formatDate(new Date().toISOString().split("T")[0])} |{" "}
                   {formatTime(new Date().toISOString())}
                 </span>
@@ -718,15 +819,19 @@ export default function CurrentBookingOverviewPage() {
             </div>
             <div className="flex justify-between">
               <span>Check in</span>
-              <span>{formatDate(bookingData.checkinDate)}</span>
+              <span className="font-medium">
+                {formatDate(bookingData.checkinDate)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Check out</span>
-              <span>{formatDate(bookingData.checkoutDate)}</span>
+              <span className="font-medium">
+                {formatDate(bookingData.checkoutDate)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Duration</span>
-              <span>
+              <span className="font-medium">
                 {calculateDuration(
                   bookingData.checkinDate,
                   bookingData.checkoutDate
@@ -741,36 +846,40 @@ export default function CurrentBookingOverviewPage() {
           <div className="space-y-4">
             <div className="flex justify-between">
               <span>Booking Fee</span>
-              <span>{formatCurrency(bookingSummary?.bookingFee)}</span>
+              <span className="font-medium">
+                {formatCurrency(fees.bookingFee)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Security Deposit</span>
-              <span>{formatCurrency(bookingSummary?.securityDeposit)}</span>
+              <span className="font-medium">
+                {formatCurrency(fees.securityDeposit)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Convenience Fee</span>
-              <span>{formatCurrency(bookingSummary?.convenienceFee)}</span>
+              <span className="font-medium">
+                {formatCurrency(fees.convenienceFee)}
+              </span>
             </div>
             <div className="flex justify-between font-medium">
               <span>Total Amount</span>
-              <span>{formatCurrency(bookingSummary?.totalAmount)}</span>
+              <span className="font-medium">
+                {formatCurrency(fees.totalAmount)}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Make Payment Button */}
-        <div className="pt-[150px] pb-[42px]">
+        <div className="pt-[50px]">
           <Button
             text={processingPayment ? "Processing..." : "Make Payment Now"}
             onClick={handlePayment}
             disabled={processingPayment || !isAuthenticated()}
             className="h-[57px] w-full disabled:opacity-50 disabled:cursor-not-allowed"
           />
-          {processingPayment && (
-            <p className="text-center text-sm text-gray-500 mt-2">
-              Please wait while we process your payment...
-            </p>
-          )}
+
           {!isAuthenticated() && (
             <p className="text-center text-sm text-red-500 mt-2">
               Please log in to make a payment
