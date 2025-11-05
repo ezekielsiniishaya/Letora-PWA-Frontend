@@ -192,7 +192,7 @@ export default function NotificationsPage() {
     <div
       key={notification.id}
       className={`flex bg-white h-[59px] rounded-[5px] px-2 items-start gap-2 py-3 cursor-pointer ${
-        !notification.isRead ? "border-l-2 border-l-[#008751]" : ""
+        !notification.isRead ? "" : ""
       } ${markingRead ? "opacity-50 pointer-events-none" : ""}`}
       onClick={() =>
         handleNotificationClick(section, notification.id, notification)

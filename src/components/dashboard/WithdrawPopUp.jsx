@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Button from "../Button";
 
 export default function WithdrawPopup({ balance, onClose, onSuccess }) {
   const [amount, setAmount] = useState("");
@@ -53,7 +54,7 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
                 setAmount(formattedValue);
               }}
               placeholder="Enter amount"
-              className={`border mt-1 w-full h-[45px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] text-black outline-none ${
+              className={`border mt-1 w-full h-[45px] rounded-[5px] px-3 py-2 text-smtext-black outline-none ${
                 amountExceedsBalance ? "border-red-500" : ""
               }`}
             />
@@ -70,15 +71,12 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
             </p>
           </div>
 
-          <button
+          <Button
+            text="Submit"
             type="submit"
+            className={!isAmountValid ? "bg-gray-400 cursor-not-allowed" : ""}
             disabled={!isAmountValid}
-            className={`w-full h-[57px] text-[16px] text-white rounded-md font-semibold ${
-              isAmountValid ? "bg-[#A20BA2]" : "bg-gray-400 cursor-not-allowed"
-            }`}
-          >
-            Submit
-          </button>
+          />
         </form>
       </div>
     </>

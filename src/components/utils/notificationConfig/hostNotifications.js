@@ -85,7 +85,7 @@ const hostNotificationConfigs = {
     width: "w-[60px]",
   },
   AVAILABILITY_REQUEST: {
-    image: "/icons/calendar.svg",
+    image: "icons/success.svg",
     heading: "Availability Request",
     message:
       "A guest has requested availability for your apartment. Please confirm the dates.",

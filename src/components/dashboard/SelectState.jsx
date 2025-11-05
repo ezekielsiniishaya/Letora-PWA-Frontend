@@ -5,6 +5,10 @@ import { UserContext } from "../../contexts/UserContext";
 export default function CurrentLocationDropdown({
   className = "",
   onLocationChange,
+  triggerBgColor = "bg-[#5F065F]", // Default purple, can be overridden via props
+  selectedBgColor = "bg-purple-50", // Background for selected state in dropdown
+  selectedTextColor = "text-purple-600", // Text color for selected state
+  hoverBgColor = "hover:bg-purple-100", // Hover background for dropdown items
 }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -97,7 +101,7 @@ export default function CurrentLocationDropdown({
     >
       {/* Location Trigger Button */}
       <div
-        className="flex items-center justify-center bg-[#5F065F] w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10 cursor-pointer hover:bg-[#2A2A2A] transition-colors"
+        className={`flex items-center justify-center ${triggerBgColor} w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10 cursor-pointer hover:bg-[#2A2A2A] transition-colors`}
         onClick={() => setOpen(!open)}
       >
         <img
@@ -125,9 +129,9 @@ export default function CurrentLocationDropdown({
             {states.map((state) => (
               <li
                 key={state}
-                className={`px-4 py-3 hover:bg-purple-100 cursor-pointer text-[#333333] transition-colors ${
+                className={`px-4 py-3 ${hoverBgColor} cursor-pointer text-[#333333] transition-colors ${
                   currentLocation?.state === state
-                    ? "bg-purple-50 text-purple-600 font-medium"
+                    ? `${selectedBgColor} ${selectedTextColor} font-medium`
                     : ""
                 }`}
                 onClick={() => handleSelect(state)}

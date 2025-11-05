@@ -125,8 +125,10 @@ export default function Dashboard() {
         </div>
 
         {/* Select Guest Current Location */}
-        <CurrentLocationDropdown onLocationChange={handleLocationChange} />
-
+        <CurrentLocationDropdown
+          onLocationChange={handleLocationChange}
+          triggerBgColor="bg-[#1A1A1A]"
+        />
         {/* Guest name */}
         <div className="relative mb-[15px] z-10">
           <h2 className="text-[17px] font-semibold">

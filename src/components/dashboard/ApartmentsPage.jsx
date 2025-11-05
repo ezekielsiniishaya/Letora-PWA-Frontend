@@ -8,7 +8,7 @@ import { useUser } from "../../hooks/useUser";
 
 export default function ApartmentsPage() {
   const navigate = useNavigate();
-  const { refreshUser } = useContext(UserContext);
+  const { refreshUser, user } = useContext(UserContext);
   const { getUserLocation } = useUser(); // ✅ Properly call the hook
 
   // Use the apartment listing context to get actual apartments
@@ -57,7 +57,13 @@ export default function ApartmentsPage() {
       <div className="flex items-center justify-between px-[21px] py-3">
         {/* Left section: arrow + text */}
         <div className="flex items-center space-x-3">
-          <button onClick={() => navigate("/guest-homepage")}>
+          <button
+            onClick={() =>
+              navigate(
+                user?.role === "HOST" ? "/host-homepage" : "/guest-homepage"
+              )
+            }
+          >
             <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-4" />
           </button>
           <h1 className="text-[14px] font-medium text-[#000000]">
