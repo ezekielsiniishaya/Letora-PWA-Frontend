@@ -12,7 +12,7 @@ export default function ProfilePage() {
 
   // Check if user is a verified host
   const isVerifiedHost =
-    user?.hostStatus === "VERIFIED" || user?.isVerifiedHost;
+    user?.role === "HOST" && user?.verificationStatus === "VERIFIED";
 
   const handleLogout = () => {
     logout();
@@ -59,20 +59,6 @@ export default function ProfilePage() {
                 {user?.email || "Email not available"}
               </span>
             </div>
-
-            {/* Show verification status badge */}
-            {isVerifiedHost && (
-              <div className="flex items-center gap-1 mt-2">
-                <span className="bg-green-500 text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1">
-                  <img
-                    src="/icons/tick-white.svg"
-                    alt="Verified"
-                    className="w-3 h-3"
-                  />
-                  Verified Host
-                </span>
-              </div>
-            )}
           </div>
           <Link to="/edit-profile">
             <button className="w-[33px] h-[33px] bg-[#A20BA2] rounded-full flex items-center justify-center">
@@ -108,14 +94,6 @@ export default function ProfilePage() {
             />
           </>
         )}
-        {/* Show revenue history for all users (including non-verified hosts) */}
-        {isVerifiedHost && (
-          <OptionItem
-            icon="/icons/my-revenue.svg"
-            text="My Revenue History"
-            link="/revenue"
-          />
-        )}{" "}
         <OptionItem
           icon="/icons/change-bank.svg"
           text="Change Bank Details"

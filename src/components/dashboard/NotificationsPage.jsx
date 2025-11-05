@@ -161,11 +161,24 @@ export default function NotificationsPage() {
       case "See Details":
         navigate("/notifications");
         break;
+      case "View Details":
+        // NEW: Use apartmentId for deposit hold and other apartment-specific notifications
+        if (activePopup.apartmentId) {
+          // Navigate to the specific apartment's booking details page
+          navigate(`/apartments/${activePopup.apartmentId}/bookings`);
+        } else if (
+          activePopup.relatedType === "BOOKING" &&
+          activePopup.relatedId
+        ) {
+          // Fallback: Use booking ID if apartmentId is not available
+          navigate(`/bookings/${activePopup.relatedId}`);
+        } else {
+          navigate("/bookings");
+        }
+        break;
       default:
         // Default navigation based on user role
-        navigate(
-          user?.role === "HOST" ? "/host-dashboard" : "/guest-dashboard"
-        );
+        navigate(user?.role === "HOST" ? "/host-dashboard" : "/bookings");
     }
 
     setActivePopup(null);
@@ -316,6 +329,8 @@ export default function NotificationsPage() {
           onClose={handlePopupClose}
           onConfirm={activePopup.buttonText ? handlePopupAction : undefined}
           height={activePopup.buttonText ? undefined : "233px"}
+          imgHeight={activePopup.imgHeight}
+          width={activePopup.width}
         />
       )}
     </div>

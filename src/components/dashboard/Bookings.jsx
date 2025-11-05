@@ -9,6 +9,7 @@ export default function MyBooking({
   booking,
   status,
   completedButtonText = "Rate your Stay",
+  onClick,
 }) {
   const [showCancelBooking, setShowCancelBooking] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
@@ -69,13 +70,57 @@ export default function MyBooking({
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
+
   // Get booking ID
   const bookingId = booking?.id;
 
-  // Debug logging to see what data we're receiving
-  console.log("Booking data:", booking);
-  console.log("Apartment data:", booking?.apartment);
-  console.log("Status:", status);
+  // Navigation handler - use onClick prop if provided, otherwise use default navigation
+  const handleNavigation = () => {
+    if (onClick) {
+      onClick(); // Use the passed onClick function
+    } else {
+      // Fallback to default navigation
+      navigate(`/bookings/${bookingId}`, { state: { booking, status } });
+    }
+  };
+
+  // Handle card click
+  const handleCardClick = () => {
+    if (status !== "ongoing") {
+      handleNavigation();
+    }
+  };
+
+  // Handle view booking button click
+  const handleViewBookingClick = (e) => {
+    e.stopPropagation();
+    handleNavigation();
+  };
+
+  // Handle success popup close with navigation fallback
+  const handleSuccessClose = () => {
+    setShowCancelSuccess(false);
+    // Use onClick prop if provided, otherwise navigate back
+    if (onClick) {
+      onClick(); // This might need to be adjusted based on what onClick should do here
+    } else {
+      navigate(-1);
+    }
+  };
+
+  // Handle hold success close
+  const handleHoldSuccessClose = () => {
+    setShowHoldSuccess(false);
+    setActionCompleted(true);
+    // No navigation needed here as it's just a state update
+  };
+
+  // Handle rating popup close
+  const handleRatingClose = () => {
+    setShowRating(false);
+    setActionCompleted(true);
+    // No navigation needed here as it's just a state update
+  };
 
   return (
     <div className="bg-white rounded-[5px] w-full h-[158px] pt-[10px] px-[10px] relative">
@@ -83,11 +128,7 @@ export default function MyBooking({
         className={`flex gap-[6px] ${
           status !== "ongoing" ? "cursor-pointer" : ""
         }`}
-        onClick={() =>
-          status !== "ongoing"
-            ? navigate(`/bookings/${bookingId}`, { state: { booking, status } })
-            : null
-        }
+        onClick={handleCardClick}
       >
         {/* Apartment Image */}
         <img
@@ -97,7 +138,7 @@ export default function MyBooking({
         />
 
         {/* Apartment Info */}
-        <div className="flex-1  mt-1 ml-1 text-[#333333] flex flex-col">
+        <div className="flex-1 mt-1 ml-1 text-[#333333] flex flex-col">
           {/* Title + Status */}
           <div className="flex items-center justify-between w-[92%]">
             <h4 className="font-medium text-[12px] truncate flex-1 max-w-[70%]">
@@ -157,12 +198,7 @@ export default function MyBooking({
               Cancel Booking
             </button>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/bookings/${bookingId}`, {
-                  state: { booking, status },
-                });
-              }}
+              onClick={handleViewBookingClick}
               className="w-[129px] h-[35px] rounded-[5px] text-[12px] font-semibold flex items-center text-white justify-center bg-[#A20BA2]"
             >
               View Booking
@@ -229,7 +265,7 @@ export default function MyBooking({
           heading="Booking Successfully Cancelled!"
           message="Your booking has been cancelled. If you're eligible for a refund, it will be processed within 7–10 business days."
           buttonText="Done"
-          onClose={() => setShowCancelSuccess(false)}
+          onClose={handleSuccessClose}
           height="auto"
         />
       )}
@@ -237,10 +273,7 @@ export default function MyBooking({
       {showRating && (
         <RatingPopup
           apartmentId={booking?.apartment?.id}
-          onClose={() => {
-            setShowRating(false);
-            setActionCompleted(true);
-          }}
+          onClose={handleRatingClose}
         />
       )}
 
@@ -251,10 +284,7 @@ export default function MyBooking({
           message="Your request to withhold the guest's security deposit has been approved. This booking is now officially in dispute."
           buttonText="Done"
           width="w-[70px]"
-          onClose={() => {
-            setShowHoldSuccess(false);
-            setActionCompleted(true);
-          }}
+          onClose={handleHoldSuccessClose}
           height="auto"
         />
       )}

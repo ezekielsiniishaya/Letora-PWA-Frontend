@@ -41,7 +41,7 @@ export default function ApartmentCard({ apt, role = "guest" }) {
 
   const getRating = () => {
     if (apt.averageRating) {
-      return apt.averageRating.toFixed(1);
+      return Number(apt.averageRating).toFixed(1);
     }
     return apt.rating || "0.0";
   };

@@ -36,7 +36,28 @@ export default function EditProfilePage() {
         dateOfBirth: user.dateOfBirth || "",
       });
       setProfileImage(user.profilePic || "/images/profile-image.png");
-      setIdDocuments(user.documents || []);
+
+      // Handle host verification documents
+      if (
+        user.hostVerification?.documents &&
+        user.hostVerification.documents.length > 0
+      ) {
+        // Convert backend document format to frontend format
+        const existingDocuments = user.hostVerification.documents.map(
+          (doc) => ({
+            id: doc.id,
+            type: doc.type,
+            url: doc.url,
+            name: doc.type === "ID_CARD" ? "ID Card" : "ID Photograph",
+            documentType: doc.type,
+            status: doc.status,
+            isExisting: true, // Flag to identify existing backend documents
+          })
+        );
+        setIdDocuments(existingDocuments);
+      } else {
+        setIdDocuments([]);
+      }
     }
   }, [user]);
 
@@ -100,6 +121,7 @@ export default function EditProfilePage() {
           name: file.name,
           type: file.type,
           documentType: documentType,
+          isExisting: false, // Flag for new uploads
         };
       });
 
@@ -139,31 +161,37 @@ export default function EditProfilePage() {
 
       // Append profile image if selected
       if (formData.profileImageFile) {
-        submitFormData.append("profilePic", formData.profileImageFile); // Use "profilePic" to match backend
+        submitFormData.append("profilePic", formData.profileImageFile);
         console.log(
           "✅ Profile image appended to FormData:",
           formData.profileImageFile.name
         );
       }
 
-      // Append documents if user is host and has documents
-      if (isHost && idDocuments.length > 0) {
-        idDocuments.forEach((doc) => {
-          if (doc.file) {
-            submitFormData.append("documents", doc.file);
-            submitFormData.append("documentTypes", doc.documentType);
-          }
-        });
-
-        // Add verificationDocuments metadata for backend processing
-        const verificationDocuments = idDocuments.map((doc) => ({
-          type: doc.documentType,
-          name: doc.name || doc.file.name,
-        }));
-        submitFormData.append(
-          "verificationDocuments",
-          JSON.stringify(verificationDocuments)
+      // Append documents if user is host and has new documents to upload
+      if (isHost) {
+        const newDocuments = idDocuments.filter(
+          (doc) => !doc.isExisting && doc.file
         );
+
+        if (newDocuments.length > 0) {
+          newDocuments.forEach((doc) => {
+            if (doc.file) {
+              submitFormData.append("documents", doc.file);
+              submitFormData.append("documentTypes", doc.documentType);
+            }
+          });
+
+          // Add verificationDocuments metadata for backend processing
+          const verificationDocuments = newDocuments.map((doc) => ({
+            type: doc.documentType,
+            name: doc.name || doc.file.name,
+          }));
+          submitFormData.append(
+            "verificationDocuments",
+            JSON.stringify(verificationDocuments)
+          );
+        }
       }
 
       // Debug: Log FormData contents
@@ -194,7 +222,15 @@ export default function EditProfilePage() {
             ...userData,
             ...(!hasExistingDOB && { dateOfBirth: formData.dateOfBirth }),
             profilePic: profileImage,
-            idDocuments: idDocuments,
+            hostVerification: {
+              ...user.hostVerification,
+              documents: idDocuments.map((doc) => ({
+                id: doc.id,
+                type: doc.documentType,
+                url: doc.url || doc.preview,
+                status: doc.status || "PENDING",
+              })),
+            },
           });
         }
 
@@ -211,7 +247,20 @@ export default function EditProfilePage() {
       setLoading(false);
     }
   };
+
   const removeDocument = (index) => {
+    const documentToRemove = idDocuments[index];
+
+    // Don't allow removal of existing verified documents
+    if (documentToRemove.isExisting && documentToRemove.status === "VERIFIED") {
+      setAlert({
+        show: true,
+        message: "Cannot remove verified documents. Please contact support.",
+        type: "error",
+      });
+      return;
+    }
+
     setIdDocuments((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -224,8 +273,8 @@ export default function EditProfilePage() {
     );
   }
 
-  // Check if user is a host (you might need to adjust this based on your user role structure)
-  const isHost = user?.role === "host" || user?.hostProfile; // Adjust based on your user structure
+  // Check if user is a host
+  const isHost = user?.role === "HOST" || user?.hostProfile;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F9F9F9]">
@@ -272,8 +321,8 @@ export default function EditProfilePage() {
               type="text"
               name="firstName"
               value={formData.firstName}
-              readOnly
-              className="mt-2 border w-full h-[48px] text-[#686464] rounded-md px-3 text-[14px] bg-gray-100 cursor-not-allowed"
+              disabled
+              className="mt-2 border w-full h-[48px] text-[#686464] rounded-md px-3 text-[14px] bg-gray-100 cursor-not-allowed disabled:opacity-100"
               placeholder="Mandy"
             />
           </div>
@@ -287,11 +336,12 @@ export default function EditProfilePage() {
               type="text"
               name="lastName"
               value={formData.lastName}
-              readOnly
-              className="mt-2 border w-full h-[48px] rounded-md px-3 text-[#686464] text-[14px] bg-gray-100 cursor-not-allowed"
+              disabled
+              className="mt-2 border w-full h-[48px] rounded-md px-3 text-[#686464] text-[14px] bg-gray-100 cursor-not-allowed disabled:opacity-100"
               placeholder="Jane"
             />
           </div>
+
           {/* Phone Number */}
           <div>
             <label className="block text-sm text-[#686464] font-medium">
@@ -351,7 +401,7 @@ export default function EditProfilePage() {
               <input
                 value={user.gender || "Male"}
                 disabled
-                className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-gray-100  text-[#807F7F]"
+                className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-gray-100 text-[#807F7F] disabled:opacity-100"
               />
             </div>
             <div className="flex-1">
@@ -363,7 +413,7 @@ export default function EditProfilePage() {
                 <input
                   value={formatDateOfBirth(user.dateOfBirth)}
                   disabled
-                  className="mt-2 border w-full h-[48px] rounded-md px-3 text-[14px] bg-gray-100  text-[#807F7F]"
+                  className="mt-2 border w-full h-[48px] rounded-md px-3 text-[14px] bg-gray-100 text-[#807F7F] disabled:opacity-100"
                 />
               ) : (
                 // Show date input if no DOB exists
@@ -386,7 +436,7 @@ export default function EditProfilePage() {
             <input
               value={user.nationality || "Nigerian"}
               disabled
-              className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-gray-100  text-[#686464]"
+              className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-gray-100 text-[#686464] disabled:opacity-100"
             />
           </div>
 
@@ -398,21 +448,22 @@ export default function EditProfilePage() {
             <input
               value={user?.location?.state || "Lagos"}
               disabled
-              className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-gray-100  text-[#686464]"
+              className="mt-2 border w-full h-[48px] rounded-md px-3 text-sm bg-gray-100 text-[#686464] disabled:opacity-100"
             />
           </div>
-          {/* Upload Means of Identification - Only show for hosts */}
-          {!isHost && (
+
+          {/* Upload Means of Identification - Only show for hosts who are not verified */}
+          {isHost && (
             <div>
               <label className="block text-sm text-[#686464] font-medium mb-5">
                 Upload Means of Identification
+                <span className="text-red-500 ml-1">*</span>
               </label>
 
               <div className="flex space-x-3 flex-wrap">
                 {/* Existing documents - show appropriate icon based on file type */}
-
                 {idDocuments.map((doc, index) => (
-                  <div key={index} className="relative">
+                  <div key={doc.id || index} className="relative">
                     <div className="w-[104px] h-[104px] border rounded-md flex flex-col items-center justify-center bg-white relative mb-2 p-2">
                       {doc.documentType === "ID_CARD" ? (
                         <img
@@ -432,13 +483,21 @@ export default function EditProfilePage() {
                           ? `${doc.name.substring(0, 10)}...`
                           : doc.name || `Document ${index + 1}`}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => removeDocument(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                      >
-                        ×
-                      </button>
+                      {doc.status === "VERIFIED" && (
+                        <div className="absolute top-1 right-1 bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                          ✓
+                        </div>
+                      )}
+                      {/* Only show delete button for unverified documents */}
+                      {doc.status !== "VERIFIED" && (
+                        <button
+                          type="button"
+                          onClick={() => removeDocument(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -465,7 +524,7 @@ export default function EditProfilePage() {
             message={alert.message}
             type={alert.type}
             onDismiss={() => setAlert({ show: false, message: "", type: "" })}
-            timeout={5000} // Optional - defaults to 5000ms
+            timeout={5000}
           />
         )}
       </div>

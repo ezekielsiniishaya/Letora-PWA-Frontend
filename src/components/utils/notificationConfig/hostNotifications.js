@@ -1,11 +1,13 @@
 const hostNotificationConfigs = {
   PAYMENT_CONFIRMED: {
-    image: "/icons/money-2.svg",
+    image: "/icons/money.png",
     heading: "Payment Confirmed!!",
     message:
       "Your guest has completed payment for their booking. Review the details to prepare for their arrival.",
     buttonText: "See Dashboard",
     booking: true,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
   },
   GUEST_CHECKED_OUT: {
     image: "/icons/stopwatch.svg",
@@ -64,19 +66,23 @@ const hostNotificationConfigs = {
     buttonText: "See Dashboard",
   },
   WALLET_CREDITED: {
-    image: "/icons/money-2.svg",
+    image: "/icons/money.png",
     heading: "Wallet Credited",
     message:
       "Your wallet has been credited. The amount is now available for withdrawal.",
     buttonText: "See Revenue History",
     revenue: true,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
   },
   WALLET_DEBITED: {
-    image: "/icons/money-2.svg",
+    image: "/icons/money.png",
     heading: "Wallet Debited",
     message: "Amount has been deducted from your wallet for service fees.",
     buttonText: "See Revenue History",
     revenue: true,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
   },
   AVAILABILITY_REQUEST: {
     image: "/icons/calendar.svg",
@@ -99,11 +105,46 @@ const hostNotificationConfigs = {
     buttonText: "View Offers",
   },
   NEW_RATING: {
-  image: "/icons/rating.svg", 
-  heading: "New Rating Received!",
-  message: "A guest has rated your apartment. Check out their feedback and see how it affects your average rating.",
-  buttonText: "See Dashboard", 
-},
+    image: "/icons/rating.svg",
+    heading: "New Rating Received!",
+    message:
+      "A guest has rated your apartment. Check out their feedback and see how it affects your average rating.",
+    buttonText: "See Dashboard",
+  },
+  DEPOSIT_HOLD_REQUESTED: {
+    image: "/icons/lock.png",
+    heading: "Deposit Hold Requested",
+    message:
+      "You have requested to hold an amount from the security deposit. This amount will be temporarily reserved.",
+    buttonText: "View Details",
+    revenue: true,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
+  },
+  BOOKING_COMPLETED: {
+    image: "/icons/success.svg",
+    heading: "Booking Completed!",
+    message:
+      "A guest has successfully completed their stay. The security deposit will be processed accordingly.",
+    buttonText: "See Booking Details",
+    booking: true,
+  },
+  BOOKING_ONGOING: {
+    image: "/icons/clock.svg",
+    heading: "Booking Ongoing",
+    message:
+      "A guest is currently staying at your apartment. The booking is in progress.",
+    buttonText: "View Booking",
+    booking: true,
+  },
+  SECURITY_DEPOSIT_REFUNDED: {
+    image: "/icons/lock.png",
+    heading: "Security Deposit Refunded",
+    message:
+      "The security deposit has been refunded to the guest after successful check-out.",
+    buttonText: "See Transaction History",
+    revenue: true,
+  },
 };
 
 export default hostNotificationConfigs;

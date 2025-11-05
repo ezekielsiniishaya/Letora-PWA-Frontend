@@ -94,12 +94,6 @@ export const updateBookingPaymentStatus = async (bookingId, paymentData) => {
   });
 };
 
-export const holdSecurityDeposit = async (bookingId) => {
-  return apiRequest(`/api/bookings/${bookingId}/hold-deposit`, {
-    method: "PUT",
-  });
-};
-
 // upload guest documents - accept FormData directly
 export const uploadGuestDocuments = async (formData) => {
   return apiRequest("/api/users/guest-documents", {
@@ -195,4 +189,39 @@ export const downloadReceipt = async (bookingId) => {
       error: error.message || "Failed to download receipt",
     };
   }
+};
+// ========== DEPOSIT HOLD APIS ==========
+
+/**
+ * Check if a booking has an active security deposit hold
+ * @param {string} bookingId - The booking ID to check
+ * @returns {Promise<Object>} Response with hasDepositHold boolean
+ */
+export const checkDepositHold = async (bookingId) => {
+  return apiRequest(`/api/bookings/${bookingId}/deposit-hold/check`, {
+    method: "GET",
+  });
+};
+
+/**
+ * Get detailed deposit hold information for a booking
+ * @param {string} bookingId - The booking ID to check
+ * @returns {Promise<Object>} Response with deposit hold details
+ */
+export const getDepositHoldDetails = async (bookingId) => {
+  return apiRequest(`/api/bookings/${bookingId}/deposit-hold/details`, {
+    method: "GET",
+  });
+};
+
+/**
+ * Create a security deposit hold for a booking
+ * @param {string} bookingId - The booking ID
+ * @param {Object} holdData - Hold data including amount, reason, etc.
+ * @returns {Promise<Object>} Response with created hold details
+ */
+export const holdSecurityDeposit = async (bookingId) => {
+  return apiRequest(`/api/bookings/${bookingId}/hold-deposit`, {
+    method: "PUT",
+  });
 };

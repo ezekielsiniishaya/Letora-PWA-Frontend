@@ -209,7 +209,7 @@ export default function Dashboard() {
       <div className="px-[21px] mt-[25px]">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
-          <Link to="/bookings">
+          <Link to="/host-dashboard">
             <button className="text-[12px] font-medium text-[#A20BA2]">
               See all
             </button>

@@ -1,26 +1,22 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { getBookingById } from "../../services/userApi"; // Your API service
-import CancelBookingPopup from "../dashboard/CancelBookingPopup";
-import ConfirmCancelPopup from "../dashboard/ConfirmCancelPopup";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { getBookingById } from "../../services/userApi";
 import ShowSuccess from "../ShowSuccess";
-import RatingPopup from "../dashboard/RatingPopup";
-import ButtonWhite from "../ButtonWhite";
 import Button from "../Button";
 
-export default function BookingDetails({ role = "guest" }) {
+export default function HostBookingDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
 
-  const [showRating, setShowRating] = useState(false);
-  const [showCancelBooking, setShowCancelBooking] = useState(false);
-  const [showConfirmCancel, setShowConfirmCancel] = useState(false);
-  const [showCancelSuccess, setShowCancelSuccess] = useState(false);
   const [depositHeld, setDepositHeld] = useState(false);
   const [showHoldSuccess, setShowHoldSuccess] = useState(false);
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Get current user ID from location state
+  const currentUserId = location.state?.currentUserId;
 
   // Fetch booking directly from backend
   useEffect(() => {
@@ -69,7 +65,7 @@ export default function BookingDetails({ role = "guest" }) {
     },
   };
 
-  // Helper functions (keep your existing ones)
+  // Helper functions
   const getPrimaryImage = (bookingData) => {
     if (!bookingData?.apartment?.images) return "/images/default-apartment.jpg";
     const primaryImage = bookingData.apartment.images.find(
@@ -147,59 +143,36 @@ export default function BookingDetails({ role = "guest" }) {
     };
   };
 
-  // Determine display information based on role
-  const getDisplayName = (bookingData) => {
-    if (role === "host") {
-      return (
-        `${bookingData?.guest?.firstName || ""} ${
-          bookingData?.guest?.lastName || ""
-        }`.trim() || "Guest"
-      );
-    } else {
-      return (
-        `${bookingData?.apartment?.host?.firstName || ""} ${
-          bookingData?.apartment?.host?.lastName || ""
-        }`.trim() || "Host"
-      );
-    }
-  };
-
-  const getDisplayPhone = (bookingData) => {
-    if (role === "host") {
-      return bookingData?.guest?.phone || "Not provided";
-    } else {
-      return bookingData?.apartment?.host?.phone || "Not provided";
-    }
-  };
-
-  const getDisplayEmail = (bookingData) => {
-    if (role === "host") {
-      return bookingData?.guest?.email || "Not provided";
-    } else {
-      return bookingData?.apartment?.host?.email || "Not provided";
-    }
-  };
-
-  const getProfilePicture = (bookingData) => {
-    if (role === "host") {
-      return bookingData?.guest?.profilePic || "/images/profile-image.png";
-    } else {
-      return (
-        bookingData?.apartment?.host?.profilePic || "/images/profile-image.png"
-      );
-    }
-  };
-
   const getBookingStatus = (bookingData) => {
     if (!bookingData?.status) return "ONGOING";
     return bookingData.status;
   };
+
+  // Check if current user owns the apartment
+  const isOwner =
+    currentUserId && booking?.apartment?.host?.id === currentUserId;
 
   const currentStatus =
     statusMap[getBookingStatus(booking)] || statusMap.ONGOING;
   const paymentBreakdown = booking
     ? calculatePaymentBreakdown(booking.totalPrice)
     : null;
+
+  // Debug logging
+  useEffect(() => {
+    if (booking) {
+      console.log("=== HOST BOOKING DETAILS DEBUG ===");
+      console.log("Current User ID:", currentUserId);
+      console.log("Apartment Host ID:", booking?.apartment?.host?.id);
+      console.log("Is Owner:", isOwner);
+      console.log("Booking Status:", getBookingStatus(booking));
+      console.log(
+        "Show Hold Deposit Button:",
+        getBookingStatus(booking) === "COMPLETED" && isOwner
+      );
+      console.log("=== END DEBUG ===");
+    }
+  }, [booking, currentUserId, isOwner]);
 
   if (loading) {
     return (
@@ -225,13 +198,11 @@ export default function BookingDetails({ role = "guest" }) {
     );
   }
 
-  // Determine which actions to show based on status and role
-  const showCancelButton =
-    ["ONGOING"].includes(getBookingStatus(booking)) && role === "guest";
-  const showReviewButton =
-    getBookingStatus(booking) === "COMPLETED" && role === "guest";
+  // Only show Hold Security Deposit button if:
+  // 1. Booking status is COMPLETED
+  // 2. Current user owns the apartment
   const showHoldDepositButton =
-    getBookingStatus(booking) === "COMPLETED" && role === "host";
+    getBookingStatus(booking) === "COMPLETED" && isOwner;
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] flex flex-col items-center">
@@ -252,7 +223,7 @@ export default function BookingDetails({ role = "guest" }) {
 
       {/* Content wrapper */}
       <div className="w-full max-w-md space-y-2 px-[21px] pb-[75px]">
-        {/* Header (image + host/guest avatar) */}
+        {/* Header (image + guest avatar) */}
         <div className="relative overflow-visible">
           <div className="rounded-[5px] overflow-hidden h-[172px] relative">
             <img
@@ -264,8 +235,8 @@ export default function BookingDetails({ role = "guest" }) {
           </div>
 
           <img
-            src={getProfilePicture(booking)}
-            alt={role === "host" ? "Guest" : "Host"}
+            src={booking?.guest?.profilePic || "/images/profile-image.png"}
+            alt="Guest"
             className="absolute left-1 bottom-0 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
           />
         </div>
@@ -275,7 +246,7 @@ export default function BookingDetails({ role = "guest" }) {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h2 className="text-[12px] font-medium text-[#333333]">
-                {getDisplayName(booking)}
+                {booking?.guest?.firstName} {booking?.guest?.lastName}
               </h2>
 
               <div className="flex items-center text-sm text-black font-medium mt-[6px]">
@@ -354,26 +325,24 @@ export default function BookingDetails({ role = "guest" }) {
           </div>
         )}
 
-        {/* Host/Guest Details */}
+        {/* Guest Details */}
         <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
-          <h3 className="font-medium mb-2">
-            {role === "guest" ? "Your Host Details" : "Your Guest Details"}
-          </h3>
+          <h3 className="font-medium mb-2">Guest Details</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span>{role === "guest" ? "Host Name" : "Guest Name"}</span>
-              <span>{getDisplayName(booking)}</span>
+              <span>Guest Name</span>
+              <span>
+                {booking?.guest?.firstName} {booking?.guest?.lastName}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Phone Number</span>
-              <span>{getDisplayPhone(booking)}</span>
+              <span>{booking?.guest?.phone || "Not provided"}</span>
             </div>
-            {role === "host" && (
-              <div className="flex justify-between">
-                <span>Email</span>
-                <span>{getDisplayEmail(booking)}</span>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <span>Email</span>
+              <span>{booking?.guest?.email || "Not provided"}</span>
+            </div>
           </div>
         </div>
 
@@ -397,30 +366,7 @@ export default function BookingDetails({ role = "guest" }) {
           </>
         )}
 
-        {/* Buttons Section */}
-        {showCancelButton && (
-          <div className="pt-[40px] pb-[42px]">
-            <ButtonWhite
-              text="Cancel Booking"
-              onClick={() => setShowConfirmCancel(true)}
-              className="w-full h-[57px]"
-            />
-          </div>
-        )}
-
-        {showReviewButton && (
-          <div className="pt-[40px] pb-[42px]">
-            <Button
-              text="Drop your Review"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowRating(true);
-              }}
-              className="h-[57px] w-full"
-            />
-          </div>
-        )}
-
+        {/* Hold Security Deposit Button - Only show if user owns the apartment and booking is completed */}
         {showHoldDepositButton && (
           <div className="pt-[40px] pb-[42px]">
             <Button
@@ -434,51 +380,18 @@ export default function BookingDetails({ role = "guest" }) {
             />
           </div>
         )}
+
+        {/* Ownership Warning */}
+        {getBookingStatus(booking) === "COMPLETED" && !isOwner && (
+          <div className="pt-[40px] pb-[42px] text-center">
+            <p className="text-[#666666] text-sm">
+              You can only manage security deposits for your own properties
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Popup Modals */}
-      {showConfirmCancel && (
-        <ConfirmCancelPopup
-          onClose={() => setShowConfirmCancel(false)}
-          onConfirm={() => {
-            setShowConfirmCancel(false);
-            setShowCancelBooking(true);
-          }}
-        />
-      )}
-
-      {showCancelBooking && (
-        <CancelBookingPopup
-          onClose={() => setShowCancelBooking(false)}
-          onSubmit={(reasons) => {
-            console.log("User reasons:", reasons);
-            setShowCancelBooking(false);
-            setShowCancelSuccess(true);
-          }}
-        />
-      )}
-
-      {showCancelSuccess && (
-        <ShowSuccess
-          image="/icons/Illustration.svg"
-          heading="Booking Successfully Cancelled!"
-          message="Your booking has been cancelled. If you're eligible for a refund, it will be processed within 7–10 business days."
-          buttonText="Done"
-          onClose={() => {
-            setShowCancelSuccess(false);
-            navigate(-1);
-          }}
-          height="auto"
-        />
-      )}
-
-      {showRating && (
-        <RatingPopup
-          apartmentId={booking.apartment?.id}
-          onClose={() => setShowRating(false)}
-        />
-      )}
-
+      {/* Hold Success Popup */}
       {showHoldSuccess && (
         <ShowSuccess
           image="/icons/lock2.svg"

@@ -3,11 +3,28 @@ import { useState } from "react";
 export default function WithdrawPopup({ balance, onClose, onSuccess }) {
   const [amount, setAmount] = useState("");
 
+  // Convert balance string to number for comparison
+  const numericBalance = parseFloat(balance.replace(/,/g, ""));
+  const numericAmount = parseFloat(amount.replace(/,/g, "")) || 0;
+
+  // Check if amount exceeds balance
+  const amountExceedsBalance = numericAmount > numericBalance;
+  // Check if amount is valid (greater than 0 and doesn't exceed balance)
+  const isAmountValid = numericAmount > 0 && !amountExceedsBalance;
+  const formatAmount = (value) => {
+    // Remove non-digit characters
+    const numericValue = value.replace(/\D/g, "");
+
+    if (numericValue === "") return "";
+
+    // Convert to number and format with commas
+    return parseInt(numericValue, 10).toLocaleString("en-US");
+  };
   const handleWithdraw = (e) => {
     e.preventDefault();
-    if (!amount) return;
+    if (!isAmountValid) return; // Prevent withdrawal if invalid
     onClose();
-    onSuccess(amount); // pass amount to success handler
+    onSuccess(amount);
   };
 
   return (
@@ -19,7 +36,7 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
       ></div>
 
       {/* Popup at the bottom */}
-      <div className="fixed bottom-0 left-0 w-full h-[224px] max-w-md mx-auto bg-white rounded-t-[15px] p-6 z-50">
+      <div className="fixed bottom-0 left-0 w-full h-[244px] max-w-md mx-auto bg-white rounded-t-[15px] p-6 z-50">
         {/* Withdraw form */}
         <form onSubmit={handleWithdraw} className="mt-4 space-y-3">
           <div>
@@ -27,13 +44,27 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
               Withdraw Amount
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               min="1"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                const formattedValue = formatAmount(e.target.value);
+                setAmount(formattedValue);
+              }}
               placeholder="Enter amount"
-              className="border mt-1 w-full h-[45px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] text-black outline-none"
+              className={`border mt-1 w-full h-[45px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] text-black outline-none ${
+                amountExceedsBalance ? "border-red-500" : ""
+              }`}
             />
+
+            {/* Error message when amount exceeds balance */}
+            {amountExceedsBalance && (
+              <p className="text-red-500 text-[12px] mt-1">
+                Amount exceeds available balance
+              </p>
+            )}
+
             <p className="text-[12px] text-[#0D132180] mt-1">
               Available balance: <span>₦{balance}</span>
             </p>
@@ -41,7 +72,10 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
 
           <button
             type="submit"
-            className="w-full h-[57px] bg-[#A20BA2] text-[16px] text-white rounded-md font-semibold"
+            disabled={!isAmountValid}
+            className={`w-full h-[57px] text-[16px] text-white rounded-md font-semibold ${
+              isAmountValid ? "bg-[#A20BA2]" : "bg-gray-400 cursor-not-allowed"
+            }`}
           >
             Submit
           </button>

@@ -49,7 +49,7 @@ import HostHomepage from "./pages/HostDashboard/HostHomepage";
 import HostDashboard from "./pages/HostDashboard/HostDashboard";
 import ConfirmEdit from "./pages/HostDashboard/ConfirmEdit";
 import ViewListing from "./pages/HostDashboard/ViewListing";
-import HostBookingDetails from "./pages/GuestDashboard/BookingDetailsPage";
+import HostBookingDetails from "../src/components/dashboard/HostBookingDetails";
 import ProfilePage from "./components/dashboard/ProfilePage";
 import EditProfile from "./pages/HostDashboard/EditProfile";
 import RevenuePage from "./pages/HostDashboard/RevenuePage";
@@ -202,6 +202,10 @@ function App() {
                       <Route
                         path="/bookings/:id"
                         element={<BookingDetails />}
+                      />
+                      <Route
+                        path="/host-booking-details/:id"
+                        element={<HostBookingDetails />}
                       />
                       <Route path="/favorites" element={<FavoritesPage />} />
 
