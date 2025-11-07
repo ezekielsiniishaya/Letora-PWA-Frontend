@@ -146,7 +146,7 @@ export default function Dashboard() {
             <img
               src="/icons/search.svg"
               alt="Search"
-              className="w-[14.3px]mt-1 h-[14.3px] mr-[14.3px]"
+              className="w-[14.3px]mt-1 h-[14.3px] mt-[1px] mr-[14.3px]"
             />
             <div className="flex-1 text-[12px]  text-[#666666]">
               Search Apartments, Type, Location....

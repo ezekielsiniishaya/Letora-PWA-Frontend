@@ -128,8 +128,11 @@ export default function ApartmentList() {
                         className="w-4 h-4"
                       />
                     )}
-                    {apartment.title}
+                    {apartment.title?.length > 22
+                      ? apartment.title.slice(0, 22) + "..."
+                      : apartment.title}
                   </h3>
+
                   <span className="flex items-center gap-1">
                     <img
                       src="/icons/star-yellow.svg"

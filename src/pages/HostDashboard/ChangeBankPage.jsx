@@ -296,6 +296,7 @@ export default function BankAccount() {
               selected={selectedBank}
               setSelected={handleBankSelect}
               hasError={!!fieldErrors.bank}
+              showIndicators={false}
             />
             {/* ✅ Inline error for bank selection */}
             {fieldErrors.bank && (

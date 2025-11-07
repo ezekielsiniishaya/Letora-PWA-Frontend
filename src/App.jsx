@@ -69,7 +69,7 @@ import BookingProvider from "./contexts/BookingProvider";
 import CurrentBookingOverviewPage from "./pages/GuestDashboard/CurrentBookingOverviewPage";
 import BookingStatusPage from "./pages/GuestDashboard/BookingStatus";
 import PaymentPage from "./pages/GuestDashboard/PaymentPage";
-
+import ApartmentAvailability from "./components/apartment/AvailabilityResponsePage";
 function App() {
   return (
     <Router>
@@ -82,7 +82,10 @@ function App() {
                   <BookingProvider>
                     <Routes>
                       {/* ===== PUBLIC ROUTES ===== */}
-
+                      <Route
+                        path="/apartment-availability"
+                        element={<ApartmentAvailability />}
+                      />
                       {/* Onboarding & Authentication */}
                       <Route path="/" element={<SplashWithOnboarding />} />
                       <Route path="/choose-type" element={<ChooseType />} />

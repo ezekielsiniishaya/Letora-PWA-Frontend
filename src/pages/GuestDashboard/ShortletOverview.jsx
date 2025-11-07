@@ -1,7 +1,7 @@
 // pages/guest/ShortletOverviewPage.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ApartmentDisplay } from "../../components/apartment/ApartmentDisplay";
+import { ApartmentOverview } from "../../components/apartment/ApartmentOverview";
 import { getApartmentById } from "../../services/apartmentApi";
 import { Link } from "react-router-dom";
 import Button from "../../components/Button";
@@ -515,14 +515,7 @@ export default function ShortletOverviewPage() {
         </div>
       )}
 
-      <div className="flex items-center mb-[10px] p-4">
-        <button onClick={() => navigate(-1)} className="hover:bg-gray-200 p-1">
-          <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
-        </button>
-        <h1 className="text-[14px] ml-3 font-medium">Shortlet Overview</h1>
-      </div>
-
-      <ApartmentDisplay
+      <ApartmentOverview
         apartment={apartment}
         user={host}
         showActions={false}

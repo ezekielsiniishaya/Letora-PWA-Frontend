@@ -383,7 +383,7 @@ export default function BankAccount() {
             <Dropdown
               label="Select Bank"
               placeholder="Choose your bank"
-              options={memoizedBankOptions} 
+              options={memoizedBankOptions}
               required={true}
               heading="Select Bank"
               isOpen={isDropdownOpen}
@@ -392,6 +392,7 @@ export default function BankAccount() {
               selected={selectedBank}
               setSelected={handleBankSelect}
               hasError={!!fieldErrors.bank}
+              showIndicators={false}
             />
             {/* ✅ Inline error for bank selection */}
             {fieldErrors.bank && (

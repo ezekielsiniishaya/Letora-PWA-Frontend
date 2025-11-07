@@ -231,7 +231,7 @@ export default function MyBooking({
 
         {status === "cancelled" && (
           <button className="bg-[#FFF1F0] border border-[#F81A0C] text-[#F81A0C] w-[179px] h-[35px] rounded-[5px] text-[12px] font-semibold">
-            Cancelled & Refunded
+            Under Dispute
           </button>
         )}
       </div>

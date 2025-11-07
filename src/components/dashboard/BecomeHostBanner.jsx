@@ -25,7 +25,7 @@ const BecomeHostBanner = () => {
               Ready to cash in on your space? <br />
               Verify your identity and list today.
             </p>
-            <button className="mt-2 text-[10px]">Click here to begin</button>
+            <button className="mt-2 font-medium text-[10px]">Click here to begin</button>
           </div>
           <div className="absolute right-[0px] bottom-0 h-full flex items-end justify-end">
             <img

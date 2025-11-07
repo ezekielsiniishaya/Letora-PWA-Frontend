@@ -1,5 +1,4 @@
 import { useRef, useEffect } from "react";
-
 export default function Dropdown({
   label,
   placeholder,
@@ -9,10 +8,11 @@ export default function Dropdown({
   isOpen,
   onToggle,
   multiple = false,
-  selected, // Receive selected value from parent
-  setSelected, // Receive setter from parent
-  width = "30px",
-  height = "30px",
+  selected,
+  setSelected,
+  width = "w-[30px]",
+  height = "h-[30px]",
+  showIndicators = true, // ✅ new prop
 }) {
   const dropdownRef = useRef(null);
 
@@ -25,60 +25,52 @@ export default function Dropdown({
       }
     } else {
       setSelected(opt);
-      onToggle(); // close dropdown on single select
+      onToggle();
     }
   };
-  // Add this useEffect right after the handleSelect function
+
   useEffect(() => {
     if (isOpen && dropdownRef.current) {
       setTimeout(() => {
         const element = dropdownRef.current;
-        const elementRect = element.getBoundingClientRect();
-        const absoluteElementTop = elementRect.top + window.pageYOffset;
+        const rect = element.getBoundingClientRect();
+        const scrollTarget =
+          rect.top + window.pageYOffset - window.innerHeight * 0.2;
 
-        // Scroll to position the dropdown about 1/4 from the top
-        const targetScroll = absoluteElementTop - window.innerHeight * 0.20;
-
-        window.scrollTo({
-          top: targetScroll,
-          behavior: "smooth",
-        });
+        window.scrollTo({ top: scrollTarget, behavior: "smooth" });
       }, 50);
     }
   }, [isOpen]);
-  const displayText = () => {
-    if (multiple) {
-      return selected.length > 0 ? `${selected.length} selected` : placeholder;
-    }
-    return selected ? selected.label : placeholder;
-  };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (e) => {
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target) &&
+        !dropdownRef.current.contains(e.target) &&
         isOpen
       ) {
         onToggle();
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onToggle]);
+
+  const displayText = () =>
+    multiple
+      ? selected.length > 0
+        ? `${selected.length} selected`
+        : placeholder
+      : selected
+      ? selected.label
+      : placeholder;
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Label */}
       <label className="block text-[14px] font-medium text-[#333333] mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
 
-      {/* Selected box */}
       <div
         className="mt-1 w-full min-h-[48px] bg-white rounded-md px-3 flex items-center justify-between cursor-pointer"
         onClick={onToggle}
@@ -86,10 +78,8 @@ export default function Dropdown({
         <span className="text-[14px] text-[#686464]">{displayText()}</span>
       </div>
 
-      {/* Popup */}
       {isOpen && (
         <div className="fixed bottom-0 left-0 w-full bg-white rounded-t-[20px] shadow-lg border-t z-50 max-h-[70vh] overflow-y-auto">
-          {/* Heading */}
           <div className="px-5 pt-4 text-[16px] font-medium text-black">
             {heading}
           </div>
@@ -112,20 +102,8 @@ export default function Dropdown({
                   <span className="text-[14px]">{opt.label}</span>
                 </div>
 
-                {/* Selection indicator for both single and multiple */}
-                {multiple ? (
-                  <span
-                    className={`w-2 h-2 rounded-full border-2 flex items-center justify-center ${
-                      isSelected
-                        ? "border-[#A20BA2] bg-[#A20BA2]"
-                        : "border-gray-400 bg-white"
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="w-[5px] h-[5px] rounded-full bg-white"></div>
-                    )}
-                  </span>
-                ) : (
+                {/* ✅ Only show circles if enabled */}
+                {showIndicators && (
                   <span
                     className={`w-2 h-2 rounded-full border-2 flex items-center justify-center ${
                       isSelected
