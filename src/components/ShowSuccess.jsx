@@ -10,6 +10,7 @@ export default function ShowSuccess({
   width = "w-[141.84px]",
   confirmMode = false,
   button = true,
+  noButton = false, // Add this new prop
 }) {
   return (
     <div
@@ -50,6 +51,7 @@ export default function ShowSuccess({
 
         {/* Buttons */}
         {button &&
+          !noButton && // Add noButton condition here
           (confirmMode ? (
             <button
               onClick={(e) => {

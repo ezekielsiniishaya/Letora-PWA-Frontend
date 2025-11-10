@@ -26,8 +26,18 @@ export default function BookingPage() {
       const pricePerNight = apartment.price;
       const securityDeposit = apartment.securityDeposit?.amount || 0;
 
-      // ✅ Pass these real values to your booking context
       setApartmentDetails(apartmentId, pricePerNight, securityDeposit);
+
+      // ✅ Auto-set checkIn if no reserved bookings
+      if (
+        !apartment.reservedBookings ||
+        apartment.reservedBookings.length === 0
+      ) {
+        const today = new Date();
+        setCheckIn(today);
+
+        // Optional: set default checkOut as tomorrow
+      }
     }
   }, [id, getApartmentById, setApartmentDetails]);
 
@@ -162,20 +172,21 @@ export default function BookingPage() {
 
         {/* Check-in / Check-out */}
         <div className="flex gap-4 w-full mb-[54px]">
+          {/* Check-in */}
           <div className="flex flex-col flex-1">
             <label className="text-[14px] text-[#333333] font-medium mb-1">
               Check-in <span className="text-red-500">*</span>
             </label>
             <button
-              onClick={() => handleOpenCalendar("checkin")}
-              className="flex items-center border border-[#E6E6E6] bg-white h-[47.48px] rounded-[5px] px-3 py-2 text-[13.64px] text-[#686464]"
+              className="flex items-center border border-[#E6E6E6] bg-gray-100 h-[47.48px] rounded-[5px] px-3 py-2 text-[13.64px] text-[#686464] cursor-not-allowed"
+              disabled
             >
               <img
                 src="/icons/calendar-add.svg"
                 alt="Calendar"
                 className="w-4 h-4 mr-[2px]"
               />
-              <span>{checkIn ? checkIn.toDateString() : "Choose Date"}</span>
+              <span>{checkIn ? checkIn.toDateString() : "Today"}</span>
             </button>
           </div>
 
@@ -236,7 +247,6 @@ export default function BookingPage() {
             <h3 className="text-[14px] text-[#333333] font-medium mt-2 mb-4">
               Select Date
             </h3>
-
             {/* Calendar header */}
             <div className="flex items-center justify-between mb-4">
               <button className="p-1" onClick={handlePrevMonth}>
@@ -257,7 +267,6 @@ export default function BookingPage() {
                 />
               </button>
             </div>
-
             {/* Days of week */}
             <div className="grid grid-cols-7 text-[14.13px] text-gray-800 mb-2">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
@@ -277,13 +286,18 @@ export default function BookingPage() {
 
                 const isPast = thisDate < todayMidnight;
 
+                // For checkout field, disable today (since check-in is today)
+                const isToday = thisDate.getTime() === todayMidnight.getTime();
+                const isDisabled =
+                  isPast || (activeField === "checkout" && isToday);
+
                 return (
                   <button
                     key={i}
-                    onClick={() => !isPast && handleSelectDate(day)}
-                    disabled={isPast}
+                    onClick={() => !isDisabled && handleSelectDate(day)}
+                    disabled={isDisabled}
                     className={`py-2 rounded ${
-                      isPast
+                      isDisabled
                         ? "text-gray-400 cursor-not-allowed"
                         : "hover:bg-[#A20BA2] hover:text-white"
                     }`}
@@ -293,7 +307,6 @@ export default function BookingPage() {
                 );
               })}
             </div>
-
             <div className="flex justify-center mb-5">
               <button
                 onClick={() => setShowCalendar(false)}

@@ -193,7 +193,7 @@ export default function ShortletOverviewPage() {
       role: user.role,
       verificationStatus: user.verificationStatus,
       guestDocumentStatus: user.guestDocumentStatus,
-      hostVerification: user.hostVerification,
+      guestVerification: user.guestVerification,
       documents: user.documents,
     });
 
@@ -241,9 +241,16 @@ export default function ShortletOverviewPage() {
       }
     }
 
-    // For GUEST users, use the guestVerification object if available
+    // For GUEST users - use guestVerification object if available (preferred)
     if (user.guestVerification) {
       const { canBook, status, hasRequiredDocuments } = user.guestVerification;
+
+      console.log("Guest verification details:", {
+        canBook,
+        status,
+        hasRequiredDocuments,
+        documents: user.documents,
+      });
 
       if (canBook) {
         return {
@@ -254,29 +261,11 @@ export default function ShortletOverviewPage() {
         };
       }
 
-      // Detailed status based on guestVerification
-      if (status && status !== "VERIFIED") {
-        if (status === "PENDING") {
-          return {
-            status: "GUEST_VERIFICATION_PENDING",
-            message:
-              "Your guest verification is pending approval. Please wait for verification to complete.",
-            action: null,
-            canBook: false,
-          };
-        }
-        if (status === "REJECTED") {
-          return {
-            status: "GUEST_VERIFICATION_REJECTED",
-            message:
-              "Your guest verification was rejected. Please contact support or re-upload your documents.",
-            action: () => navigate("/id-check"),
-            canBook: false,
-          };
-        }
-      }
-
-      if (!hasRequiredDocuments) {
+      // Check if documents are missing entirely
+      if (
+        !hasRequiredDocuments &&
+        (!user.documents || user.documents.length === 0)
+      ) {
         return {
           status: "DOCUMENTS_REQUIRED",
           message: "Please upload your ID documents to book an apartment",
@@ -284,56 +273,75 @@ export default function ShortletOverviewPage() {
           canBook: false,
         };
       }
-    }
 
-    // Fallback to individual field checks for GUEST users if guestVerification is not available
-    // Check user verification status
-    if (user.verificationStatus !== "VERIFIED") {
-      if (user.verificationStatus === "PENDING") {
+      // Check if documents are pending verification
+      if (status === "PENDING") {
         return {
-          status: "USER_VERIFICATION_PENDING",
+          status: "GUEST_VERIFICATION_PENDING",
           message:
-            "Your account verification is pending. Please wait for approval.",
+            "Your documents are under review. Please wait for verification.",
           action: null,
           canBook: false,
         };
       }
-      return {
-        status: "USER_NOT_VERIFIED",
-        message: "Your account needs to be verified to book an apartment",
-        action: () => navigate("/profile"),
-        canBook: false,
-      };
-    }
 
-    // Check guest document status (only for GUEST users)
-    if (
-      user.role === "GUEST" &&
-      user.guestDocumentStatus &&
-      user.guestDocumentStatus !== "VERIFIED"
-    ) {
-      if (user.guestDocumentStatus === "PENDING") {
+      // Check if verification was rejected
+      if (status === "REJECTED") {
         return {
-          status: "GUEST_DOCUMENTS_PENDING",
-          message:
-            "Your guest documents are under review. Please wait for verification.",
-          action: null,
-          canBook: false,
-        };
-      }
-      if (user.guestDocumentStatus === "REJECTED") {
-        return {
-          status: "GUEST_DOCUMENTS_REJECTED",
-          message:
-            "Your guest documents were rejected. Please upload new documents.",
+          status: "GUEST_VERIFICATION_REJECTED",
+          message: "Your documents were rejected. Please upload new documents.",
           action: () => navigate("/id-check"),
           canBook: false,
         };
       }
     }
 
-    // Check document requirements for GUEST users
+    // Fallback for GUEST users without guestVerification object
     if (user.role === "GUEST") {
+      // Check guest document status
+      if (user.guestDocumentStatus) {
+        if (user.guestDocumentStatus === "PENDING") {
+          // Check if documents exist but are pending, or if no documents uploaded
+          if (!user.documents || user.documents.length === 0) {
+            return {
+              status: "DOCUMENTS_REQUIRED",
+              message: "Please upload your ID documents to book an apartment",
+              action: () => navigate("/id-check"),
+              canBook: false,
+            };
+          } else {
+            return {
+              status: "GUEST_DOCUMENTS_PENDING",
+              message:
+                "Your documents are under review. Please wait for verification.",
+              action: null,
+              canBook: false,
+            };
+          }
+        }
+
+        if (user.guestDocumentStatus === "REJECTED") {
+          return {
+            status: "GUEST_DOCUMENTS_REJECTED",
+            message:
+              "Your documents were rejected. Please upload new documents.",
+            action: () => navigate("/id-check"),
+            canBook: false,
+          };
+        }
+      }
+
+      // Check if no documents uploaded at all
+      if (!user.documents || user.documents.length === 0) {
+        return {
+          status: "DOCUMENTS_REQUIRED",
+          message: "Please upload your ID documents to book an apartment",
+          action: () => navigate("/id-check"),
+          canBook: false,
+        };
+      }
+
+      // Check document verification status
       const documentStatus = checkDocumentStatus();
       if (!documentStatus.hasRequiredDocuments) {
         return {
@@ -372,6 +380,25 @@ export default function ShortletOverviewPage() {
           };
         }
       }
+    }
+
+    // Check user verification status (general account verification)
+    if (user.verificationStatus && user.verificationStatus !== "VERIFIED") {
+      if (user.verificationStatus === "PENDING") {
+        return {
+          status: "USER_VERIFICATION_PENDING",
+          message:
+            "Your account verification is pending. Please wait for approval.",
+          action: null,
+          canBook: false,
+        };
+      }
+      return {
+        status: "USER_NOT_VERIFIED",
+        message: "Your account needs to be verified to book an apartment",
+        action: () => navigate("/profile"),
+        canBook: false,
+      };
     }
 
     // If we reach here and still can't book, show generic message

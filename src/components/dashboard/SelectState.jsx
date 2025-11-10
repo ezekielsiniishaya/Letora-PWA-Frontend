@@ -7,7 +7,7 @@ export default function CurrentLocationDropdown({
   onLocationChange,
   triggerBgColor = "bg-[#5F065F]", // Default purple, can be overridden via props
   selectedBgColor = "bg-purple-50", // Background for selected state in dropdown
-  selectedTextColor = "text-purple-600", // Text color for selected state
+  selectedTextColor = "text-[#8C068C]", // Text color for selected state
   hoverBgColor = "hover:bg-purple-100", // Hover background for dropdown items
 }) {
   const [open, setOpen] = useState(false);
@@ -101,7 +101,7 @@ export default function CurrentLocationDropdown({
     >
       {/* Location Trigger Button */}
       <div
-        className={`flex items-center justify-center ${triggerBgColor} w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10 cursor-pointer hover:bg-[#2A2A2A] transition-colors`}
+        className={`flex items-center justify-center ${triggerBgColor} w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10 cursor-pointer hover:bg-[#2A2A2A] transition-colors px-[12px] py-[5px]`}
         onClick={() => setOpen(!open)}
       >
         <img
@@ -111,19 +111,11 @@ export default function CurrentLocationDropdown({
         />
         <span className="text-[#FFFFFF] text-[11px]">{displayText}</span>
       </div>
-
       {/* Dropdown Menu */}
       {open && (
         <div className="fixed bottom-0 left-0 w-full bg-white rounded-t-[20px] shadow-lg border-t z-50 max-h-[70vh] overflow-y-auto">
           <div className="sticky top-0 bg-white px-5 py-4 text-[16px] font-medium text-black border-b">
             Select Current Location
-            <button
-              type="button"
-              className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
-              onClick={() => setOpen(false)}
-            >
-              ✕
-            </button>
           </div>
           <ul className="pb-6">
             {states.map((state) => (
@@ -137,9 +129,6 @@ export default function CurrentLocationDropdown({
                 onClick={() => handleSelect(state)}
               >
                 {state}
-                {currentLocation?.state === state && (
-                  <span className="ml-2 text-purple-500">✓</span>
-                )}
               </li>
             ))}
           </ul>

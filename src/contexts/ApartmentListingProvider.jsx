@@ -15,31 +15,19 @@ const ApartmentListingProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [hotApartmentsLoading, setHotApartmentsLoading] = useState(false);
   const [nearbyApartmentsLoading, setNearbyApartmentsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [hasFetched, setHasFetched] = useState(false);
 
   const { isAuthenticated, getUserLocation, user } = useUser();
-
-  // Fetch all approved apartments
-  const fetchApartments = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await getApprovedApartments();
-      setApartments(response.data);
-    } catch (err) {
-      setError(err.message || "Failed to fetch apartments");
-      console.error("Error fetching apartments:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   // Fetch hot apartments
   const fetchHotApartments = useCallback(async () => {
     setHotApartmentsLoading(true);
     try {
-      const response = await getHotApartments();
+      // Pass the user ID to exclude host's own apartments
+      const excludeHostId = user?.id || null;
+      console.log("Fetching hot apartments, excluding host ID:", excludeHostId);
+      const response = await getHotApartments(10, excludeHostId);
       setHotApartments(response.data);
     } catch (err) {
       console.error("Error fetching hot apartments:", err);
@@ -47,14 +35,29 @@ const ApartmentListingProvider = ({ children }) => {
     } finally {
       setHotApartmentsLoading(false);
     }
-  }, []);
+  }, [user]); // Add user to dependencies
 
-  // Fetch nearby apartments using user's actual location
+  // Fetch all approved apartments
+  const fetchApartments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const excludeHostId = user?.id || null;
+      const response = await getApprovedApartments(excludeHostId);
+      setApartments(response.data);
+    } catch (err) {
+      console.error("Error fetching apartments:", err);
+      setApartments([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Fetch nearby apartments
   const fetchNearbyApartments = useCallback(
     async (state = null, town = null) => {
       setNearbyApartmentsLoading(true);
       try {
-        // Use provided location or fallback to user's actual location
+        const excludeHostId = user?.id || null;
         let userState = state;
         let userTown = town;
 
@@ -63,12 +66,14 @@ const ApartmentListingProvider = ({ children }) => {
           userState = userLocation?.state || user.stateOrigin;
         }
 
-        // Only fetch if we have a location
         if (userState) {
-          const response = await getNearbyApartments(userState, userTown);
+          const response = await getNearbyApartments(
+            userState,
+            userTown,
+            excludeHostId
+          );
           setNearbyApartments(response.data);
         } else {
-          // If no user location, show empty array
           setNearbyApartments([]);
         }
       } catch (err) {
@@ -80,6 +85,7 @@ const ApartmentListingProvider = ({ children }) => {
     },
     [isAuthenticated, getUserLocation, user]
   );
+
   // Clear apartments
   const clearApartments = () => {
     setApartments([]);

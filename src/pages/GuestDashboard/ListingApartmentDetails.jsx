@@ -12,6 +12,7 @@ export default function ListingApartmentDetails() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Use existing data or initialize empty
   const [formData, setFormData] = useState({
@@ -58,11 +59,37 @@ export default function ListingApartmentDetails() {
     { label: "None", value: "NONE" },
   ];
 
+  // Validate form fields
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.bedrooms)
+      newErrors.bedrooms = "Please select number of bedrooms";
+    if (!formData.bathrooms)
+      newErrors.bathrooms = "Please select number of bathrooms";
+    if (!formData.electricity)
+      newErrors.electricity = "Please select electricity choice";
+    if (!formData.guests) newErrors.guests = "Please select guest number";
+    if (!formData.parking) newErrors.parking = "Please select parking space";
+    if (!formData.kitchen) newErrors.kitchen = "Please select kitchen size";
+    if (!formData.description?.trim())
+      newErrors.description = "Please enter a description";
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleDropdownChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
+    // Clear field error when user selects an option
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+    // Clear general error when user interacts
+    if (error) setError("");
   };
 
   const handleInputChange = (e) => {
@@ -71,6 +98,12 @@ export default function ListingApartmentDetails() {
       ...prev,
       [name]: value,
     }));
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    // Clear general error when user interacts
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -79,20 +112,10 @@ export default function ListingApartmentDetails() {
     setError("");
 
     try {
-      // Validate required fields
-      const requiredFields = [
-        "bedrooms",
-        "bathrooms",
-        "electricity",
-        "guests",
-        "parking",
-        "kitchen",
-        "description",
-      ];
-      const missingFields = requiredFields.filter((field) => !formData[field]);
-
-      if (missingFields.length > 0) {
-        setError("Please fill in all required fields");
+      // Validate form
+      const isValid = validateForm();
+      if (!isValid) {
+        console.log("Validation errors:", fieldErrors);
         setLoading(false);
         return;
       }
@@ -148,141 +171,203 @@ export default function ListingApartmentDetails() {
 
       {/* Error Message */}
       {error && (
-        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+        <div className="mt-4 mx-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            <div className="flex items-center">
+              <img
+                src="/icons/error.svg"
+                alt="Error"
+                className="w-4 h-4 mr-2"
+              />
+              <span className="text-sm">{error}</span>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Form */}
       <div className="flex-1 mt-[40px]">
-        <form className="space-y-9" onSubmit={handleSubmit}>
+        <form className="space-y-9" onSubmit={handleSubmit} noValidate>
           {/* Bedrooms */}
-          <Dropdown
-            label="Bedrooms"
-            placeholder="Choose Number"
-            heading="Select Number of Bedrooms"
-            options={numberOptions}
-            required
-            isOpen={openDropdown === "bedrooms"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "bedrooms" ? null : "bedrooms")
-            }
-            selected={
-              formData.bedrooms
-                ? {
-                    label: formData.bedrooms.toString(),
-                    value: formData.bedrooms,
-                  }
-                : null
-            }
-            setSelected={(value) =>
-              handleDropdownChange("bedrooms", value.value)
-            }
-          />
+          <div>
+            <Dropdown
+              label="Bedrooms"
+              placeholder="Choose Number"
+              heading="Select Number of Bedrooms"
+              options={numberOptions}
+              isOpen={openDropdown === "bedrooms"}
+              showIndicators={false}
+              required={true}
+              onToggle={() =>
+                setOpenDropdown(openDropdown === "bedrooms" ? null : "bedrooms")
+              }
+              selected={
+                formData.bedrooms
+                  ? {
+                      label: formData.bedrooms.toString(),
+                      value: formData.bedrooms,
+                    }
+                  : null
+              }
+              setSelected={(value) =>
+                handleDropdownChange("bedrooms", value.value)
+              }
+            />
+            {fieldErrors.bedrooms && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.bedrooms}
+              </p>
+            )}
+          </div>
 
           {/* Bathrooms */}
-          <Dropdown
-            label="Bathroom Number"
-            placeholder="Choose Number"
-            heading="Select Number of Bathrooms"
-            options={numberOptions}
-            required
-            isOpen={openDropdown === "bathrooms"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "bathrooms" ? null : "bathrooms")
-            }
-            selected={
-              formData.bathrooms
-                ? {
-                    label: formData.bathrooms.toString(),
-                    value: formData.bathrooms,
-                  }
-                : null
-            }
-            setSelected={(value) =>
-              handleDropdownChange("bathrooms", value.value)
-            }
-          />
+          <div>
+            <Dropdown
+              label="Bathroom Number"
+              placeholder="Choose Number"
+              heading="Select Number of Bathrooms"
+              options={numberOptions}
+              isOpen={openDropdown === "bathrooms"}
+              showIndicators={false}
+              required={true}
+              onToggle={() =>
+                setOpenDropdown(
+                  openDropdown === "bathrooms" ? null : "bathrooms"
+                )
+              }
+              selected={
+                formData.bathrooms
+                  ? {
+                      label: formData.bathrooms.toString(),
+                      value: formData.bathrooms,
+                    }
+                  : null
+              }
+              setSelected={(value) =>
+                handleDropdownChange("bathrooms", value.value)
+              }
+            />
+            {fieldErrors.bathrooms && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.bathrooms}
+              </p>
+            )}
+          </div>
 
           {/* Electricity */}
-          <Dropdown
-            label="Electricity Choice"
-            placeholder="Select Electricity"
-            heading="Select Electricity Choice"
-            options={electricityOptions}
-            required
-            isOpen={openDropdown === "electricity"}
-            onToggle={() =>
-              setOpenDropdown(
-                openDropdown === "electricity" ? null : "electricity"
-              )
-            }
-            selected={
-              electricityOptions.find(
-                (opt) => opt.value === formData.electricity
-              ) || null
-            }
-            setSelected={(value) =>
-              handleDropdownChange("electricity", value.value)
-            }
-          />
+          <div>
+            <Dropdown
+              label="Electricity Choice"
+              placeholder="Select Electricity"
+              heading="Select Electricity Choice"
+              options={electricityOptions}
+              isOpen={openDropdown === "electricity"}
+              showIndicators={false}
+              required={true}
+              onToggle={() =>
+                setOpenDropdown(
+                  openDropdown === "electricity" ? null : "electricity"
+                )
+              }
+              selected={
+                electricityOptions.find(
+                  (opt) => opt.value === formData.electricity
+                ) || null
+              }
+              setSelected={(value) =>
+                handleDropdownChange("electricity", value.value)
+              }
+            />
+            {fieldErrors.electricity && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.electricity}
+              </p>
+            )}
+          </div>
 
           {/* Guests */}
-          <Dropdown
-            label="Guest Number"
-            placeholder="Choose Number"
-            heading="Guest Number"
-            options={guestOptions}
-            required
-            isOpen={openDropdown === "guests"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "guests" ? null : "guests")
-            }
-            selected={
-              guestOptions.find((opt) => opt.value === formData.guests) || null
-            }
-            setSelected={(value) => handleDropdownChange("guests", value.value)}
-          />
+          <div>
+            <Dropdown
+              label="Guest Number"
+              placeholder="Choose Number"
+              heading="Guest Number"
+              options={guestOptions}
+              isOpen={openDropdown === "guests"}
+              showIndicators={false}
+              required={true}
+              onToggle={() =>
+                setOpenDropdown(openDropdown === "guests" ? null : "guests")
+              }
+              selected={
+                guestOptions.find((opt) => opt.value === formData.guests) ||
+                null
+              }
+              setSelected={(value) =>
+                handleDropdownChange("guests", value.value)
+              }
+            />
+            {fieldErrors.guests && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.guests}
+              </p>
+            )}
+          </div>
 
           {/* Parking */}
-          <Dropdown
-            label="Parking Space"
-            placeholder="Choose Option"
-            heading="Select Choice"
-            options={parkingOptions}
-            required
-            isOpen={openDropdown === "parking"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "parking" ? null : "parking")
-            }
-            selected={
-              parkingOptions.find((opt) => opt.value === formData.parking) ||
-              null
-            }
-            setSelected={(value) =>
-              handleDropdownChange("parking", value.value)
-            }
-          />
+          <div>
+            <Dropdown
+              label="Parking Space"
+              placeholder="Choose Option"
+              heading="Select Choice"
+              options={parkingOptions}
+              isOpen={openDropdown === "parking"}
+              showIndicators={false}
+              required={true}
+              onToggle={() =>
+                setOpenDropdown(openDropdown === "parking" ? null : "parking")
+              }
+              selected={
+                parkingOptions.find((opt) => opt.value === formData.parking) ||
+                null
+              }
+              setSelected={(value) =>
+                handleDropdownChange("parking", value.value)
+              }
+            />
+            {fieldErrors.parking && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.parking}
+              </p>
+            )}
+          </div>
 
           {/* Kitchen */}
-          <Dropdown
-            label="Kitchen Size"
-            placeholder="Choose Option"
-            heading="Select Choice"
-            options={kitchenOptions}
-            required
-            isOpen={openDropdown === "kitchen"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "kitchen" ? null : "kitchen")
-            }
-            selected={
-              kitchenOptions.find((opt) => opt.value === formData.kitchen) ||
-              null
-            }
-            setSelected={(value) =>
-              handleDropdownChange("kitchen", value.value)
-            }
-          />
+          <div>
+            <Dropdown
+              label="Kitchen Size"
+              placeholder="Choose Option"
+              heading="Select Choice"
+              options={kitchenOptions}
+              isOpen={openDropdown === "kitchen"}
+              showIndicators={false}
+              required={true}
+              onToggle={() =>
+                setOpenDropdown(openDropdown === "kitchen" ? null : "kitchen")
+              }
+              selected={
+                kitchenOptions.find((opt) => opt.value === formData.kitchen) ||
+                null
+              }
+              setSelected={(value) =>
+                handleDropdownChange("kitchen", value.value)
+              }
+            />
+            {fieldErrors.kitchen && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.kitchen}
+              </p>
+            )}
+          </div>
 
           {/* Short Description */}
           <div>
@@ -294,11 +379,17 @@ export default function ListingApartmentDetails() {
               name="description"
               placeholder="Enter text..."
               rows={4}
-              className="w-full border rounded-[5px] px-3 py-2 text-sm text-[#686464] bg-white h-[137px]"
+              className={`w-full border rounded-[5px] px-3 py-2 text-sm text-[#686464] bg-white h-[137px] ${
+                fieldErrors.description ? "border-[#F81A0C]" : "border-gray-300"
+              }`}
               value={formData.description}
               onChange={handleInputChange}
-              required
             />
+            {fieldErrors.description && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.description}
+              </p>
+            )}
           </div>
 
           {/* Next Button */}

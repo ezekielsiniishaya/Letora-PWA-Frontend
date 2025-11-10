@@ -13,6 +13,7 @@ export default function UploadLegalsPage() {
   const [files, setFiles] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
   const hasHydrated = useRef(false);
@@ -127,7 +128,12 @@ export default function UploadLegalsPage() {
       ...prev,
       [field]: { name: file.name, data: base64, type: file.type },
     }));
-    setError(""); // Clear error when file is selected
+    // Clear field error when file is selected
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+    // Clear general error
+    setError("");
   };
 
   const fileToBase64 = (file) => {
@@ -147,6 +153,8 @@ export default function UploadLegalsPage() {
     } else {
       setSelectedRole(role);
     }
+    // Clear errors when role is selected
+    setFieldErrors((prev) => ({ ...prev, role: "" }));
     setError("");
   };
 
@@ -168,21 +176,23 @@ export default function UploadLegalsPage() {
   };
 
   const validateForm = () => {
+    const newErrors = {};
+
+    // Check role selection
+    if (!selectedRole) {
+      newErrors.role = "Please select your host type";
+    }
+
+    // Check required files
     const requiredFields = getRequiredFields();
-    const missingFields = requiredFields.filter((field) => !files[field]);
+    requiredFields.forEach((field) => {
+      if (!files[field]) {
+        newErrors[field] = "This document is required";
+      }
+    });
 
-    if (missingFields.length > 0) {
-      setError(`Please upload all required documents`);
-      return false;
-    }
-
-    const uploadedFiles = Object.values(files).filter(Boolean);
-    if (uploadedFiles.length === 0) {
-      setError("Please select at least one document");
-      return false;
-    }
-
-    return true;
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const mapFieldToDocumentType = (fieldName) => {
@@ -201,19 +211,18 @@ export default function UploadLegalsPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedRole) {
-      setError("Please select your host type");
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
-
     setLoading(true);
     setError("");
 
     try {
+      // Validate form
+      const isValid = validateForm();
+      if (!isValid) {
+        console.log("Validation errors:", fieldErrors);
+        setLoading(false);
+        return;
+      }
+
       // Prepare documents for context
       const legalDocuments = Object.entries(files).map(([field, file]) => ({
         documentType: mapFieldToDocumentType(field),
@@ -242,11 +251,29 @@ export default function UploadLegalsPage() {
   const renderForm = () => {
     switch (selectedRole?.value) {
       case "LANDLORD":
-        return <LandlordForm files={files} onFileChange={handleFileChange} />;
+        return (
+          <LandlordForm
+            files={files}
+            onFileChange={handleFileChange}
+            fieldErrors={fieldErrors}
+          />
+        );
       case "TENANT":
-        return <TenantForm files={files} onFileChange={handleFileChange} />;
+        return (
+          <TenantForm
+            files={files}
+            onFileChange={handleFileChange}
+            fieldErrors={fieldErrors}
+          />
+        );
       case "AGENT":
-        return <AgentForm files={files} onFileChange={handleFileChange} />;
+        return (
+          <AgentForm
+            files={files}
+            onFileChange={handleFileChange}
+            fieldErrors={fieldErrors}
+          />
+        );
       default:
         return null;
     }
@@ -271,33 +298,49 @@ export default function UploadLegalsPage() {
           Your paperwork, our partnership
         </p>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 mx-4">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+              <div className="flex items-center">
+                <img
+                  src="/icons/error.svg"
+                  alt="Error"
+                  className="w-4 h-4 mr-2"
+                />
+                <span className="text-sm">{error}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form
           className="mt-[35px] flex flex-col space-y-8"
           onSubmit={handleSubmit}
+          noValidate
         >
           {/* Host Type Dropdown */}
-          <Dropdown
-            label="What type of host are you?"
-            placeholder="Choose option"
-            options={hostTypeOptions}
-            required={true}
-            heading="Choose who you are"
-            isOpen={isDropdownOpen}
-            onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
-            selected={selectedRole}
-            setSelected={handleRoleSelect}
-            multiple={false}
-          />
+          <div>
+            <Dropdown
+              label="What type of host are you?"
+              placeholder="Choose option"
+              options={hostTypeOptions}
+              heading="Choose who you are"
+              isOpen={isDropdownOpen}
+              onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
+              selected={selectedRole}
+              setSelected={handleRoleSelect}
+              multiple={false}
+            />
+            {fieldErrors.role && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.role}
+              </p>
+            )}
+          </div>
 
           {/* Dynamic Form based on selection */}
           {selectedRole && renderForm()}
-
-          {/* Error Message */}
-          {error && (
-            <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
-          )}
 
           {/* Next Button */}
           {selectedRole && (

@@ -1,25 +1,38 @@
 // services/apartmentApi.js
 import { apiRequest } from "./apiRequest";
 
-// GET endpoints for fetching apartments
-export const getApprovedApartments = async () => {
-  return apiRequest("/api/apartments/approved", {
+// Get all approved apartments
+export const getApprovedApartments = async (excludeHostId = null) => {
+  const params = new URLSearchParams();
+  if (excludeHostId) params.append("excludeHostId", excludeHostId);
+
+  return apiRequest(`/api/apartments/approved?${params.toString()}`, {
     method: "GET",
   });
 };
 
-export const getHotApartments = async () => {
-  return apiRequest("/api/apartments/hot", {
-    method: "GET",
-  });
-};
-
-export const getNearbyApartments = async (state, town) => {
+// Get nearby apartments
+export const getNearbyApartments = async (
+  state,
+  town,
+  excludeHostId = null
+) => {
   const params = new URLSearchParams();
   if (state) params.append("state", state);
   if (town) params.append("town", town);
+  if (excludeHostId) params.append("excludeHostId", excludeHostId);
 
   return apiRequest(`/api/apartments/nearby?${params.toString()}`, {
+    method: "GET",
+  });
+};
+
+export const getHotApartments = async (limit = 10, excludeHostId = null) => {
+  const params = new URLSearchParams();
+  params.append("limit", limit);
+  if (excludeHostId) params.append("excludeHostId", excludeHostId);
+
+  return apiRequest(`/api/apartments/hot?${params.toString()}`, {
     method: "GET",
   });
 };

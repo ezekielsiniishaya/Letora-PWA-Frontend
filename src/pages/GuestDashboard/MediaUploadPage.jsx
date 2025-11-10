@@ -8,6 +8,7 @@ export default function MediaUploadPage() {
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null); // Track which image is being deleted
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
   const { apartmentData, updateImages, setCurrentStep } =
     useApartmentCreation();
@@ -39,6 +40,18 @@ export default function MediaUploadPage() {
           })
       )
     ).then((results) => results.filter((r) => r !== null));
+  };
+
+  // Validate form
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (images.length < 7) {
+      newErrors.images = "You need to upload at least 7 images";
+    }
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleFileChange = async (e) => {
@@ -73,6 +86,10 @@ export default function MediaUploadPage() {
     const newImages = await filesToBase64(validFiles);
     updateImages([...images, ...newImages]);
     setError("");
+    // Clear field error when user uploads images
+    if (fieldErrors.images) {
+      setFieldErrors((prev) => ({ ...prev, images: "" }));
+    }
   };
 
   const handleRemove = async (index, imageId = null) => {
@@ -103,15 +120,18 @@ export default function MediaUploadPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Use the safe images variable
-    if (images.length < 7) {
-      return;
-    }
-
     setLoading(true);
     setError("");
 
     try {
+      // Validate form
+      const isValid = validateForm();
+      if (!isValid) {
+        console.log("Validation errors:", fieldErrors);
+        setLoading(false);
+        return;
+      }
+
       setCurrentStep(5);
       navigate("/booking-pricing");
     } catch (err) {
@@ -151,20 +171,46 @@ export default function MediaUploadPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+          <div className="mt-4 mx-4">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+              <div className="flex items-center">
+                <img
+                  src="/icons/error.svg"
+                  alt="Error"
+                  className="w-4 h-4 mr-2"
+                />
+                <span className="text-sm">{error}</span>
+              </div>
+            </div>
           </div>
         )}
 
-        <form className="mt-[25px] flex flex-col" onSubmit={handleSubmit}>
+        <form
+          className="mt-[25px] flex flex-col"
+          onSubmit={handleSubmit}
+          noValidate
+        >
           <label className="block text-[14px] font-medium text-[#333333]">
-            Upload Apartment Images <span className="text-red-500">*</span>
+            Upload Apartment <span className="text-red-500">*</span>
           </label>
 
           {/* Upload Box */}
-          <div className="border-[2.2px] mt-[10px] rounded-lg border-dashed border-[#D9D9D9] p-2">
+          <div
+            className={` ${
+              fieldErrors.images ? "border-[#F81A0C]" : "border-[#D9D9D9]"
+            }`}
+          >
             {images.length === 0 ? (
-              <label className="w-full h-[200px] bg-[#CCCCCC42] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px]">
+              <label
+                className={`w-full h-[200px] rounded-lg flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] bg-white mt-3 ${
+                  fieldErrors.images ? "border-[#F81A0C]" : "border-[#D9D9D9]"
+                }`}
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='8' ry='8' stroke='%23${
+                    fieldErrors.images ? "F81A0C" : "D9D9D9"
+                  }' stroke-width='2' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e")`,
+                }}
+              >
                 <input
                   type="file"
                   accept="image/*"
@@ -178,10 +224,11 @@ export default function MediaUploadPage() {
                   className="w-[28px] h-[26px] mb-2"
                 />
                 <span className="text-center font-medium text-[12px] text-[#505050] w-[187px]">
-                  Browse Images (7–10 required)
+                  Browse Images
                 </span>
                 <p className="w-[260px] text-center text-[12px] font-thin">
-                  Upload living room, bedroom, kitchen, amenities, etc.
+                  Images including rooms, amenities, kitchen, interior decors,
+                  are important
                 </p>
               </label>
             ) : (
@@ -246,23 +293,30 @@ export default function MediaUploadPage() {
             )}
           </div>
 
-          {/* Status Message */}
+          {/* Field Error Message */}
+          {fieldErrors.images && (
+            <p className="text-[#F81A0C] text-[10px] mt-1">
+              {fieldErrors.images}
+            </p>
+          )}
+
+          {/* Status Message - Always visible but not as error */}
           <p
             className={`mt-2 text-[12px] ${
-              images.length < 7 ? "text-red-500" : "text-green-600"
+              images.length < 7 ? "text-[#666666]" : "text-green-600"
             }`}
           >
             {images.length < 7
-              ? `You need at least 7 images. Currently selected: ${images.length}`
+              ? ""
               : `Selected ${images.length} images (max 10). First image is primary.`}
           </p>
 
           {/* Next Button */}
-          <div className="mt-[40px]">
+          <div className="mt-[169px]">
             <Button
               text={loading ? "Saving..." : "Next"}
               type="submit"
-              disabled={loading || images.length < 7}
+              disabled={loading}
             />
           </div>
         </form>

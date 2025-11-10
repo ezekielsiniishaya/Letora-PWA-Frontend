@@ -245,7 +245,7 @@ export const ApartmentOverview = ({
           />
 
           <div
-            className="bg-white flex items-center mx-auto gap-[6.48px] overflow-x-auto px-[6.48px] py-[6.48px] scrollbar-hide w-[333px] border-b absolute h-[66.61px] bottom-5 left-10 rounded-[7.2px]"
+            className="scroll-x-only bg-white flex items-center gap-[6.48px] px-[6.48px] py-[6.48px] scrollbar-hide w-[333px] border-b absolute h-[66.61px] bottom-5 left-1/2 -translate-x-1/2 rounded-[7.2px]"
             onScroll={() => setShowThumbnailOverlay(false)}
           >
             {displayImages.map((src, i) => (
@@ -255,7 +255,7 @@ export const ApartmentOverview = ({
                   setSelectedImage(src);
                   setShowThumbnailOverlay(false);
                 }}
-                className={`flex-shrink-0 w-[63px] h-[57px] rounded-md overflow-hidden border-2 transition-all duration-200 relative `}
+                className="flex-shrink-0 w-[63px] h-[57px] rounded-md overflow-hidden border-2 transition-all duration-200 relative"
               >
                 <img
                   src={src}
@@ -265,7 +265,6 @@ export const ApartmentOverview = ({
                     (e.target.src = "/images/apartment-dashboard.png")
                   }
                 />
-                {/* +number overlay on last thumbnail */}
                 {showThumbnailOverlay &&
                   i === displayImages.length - 1 &&
                   displayImages.length > 4 && (
@@ -278,6 +277,7 @@ export const ApartmentOverview = ({
               </button>
             ))}
           </div>
+
           {/* Top icons */}
           <div className="absolute top-3 left-3 flex items-center space-x-2">
             <button
@@ -286,7 +286,7 @@ export const ApartmentOverview = ({
                   ? navigate("/host-dashboard")
                   : window.history.back()
               }
-              className="bg-white/80 p-2 rounded-full shadow-md"
+              className="bg-white/80 p-2 rounded-full"
             >
               <img
                 src="/icons/arrow-left.svg"
@@ -299,7 +299,7 @@ export const ApartmentOverview = ({
             <button
               onClick={toggleFavorite}
               disabled={loadingStates[getApartmentId()]}
-              className="bg-white/80 p-2 rounded-full shadow-md"
+              className="bg-white/80 p-2 rounded-full"
             >
               {loadingStates[getApartmentId()] ? (
                 <div className="w-3 h-3 border-2 border-[#A20BA2] border-t-transparent rounded-full animate-spin"></div>
@@ -330,11 +330,11 @@ export const ApartmentOverview = ({
               className="w-[50px] h-[50px] rounded-full object-cover -mt-4 z-10 border-2 border-white"
               onError={(e) => (e.target.src = "/images/default-avatar.jpg")}
             />
-            <span className="font-medium mt-[8px] text-[#39302A] text-[12px]">
+            <span className="font-medium mt-[4px] text-[#39302A] text-[13px]">
               {hostInfo.name} {hostInfo.surname}
             </span>
 
-            <div className="flex flex-col w-full mt-[6px] gap-[20px]">
+            <div className="flex flex-col w-full mt-[4px] gap-[20px]">
               <div className="flex-1">
                 {/* Verified badge and title */}
                 <div className="flex gap-1 mb-1">
@@ -343,7 +343,7 @@ export const ApartmentOverview = ({
                     <img
                       src="/icons/tick-black.svg"
                       alt="Verified icon"
-                      className="w-[16px] mt-[2px] h-[18px]"
+                      className="w-[16px] h-[18px]"
                     />
                   )}
                   <h1 className="text-[14px] font-semibold leading-snug">
@@ -358,7 +358,7 @@ export const ApartmentOverview = ({
                 </p>
                 {/* Rating and likes section */}
                 {apartment.totalLikes != null && (
-                  <div className="flex items-center mt-4 gap-1 md:mt-4 md:gap-2">
+                  <div className="flex items-center mt-[10px] gap-1 md:mt-4 md:gap-2">
                     <div className="flex -space-x-2 md:-space-x-3">
                       <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#8B44FF] md:w-[36.62px] md:h-[36.62px]" />
                       <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#E00E9A] md:w-[36.62px] md:h-[36.62px]" />
@@ -373,7 +373,7 @@ export const ApartmentOverview = ({
                 )}{" "}
                 <div className="flex flex-col items-end">
                   <button
-                    className="text-white py-[6px] px-[6px] bg-[#A20BA2] h-[25px] font-semibold text-[12px] mt-[-25px] rounded flex items-center justify-center"
+                    className="text-white py-[6px] w-[128px] px-[6px] bg-[#A20BA2] h-[30px] font-semibold text-[12.5px] mt-[-30px] rounded-[5px] flex items-center justify-center"
                     onClick={onPriceButtonClick}
                   >
                     ₦{formatPrice(pricing.pricePerNight)}/Night

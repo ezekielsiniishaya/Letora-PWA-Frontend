@@ -40,21 +40,21 @@ export const apiRequest = async (endpoint, options = {}) => {
     }
   }
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({
-      error: "Network error. Please check your connection.",
-    }));
+  const responseData = await response.json().catch(() => ({
+    error: "Network error. Please check your connection.",
+  }));
 
-    // ✅ Pass a structured error for handleError()
+  // ✅ Check if the business logic indicates failure
+  if (!response.ok || responseData.success === false) {
     throw {
       response: {
         status: response.status,
-        data: errorData,
+        data: responseData,
       },
     };
   }
 
-  return response.json();
+  return responseData;
 };
 
 // Logout function

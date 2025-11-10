@@ -78,6 +78,7 @@ export default function ListingFacilitiesPage() {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const dropdownRef = useRef(null);
 
   // Update selected facilities when apartmentData changes (for editing mode)
@@ -88,6 +89,18 @@ export default function ListingFacilitiesPage() {
     setSelectedFacilities(mappedFacilities);
   }, [apartmentData.facilities]);
 
+  // Validate form
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (selectedFacilities.length === 0) {
+      newErrors.facilities = "Please select at least one facility";
+    }
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   // Custom Dropdown Component
   const FacilityDropdown = () => {
     const [open, setOpen] = useState(false);
@@ -97,7 +110,13 @@ export default function ListingFacilitiesPage() {
     const applySelections = useCallback(() => {
       setSelectedFacilities(tempFacilities);
       setOpen(false);
-    }, [tempFacilities]);
+      // Clear error when user selects facilities
+      if (fieldErrors.facilities) {
+        setFieldErrors((prev) => ({ ...prev, facilities: "" }));
+      }
+      // Clear general error
+      if (error) setError("");
+    }, [tempFacilities, fieldErrors.facilities, error]);
 
     const toggleDropdown = () => {
       if (!open) {
@@ -135,7 +154,9 @@ export default function ListingFacilitiesPage() {
       <div className="relative" ref={dropdownRef}>
         <button
           type="button"
-          className="w-full text-left h-[45px] px-3 border border-[#D9D9D9] rounded-md bg-white flex items-center justify-between text-sm text-[#666666] focus:outline-none"
+          className={`w-full text-left h-[45px] px-3 border rounded-md bg-white flex items-center justify-between text-sm text-[#666666] focus:outline-none ${
+            fieldErrors.facilities ? "border-[#F81A0C]" : "border-[#D9D9D9]"
+          }`}
           onClick={toggleDropdown}
         >
           {selectedFacilities.length > 0 ? (
@@ -148,6 +169,11 @@ export default function ListingFacilitiesPage() {
             </span>
           )}
         </button>
+        {fieldErrors.facilities && (
+          <p className="text-[#F81A0C] text-[10px] mt-1">
+            {fieldErrors.facilities}
+          </p>
+        )}
 
         {open && (
           <div className="fixed left-0 bottom-0 w-full h-[50%] bg-white border border-[#D9D9D9] rounded-t-[10px] shadow-lg overflow-y-auto z-10">
@@ -211,15 +237,18 @@ export default function ListingFacilitiesPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (selectedFacilities.length === 0) {
-      setError("Please select at least one facility");
-      return;
-    }
-
     setLoading(true);
     setError("");
 
     try {
+      // Validate form
+      const isValid = validateForm();
+      if (!isValid) {
+        console.log("Validation errors:", fieldErrors);
+        setLoading(false);
+        return;
+      }
+
       // Save to context
       updateFacilities(selectedFacilities);
 
@@ -260,13 +289,23 @@ export default function ListingFacilitiesPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+        <div className="mt-4 mx-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            <div className="flex items-center">
+              <img
+                src="/icons/error.svg"
+                alt="Error"
+                className="w-4 h-4 mr-2"
+              />
+              <span className="text-sm">{error}</span>
+            </div>
+          </div>
         </div>
       )}
+
       {/* Form */}
       <div className="flex-1 mt-[80px]">
-        <form className="space-y-9" onSubmit={handleSubmit}>
+        <form className="space-y-9" onSubmit={handleSubmit} noValidate>
           {/* Facilities Dropdown */}
           <div>
             <label className="block text-sm font-medium text-[#333333] mb-1">
@@ -311,7 +350,7 @@ export default function ListingFacilitiesPage() {
             <Button
               text={loading ? "Saving..." : "Next"}
               type="submit"
-              disabled={loading || selectedFacilities.length === 0}
+              disabled={loading}
             />
           </div>
         </form>

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Button from "../../components/Button";
 import ShowSuccess from "../../components/ShowSuccess";
 import { confirmPayment } from "../../services/userApi";
-
+import { useUser } from "../../hooks/useUser";
 export default function PaymentPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -14,6 +14,16 @@ export default function PaymentPage() {
   const [confirming, setConfirming] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showTimeoutError, setShowTimeoutError] = useState(false);
+  const [showPaymentFailed, setShowPaymentFailed] = useState(false);
+  const { user, isHost } = useUser();
+
+  const navigateToHomepage = () => {
+    if (isHost && user?.isVerified) {
+      navigate("/host-homepage");
+    } else {
+      navigate("/guest-homepage");
+    }
+  };
 
   const handleError = (error, customMessage = null) => {
     console.error("Payment Error:", error);
@@ -75,11 +85,7 @@ export default function PaymentPage() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          setShowTimeoutError(true);
-          handleError(
-            new Error("Payment session expired"),
-            "Payment session has expired. Please start over."
-          );
+          setShowTimeoutError(true); // Only show modal, don't set error
           return 0;
         }
         return prev - 1;
@@ -88,7 +94,6 @@ export default function PaymentPage() {
 
     return () => clearInterval(timer);
   }, [loading]);
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -112,10 +117,6 @@ export default function PaymentPage() {
 
   const handleConfirmPayment = async () => {
     if (timeLeft === 0) {
-      handleError(
-        new Error("Session expired"),
-        "Payment session has expired. Please start over."
-      );
       return;
     }
 
@@ -148,7 +149,16 @@ export default function PaymentPage() {
 
       console.log("Transaction status:", transactionStatus);
       console.log("Payment status:", paymentStatus);
-
+      if (transactionStatus === "failed" || paymentStatus === "FAILED") {
+        // Specific failed payment
+        setShowPaymentFailed(true);
+      } else if (
+        transactionStatus !== "successful" &&
+        paymentStatus !== "SUCCESSFUL"
+      ) {
+        // Unconfirmed payment (pending, etc.)
+        setShowSuccess(true);
+      }
       // Only redirect to success page if payment is actually successful
       if (
         transactionStatus === "successful" ||
@@ -181,7 +191,7 @@ export default function PaymentPage() {
 
   const handleTimeoutErrorClose = () => {
     setShowTimeoutError(false);
-    navigate(-1);
+    navigate(-1); // Go back two steps to booking details page
   };
 
   if (loading) {
@@ -337,8 +347,15 @@ export default function PaymentPage() {
 
         {/* Info Note */}
         <p className="text-[11px] text-[#888888] mb-6 leading-snug max-w-[333px]">
-          Account details are valid for 10 minutes only. Do not save or reuse.
-          Please Click on Proceed to confirm once payment is made.
+          Account details are valid for{" "}
+          <span
+            className="font-semibold 
+          text-[#666666]"
+          >
+            10 minutes only
+          </span>
+          . Do not save or reuse. Please Click on Proceed to confirm once
+          payment is made..
         </p>
 
         {/* Proceed Button */}
@@ -355,11 +372,11 @@ export default function PaymentPage() {
         <ShowSuccess
           heading="Unconfirmed Payment"
           message="Your payment couldn’t be confirmed at the moment. Please double-check your transaction or contact support."
-          buttonText="Back"
           onClose={handleSuccessClose}
           image="/icons/error.png"
           imgHeight="h-auto"
           width="w-[56px]"
+          noButton={true}
         />
       )}
 
@@ -370,6 +387,20 @@ export default function PaymentPage() {
           message="Your payment session has expired. Please start the payment process again to get new bank details."
           buttonText="Go Back"
           onClose={handleTimeoutErrorClose}
+          onConfirm={handleTimeoutErrorClose}
+          image="/icons/error.png"
+          imgHeight="h-auto"
+          width="w-[56px]"
+          noButton={true}
+        />
+      )}
+      {showPaymentFailed && (
+        <ShowSuccess
+          heading="Payment Failed"
+          message="Your payment was unsuccessful. Please try again with a different payment method or contact your bank."
+          buttonText="Try Again"
+          onClose={navigateToHomepage}
+          onConfirm={navigateToHomepage}
           image="/icons/error.png"
           imgHeight="h-auto"
           width="w-[56px]"

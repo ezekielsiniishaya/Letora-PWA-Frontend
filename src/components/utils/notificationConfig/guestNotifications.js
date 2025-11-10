@@ -69,14 +69,25 @@ const guestNotificationConfigs = {
     buttonText: "See Requests",
     booking: true,
   },
-  AVAILABILITY_CONFIRMED: {
-    image: "/icons/success.svg",
+  AVAILABILITY_CONFIRMED: (notification) => ({
+    image: "/icons/firework.svg",
     heading: "Availability Confirmed",
     message:
-      "The host has confirmed your requested dates are available. You can now proceed with booking.",
+      "The host has confirmed the availability of your choiced apartment for short-stay. Please proceed to book and make payments",
     buttonText: "Book Now",
     booking: true,
-  },
+    apartmentId: notification.metadata?.apartmentId,
+  }),
+  AVAILABILITY_REJECTED: (notification) => ({
+    image: "/icons/error.png",
+    heading: "Availability Declined",
+    message: notification.message,
+    buttonText: "Browse Around",
+    booking: false,
+    apartmentId: notification.metadata?.apartmentId,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
+  }),
   AVAILABILITY_DENIED: {
     image: "/icons/cancel-2.svg",
     heading: "Dates Not Available",
@@ -97,4 +108,5 @@ const guestNotificationConfigs = {
     buttonText: "View Offers",
   },
 };
+
 export default guestNotificationConfigs;

@@ -12,7 +12,7 @@ export default function SecurityDeposit() {
   const { apartmentData, updateSecurityDeposit, setCurrentStep } =
     useApartmentCreation();
 
-  const MAX_DEPOSIT = 100000;
+  const MAX_DEPOSIT = 500000;
 
   // Use existing data or initialize
   useEffect(() => {
@@ -142,7 +142,7 @@ export default function SecurityDeposit() {
           {/* Max note - when no input */}
           {!error && (
             <div className="text-right text-[12px] text-[#666666] mt-1">
-              Max. ₦100,000
+              Max. ₦500,000
             </div>
           )}
 

@@ -41,3 +41,10 @@ body {
   position: relative;
   z-index: 2;
 }
+.scroll-x-only {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch; /* keeps smooth scroll on iOS */
+  touch-action: pan-x; /* lock scrolling to x-axis */
+}
+

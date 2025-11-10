@@ -12,6 +12,7 @@ export default function HouseRulesPage() {
   const [selectedRules, setSelectedRules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const houseRulesOptions = [
     { label: "No Smoking", value: "NO_SMOKING", icon: "/icons/no-smoking.svg" },
@@ -82,18 +83,33 @@ export default function HouseRulesPage() {
     setSelectedRules(mapExistingRules(apartmentData.houseRules));
   }, [apartmentData.houseRules]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Validate form
+  const validateForm = () => {
+    const newErrors = {};
 
     if (selectedRules.length === 0) {
-      setError("Please select at least one house rule");
-      return;
+      newErrors.houseRules = "Please select at least one house rule";
     }
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
     setLoading(true);
     setError("");
 
     try {
+      // Validate form
+      const isValid = validateForm();
+      if (!isValid) {
+        console.log("Validation errors:", fieldErrors);
+        setLoading(false);
+        return;
+      }
+
       updateHouseRules(selectedRules);
       setCurrentStep(8);
       // Navigate to next step WITH role and documents data
@@ -119,7 +135,13 @@ export default function HouseRulesPage() {
     const applySelections = useCallback(() => {
       setSelectedRules(tempRules);
       setOpen(false);
-    }, [tempRules]);
+      // Clear error when user selects rules
+      if (fieldErrors.houseRules) {
+        setFieldErrors((prev) => ({ ...prev, houseRules: "" }));
+      }
+      // Clear general error
+      if (error) setError("");
+    }, [tempRules, fieldErrors.houseRules, error]);
 
     const toggleDropdown = () => {
       if (!open) setTempRules(selectedRules);
@@ -151,7 +173,9 @@ export default function HouseRulesPage() {
       <div className="relative" ref={dropdownRef}>
         <button
           type="button"
-          className="w-full text-left h-[45px] px-3 border border-[#D9D9D9] rounded-md bg-white flex items-center justify-between text-sm text-[#666666] focus:outline-none"
+          className={`w-full text-left h-[45px] px-3 border rounded-md bg-white flex items-center justify-between text-sm text-[#666666] focus:outline-none ${
+            fieldErrors.houseRules ? "border-[#F81A0C]" : "border-[#D9D9D9]"
+          }`}
           onClick={toggleDropdown}
         >
           {selectedRules.length > 0 ? (
@@ -164,6 +188,11 @@ export default function HouseRulesPage() {
             </span>
           )}
         </button>
+        {fieldErrors.houseRules && (
+          <p className="text-[#F81A0C] text-[10px] mt-1">
+            {fieldErrors.houseRules}
+          </p>
+        )}
 
         {open && (
           <div className="fixed left-0 bottom-0 w-full h-[50%] bg-white border border-[#D9D9D9] rounded-t-[10px] shadow-lg overflow-y-auto z-10">
@@ -237,14 +266,24 @@ export default function HouseRulesPage() {
         <p className="text-[#666666] text-[14px]">Your Apartment, Your Rules</p>
       </header>
 
+      {/* Error Message */}
       {error && (
-        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+        <div className="mt-4 mx-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            <div className="flex items-center">
+              <img
+                src="/icons/error.svg"
+                alt="Error"
+                className="w-4 h-4 mr-2"
+              />
+              <span className="text-sm">{error}</span>
+            </div>
+          </div>
         </div>
       )}
 
       <div className="flex-1 mt-[80px]">
-        <form className="space-y-9" onSubmit={handleSubmit}>
+        <form className="space-y-9" onSubmit={handleSubmit} noValidate>
           <div>
             <label className="block text-sm font-medium text-[#333333] mb-1">
               House Rules <span className="text-red-500">*</span>
@@ -252,7 +291,7 @@ export default function HouseRulesPage() {
             <HouseRulesDropdown />
           </div>
 
-          {/* Updated Selected Rules Display - Matches Facilities Page */}
+          {/* Selected Rules Display */}
           {selectedRules.length > 0 && (
             <div className="mt-6">
               <h3 className="text-[16px] font-medium text-[#333333] mb-4">
@@ -288,7 +327,7 @@ export default function HouseRulesPage() {
             <Button
               text={loading ? "Saving..." : "Next"}
               type="submit"
-              disabled={loading || selectedRules.length === 0}
+              disabled={loading}
             />
           </div>
         </form>

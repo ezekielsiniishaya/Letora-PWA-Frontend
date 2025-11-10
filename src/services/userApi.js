@@ -51,7 +51,19 @@ export const requestAvailability = async (apartmentId) => {
     body: { apartmentId },
   });
 };
-
+// Respond to availability request
+export const respondToAvailability = async (
+  availabilityRequestId,
+  isAvailable
+) => {
+  return apiRequest("/api/users/availability/respond", {
+    method: "POST",
+    body: {
+      availabilityRequestId,
+      isAvailable,
+    },
+  });
+};
 // Create rating
 export const createRating = async (apartmentId, rating, comment) => {
   return apiRequest("/api/users/rating", {

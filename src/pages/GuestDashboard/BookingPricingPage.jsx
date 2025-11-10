@@ -75,9 +75,9 @@ export default function BookingPricingPage() {
           {/* Money Icon */}
           <div className="flex justify-center">
             <img
-              src="/icons/money.png"
+              src="/icons/moneyStack.png"
               alt="Money Icon"
-              className="w-[111px] h-[111px]"
+              className="w-[111px] h-[119px]"
             />
           </div>
           <p className="text-center mb-[50px] mt-[-8px] text-[14px] font-medium text-[#333333]">

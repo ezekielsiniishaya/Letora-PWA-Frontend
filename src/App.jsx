@@ -83,7 +83,7 @@ function App() {
                     <Routes>
                       {/* ===== PUBLIC ROUTES ===== */}
                       <Route
-                        path="/apartment-availability"
+                        path="/apartment-availability/"
                         element={<ApartmentAvailability />}
                       />
                       {/* Onboarding & Authentication */}

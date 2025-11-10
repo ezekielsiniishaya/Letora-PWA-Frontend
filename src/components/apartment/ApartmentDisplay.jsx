@@ -5,8 +5,8 @@ import Facilities from "../dashboard/Facilities";
 import HouseRules from "../dashboard/HouseRules";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useCallback } from "react";
-import { toggleFavoriteAPI } from "../../services/apartmentApi";
-import { useUser } from "../../hooks/useUser";
+import Alert from "../utils/Alerts";
+import { getDocumentIcon } from "./fileIcon";
 
 import {
   parkingSpaceMap,
@@ -90,29 +90,20 @@ export const ApartmentDisplay = ({
   showLegalDocuments = true,
   backToHostDashboard = false,
   onPriceButtonClick,
+  error = null, // Add error prop
+  onClearError, // Add error clearing function
 }) => {
   const [showGallery, setShowGallery] = useState(false);
-  const [favorites, setFavorites] = useState({});
-  const [loadingStates, setLoadingStates] = useState({});
-
-  const { user: currentUser, refreshUser } = useUser();
+  const [localError, setLocalError] = useState(null);
   const navigate = useNavigate();
 
-  // Initialize favorite state from user's favorites
-  useEffect(() => {
-    if (apartment && currentUser) {
-      const initialFavorites = {};
-      // Check if this apartment is in user's favorites
-      const isFavorited = currentUser.favorites?.some(
-        (fav) => fav.apartmentId === apartment.id
-      );
-      initialFavorites[apartment.id] = isFavorited || false;
-      setFavorites(initialFavorites);
-    }
-  }, [apartment, currentUser]);
+  // Handle both prop errors and local errors
+  const displayError = error || localError;
+
   const getApartmentId = useCallback(() => {
     return apartment?.securityDeposit?.apartmentId;
   }, [apartment?.securityDeposit?.apartmentId]);
+
   useEffect(() => {
     const apartmentId = getApartmentId();
     console.log("🎯 Found apartment ID:", apartmentId);
@@ -122,54 +113,98 @@ export const ApartmentDisplay = ({
     );
   }, [apartment, getApartmentId]);
 
-  // Update toggleFavorite function
-  const toggleFavorite = async (e) => {
-    e.stopPropagation();
+  // Clear error when component unmounts or when explicitly cleared
+  useEffect(() => {
+    return () => {
+      setLocalError(null);
+    };
+  }, []);
 
-    const apartmentId = getApartmentId();
-    console.log("Toggling favorite for apartment ID:", apartmentId);
-
-    if (!apartmentId) {
-      console.error("No apartment ID found!");
-      return;
-    }
-
-    setLoadingStates((prev) => ({ ...prev, [apartmentId]: true }));
-
-    try {
-      const response = await toggleFavoriteAPI(apartmentId);
-
-      if (response.success) {
-        setFavorites((prev) => ({
-          ...prev,
-          [apartmentId]: response.isFavorited,
-        }));
-      }
-      await refreshUser();
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, [apartmentId]: false }));
+  const handleDismissError = () => {
+    setLocalError(null);
+    if (onClearError) {
+      onClearError();
     }
   };
 
-  // Update favorite initialization
-  useEffect(() => {
-    if (apartment && currentUser) {
-      const apartmentId = getApartmentId();
-      const initialFavorites = {};
+  // Function to set local errors (for internal component errors)
+  const setError = (errorMessage, errorType = "error") => {
+    setLocalError({
+      type: errorType,
+      message: errorMessage,
+    });
+  };
 
-      const isFavorited = currentUser.favorites?.some(
-        (fav) => fav.apartmentId === apartmentId
-      );
-      initialFavorites[apartmentId] = isFavorited || false;
-      setFavorites(initialFavorites);
+  // Enhanced error handling for image loading
+  const handleImageError = (e, imageType = "apartment") => {
+    console.error(`Failed to load ${imageType} image:`, e.target.src);
+    e.target.src = "/images/apartment-dashboard.png";
+
+    // Only show error for critical images (main image)
+    if (imageType === "main") {
+      setError("Failed to load apartment image", "network");
     }
-  }, [apartment, currentUser, getApartmentId]);
+  };
+
+  // Enhanced error handling for avatar
+  const handleAvatarError = (e) => {
+    console.error("Failed to load avatar:", e.target.src);
+    e.target.src = "/images/default-avatar.jpg";
+  };
+
+  // Safe navigation with error handling
+  const handleNavigation = () => {
+    try {
+      if (backToHostDashboard) {
+        navigate("/host-dashboard");
+      } else {
+        window.history.back();
+      }
+    } catch (navError) {
+      console.error("Navigation error:", navError);
+      setError("Navigation failed. Please try again.", "error");
+    }
+  };
+
+  // Enhanced price button click with error handling
+  const handlePriceButtonClick = () => {
+    try {
+      if (onPriceButtonClick) {
+        onPriceButtonClick();
+      } else {
+        console.warn("No price button handler provided");
+      }
+    } catch (buttonError) {
+      console.error("Price button click error:", buttonError);
+      setError("Action failed. Please try again.", "error");
+    }
+  };
+
+  // Enhanced edit handler
+  const handleEdit = () => {
+    try {
+      if (onEdit) {
+        onEdit();
+      } else {
+        console.warn("No edit handler provided");
+        setError("Edit functionality not available", "error");
+      }
+    } catch (editError) {
+      console.error("Edit action error:", editError);
+      setError("Failed to initiate edit. Please try again.", "error");
+    }
+  };
 
   if (!apartment) {
-    return <div>Loading apartment details...</div>;
+    return (
+      <div className="mx-[18px] text-[#39302A] mb-[24px] mt-[10px] bg-white">
+        <div className="flex items-center justify-center h-40">
+          <span>Loading apartment details...</span>
+        </div>
+      </div>
+    );
   }
+
   // Destructure apartment data with defaults
   const {
     basicInfo = {},
@@ -182,7 +217,7 @@ export const ApartmentDisplay = ({
     legalDocuments = [],
   } = apartment;
 
-  // Prepare images
+  // Prepare images with error handling
   const displayImages =
     images && images.length > 0
       ? images.map((img) =>
@@ -197,38 +232,48 @@ export const ApartmentDisplay = ({
   const mappedFacilities = reverseMapFacilities(facilities);
   const mappedHouseRules = reverseMapHouseRules(houseRules);
 
-  // Format price
+  // Format price with error handling
   const formatPrice = (price) => {
-    if (!price) return "0";
-    if (typeof price === "number") return price.toLocaleString();
-    if (typeof price === "string") {
-      const num = parseInt(price.replace(/,/g, ""));
-      return isNaN(num) ? "0" : num.toLocaleString();
-    }
-    return "0";
-  };
-
-  // Format security deposit
-  const formatSecurityDeposit = (deposit) => {
-    if (!deposit) return "0";
-
-    if (typeof deposit === "number") return deposit.toLocaleString();
-
-    if (typeof deposit === "object" && deposit.amount) {
-      if (typeof deposit.amount === "number")
-        return deposit.amount.toLocaleString();
-      if (typeof deposit.amount === "string") {
-        const num = parseInt(deposit.amount.replace(/,/g, ""));
+    try {
+      if (!price) return "0";
+      if (typeof price === "number") return price.toLocaleString();
+      if (typeof price === "string") {
+        const num = parseInt(price.replace(/,/g, ""));
         return isNaN(num) ? "0" : num.toLocaleString();
       }
+      return "0";
+    } catch (formatError) {
+      console.error("Price formatting error:", formatError);
+      return "0";
     }
+  };
 
-    if (typeof deposit === "string") {
-      const num = parseInt(deposit.replace(/,/g, ""));
-      return isNaN(num) ? "0" : num.toLocaleString();
+  // Format security deposit with error handling
+  const formatSecurityDeposit = (deposit) => {
+    try {
+      if (!deposit) return "0";
+
+      if (typeof deposit === "number") return deposit.toLocaleString();
+
+      if (typeof deposit === "object" && deposit.amount) {
+        if (typeof deposit.amount === "number")
+          return deposit.amount.toLocaleString();
+        if (typeof deposit.amount === "string") {
+          const num = parseInt(deposit.amount.replace(/,/g, ""));
+          return isNaN(num) ? "0" : num.toLocaleString();
+        }
+      }
+
+      if (typeof deposit === "string") {
+        const num = parseInt(deposit.replace(/,/g, ""));
+        return isNaN(num) ? "0" : num.toLocaleString();
+      }
+
+      return "0";
+    } catch (formatError) {
+      console.error("Security deposit formatting error:", formatError);
+      return "0";
     }
-
-    return "0";
   };
 
   // Host info
@@ -249,23 +294,31 @@ export const ApartmentDisplay = ({
 
   return (
     <div className="mx-[18px] text-[#39302A] mb-[24px] mt-[10px] bg-white">
+      {/* Alert Display */}
+      {displayError && (
+        <div className="fixed top-4 right-4 z-50">
+          <Alert
+            type={displayError.type || "error"}
+            message={displayError.message}
+            onDismiss={handleDismissError}
+            timeout={5000}
+          />
+        </div>
+      )}
+
       {/* Header Actions */}
       {showActions && (
         <div className="flex items-center mb-[20px] justify-between">
           <button
-            onClick={() =>
-              backToHostDashboard
-                ? navigate("/host-dashboard")
-                : window.history.back()
-            }
-            className="hover:bg-gray-200"
+            onClick={handleNavigation}
+            className="hover:bg-gray-200 p-1 rounded"
           >
             <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
           </button>
           {status === "draft" && onEdit && (
             <button
-              onClick={onEdit}
-              className="bg-[#686464] text-[12px] font-medium w-[65px] h-[21px] text-white px-4 rounded-full hover:bg-gray-800"
+              onClick={handleEdit}
+              className="bg-[#686464] text-[12px] font-medium w-[65px] h-[21px] text-white px-4 rounded-full hover:bg-gray-800 transition-colors"
             >
               Edit
             </button>
@@ -280,34 +333,12 @@ export const ApartmentDisplay = ({
 
       {/* Apartment Images */}
       <div className="flex h-[249px] flex-row gap-x-[7px] md:hidden relative">
-        {/* Favorite Heart Button - positioned on top right of main image */}
-        <button
-          className="absolute top-3 right-3 w-[29px] h-[29px] bg-white rounded-full px-1 flex items-center justify-center disabled:opacity-50 z-10"
-          onClick={toggleFavorite} // Remove parameter since we get ID inside
-          disabled={loadingStates[getApartmentId()]}
-        >
-          {loadingStates[getApartmentId()] ? (
-            <div className="w-3 h-3 border-2 border-[#A20BA2] border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <img
-              src={
-                favorites[getApartmentId()]
-                  ? "/icons/heart-purple.svg"
-                  : "/icons/heart-gray2.svg"
-              }
-              alt="heart"
-              className="w-[19px] h-[16px]"
-            />
-          )}
-        </button>
         <div className="flex-1">
           <img
             src={displayImages[0]}
             alt="Apartment main view"
             className="rounded-[5.13px] w-full h-full object-cover"
-            onError={(e) => {
-              e.target.src = "/images/apartment-dashboard.png";
-            }}
+            onError={(e) => handleImageError(e, "main")}
           />
         </div>
 
@@ -318,9 +349,7 @@ export const ApartmentDisplay = ({
                 src={src}
                 alt={`Apartment ${i + 2}`}
                 className="rounded-[3.81px] w-full h-[78px] object-cover cursor-pointer hover:opacity-80"
-                onError={(e) => {
-                  e.target.src = "/images/apartment-dashboard.png";
-                }}
+                onError={(e) => handleImageError(e, "thumbnail")}
               />
               {/* Overlay on ALL images when more than 4 */}
               {displayImages.length > 4 && (
@@ -348,9 +377,7 @@ export const ApartmentDisplay = ({
             src={hostInfo.avatar}
             alt="Host"
             className="w-[50px] h-[50px] rounded-full object-cover -mt-10"
-            onError={(e) => {
-              e.target.src = "/images/default-avatar.jpg";
-            }}
+            onError={handleAvatarError}
           />
           <span className="font-medium mt-[8px] text-[12px]">
             {hostInfo.name} {hostInfo.surname}
@@ -400,8 +427,8 @@ export const ApartmentDisplay = ({
                 </span>
               )}
               <button
-                className="text-white py-[6px] px-[6px] bg-[#A20BA2] h-[25px] font-semibold text-[12px] mt-[19px] rounded flex items-center justify-center"
-                onClick={onPriceButtonClick}
+                className="text-white py-[6px] px-[6px] bg-[#A20BA2] h-[25px] font-semibold text-[12px] mt-[19px] rounded flex items-center justify-center hover:bg-[#8A0A8A] transition-colors"
+                onClick={handlePriceButtonClick}
               >
                 ₦{formatPrice(pricing.pricePerNight)}/Night
               </button>
@@ -485,33 +512,16 @@ export const ApartmentDisplay = ({
                 key={index}
                 className="flex-1 min-w-0 border-[1.5px] border-[#D1D0D0] rounded-lg bg-[#CCCCCC42] h-[98px] flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] p-1"
               >
-                {doc.type?.includes("image") ? (
-                  <>
-                    <img
-                      src="/icons/camera.svg"
-                      alt="Image Document"
-                      className="w-8 h-8 mb-1 flex-shrink-0"
-                    />
-                    <span className="text-center px-1 text-[10px] truncate w-full">
-                      {doc.name && doc.name.length > 15
-                        ? `${doc.name.substring(0, 12)}...`
-                        : doc.name}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <img
-                      src="/icons/pdf.svg"
-                      alt="PDF"
-                      className="w-8 h-8 mb-1 flex-shrink-0"
-                    />
-                    <span className="text-center px-1 text-[10px] truncate w-full">
-                      {doc.name && doc.name.length > 15
-                        ? `${doc.name.substring(0, 12)}...`
-                        : doc.name}
-                    </span>
-                  </>
-                )}
+                <img
+                  src={getDocumentIcon(doc.name)}
+                  alt={doc.name}
+                  className="w-6 h-6 mb-1 flex-shrink-0" // slightly smaller than w-8 h-8
+                />
+                <span className="text-center px-1 text-[10px] truncate w-full">
+                  {doc.name && doc.name.length > 15
+                    ? `${doc.name.substring(0, 12)}...`
+                    : doc.name}
+                </span>
               </div>
             ))}
           </div>
@@ -534,9 +544,7 @@ export const ApartmentDisplay = ({
                 src={src}
                 alt={`Apartment ${i + 1}`}
                 className="rounded-[5px] w-[319px] h-[203px] object-cover flex-shrink-0"
-                onError={(e) => {
-                  e.target.src = "/images/apartment-dashboard.png";
-                }}
+                onError={(e) => handleImageError(e, "gallery")}
               />
             ))}
           </div>

@@ -9,7 +9,7 @@ import {
 } from "../../services/apartmentApi";
 import { useUser } from "../../hooks/useUser";
 import ApartmentDisplay from "../../components/apartment/ApartmentDisplay";
-
+import Alert from "../../components/utils/Alerts"; // or wherever your Alert component is
 // Helper function to convert base64 to File
 function base64ToFile(base64Data, fileName, fileType = "image/jpeg") {
   const arr = base64Data.split(",");
@@ -39,7 +39,7 @@ export default function ListingOverviewPage() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
 
   const { apartmentData, clearApartmentData, isEditing } =
     useApartmentCreation();
@@ -61,28 +61,30 @@ export default function ListingOverviewPage() {
 
   const handleSubmit = async () => {
     if (!agreeInfo || !agreeTerms) {
-      setError("Please agree to both conditions before submitting");
+      setError({
+        type: "error",
+        message: "Please agree to both conditions before submitting",
+      });
       return;
     }
 
     setLoading(true);
-    setError("");
+    setError(null);
 
     try {
       console.log("🟡 Preparing submission...");
       console.log("Is editing mode:", isEditing());
       console.log("Existing apartment ID:", existingApartmentId);
-
+      let documentMetadata = [];
       // 1. Transform apartmentData for backend - FLAT structure
       const submissionData = {
-        // Basic info at ROOT level (not nested under basicInfo)
-        title: basicInfo?.title || "",
-        apartmentType: basicInfo?.apartmentType || "",
-        town: basicInfo?.town || "",
-        state: basicInfo?.state || "",
-        price: pricing?.pricePerNight || 0,
-
-        // Other data as nested objects/arrays
+        basicInfo: {
+          title: basicInfo?.title || "",
+          apartmentType: basicInfo?.apartmentType || "",
+          town: basicInfo?.town || "",
+          state: basicInfo?.state || "",
+          price: pricing?.pricePerNight || 0,
+        },
         details: {
           bedrooms: details?.bedrooms || 0,
           bathrooms: details?.bathrooms || 0,
@@ -98,10 +100,14 @@ export default function ListingOverviewPage() {
         houseRules: houseRules
           .map((r) => r?.value || r?.rule || "")
           .filter(Boolean),
-        securityDeposit: securityDeposit?.amount || 0,
+        securityDeposit: securityDeposit
+          ? { amount: securityDeposit?.amount || securityDeposit } // handles both number or object
+          : undefined,
+
         legalDocuments: legalDocuments?.role
           ? { role: legalDocuments.role }
           : null,
+        documentMetadata,
       };
 
       console.log("📦 Final submission data:", submissionData);
@@ -130,7 +136,6 @@ export default function ListingOverviewPage() {
         .forEach((file) => formData.append("images", file));
 
       // 4. Convert documents + add metadata - use destructured legalDocuments
-      let documentMetadata = [];
 
       (legalDocuments?.documents || []).forEach((doc, idx) => {
         let file = null;
@@ -184,25 +189,40 @@ export default function ListingOverviewPage() {
         console.log("🆕 Creating new apartment");
         response = await createCompleteApartment(formData);
       }
-
       if (response.success) {
+        // Success case
         console.log("🟢 Apartment operation successful:", response.apartment);
         clearApartmentData();
         setShowSuccess(true);
 
-        // Navigate to the success page WITH THE APARTMENT DATA
         navigate("/shortlet-review", {
           state: {
             apartment: response.apartment,
-            isUpdate: isEditing(), // Pass whether this was an update
+            isUpdate: isEditing(),
           },
         });
       } else {
-        throw new Error(response.error || "Failed to process apartment");
+        // Handle backend error directly
+        console.log("🔴 Backend returned error:", response.error);
+        setError({
+          type: "error",
+          message: response.error, // This comes from {"success":false,"error":"Missing required fields..."}
+        });
+        setLoading(false);
+        return; // Important: return early to prevent further execution
       }
     } catch (err) {
-      console.error("🔴 Submission failed:", err);
-      setError(err.message || "Failed to submit listing. Please try again.");
+      console.log("🔍 FULL ERROR OBJECT:", err);
+
+      const backendError =
+        err?.response?.data?.error ||
+        err?.message ||
+        "Failed to submit listing";
+
+      setError({
+        type: "error",
+        message: backendError,
+      });
     } finally {
       setLoading(false);
     }
@@ -250,10 +270,14 @@ export default function ListingOverviewPage() {
         </label>
       </div>
 
-      {/* Error Message */}
       {error && (
-        <div className="mx-[18px] mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+        <div className="fixed top-4 right-4 z-50">
+          <Alert
+            type={error.type || "error"} // Add fallback
+            message={error.message || error} // Handle both object and string
+            onDismiss={() => setError(null)} // Clear properly
+            timeout={5000}
+          />
         </div>
       )}
 

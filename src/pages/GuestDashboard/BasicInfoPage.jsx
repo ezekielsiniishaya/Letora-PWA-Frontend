@@ -38,6 +38,7 @@ export default function BasicInfoPage() {
   const [pageLoading, setPageLoading] = useState(!!apartmentId);
   const [hasFetched, setHasFetched] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Initialize form data from context
   const [formData, setFormData] = useState({
@@ -154,12 +155,31 @@ export default function BasicInfoPage() {
     return found || null;
   }, [formData.apartmentType]);
 
+  // Validate form fields
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.title?.trim())
+      newErrors.title = "Please enter a listing title";
+    if (!formData.apartmentType?.trim())
+      newErrors.apartmentType = "Please select apartment type";
+    if (!formData.state?.trim()) newErrors.state = "Please select a state";
+    if (!formData.town?.trim()) newErrors.town = "Please enter a town";
+
+    setFieldErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
-    // Clear error when user starts typing
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+    // Clear general error when user starts typing
     if (error) setError("");
   };
 
@@ -178,28 +198,10 @@ export default function BasicInfoPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Debug: Check current form values
-    console.log("Form data before validation:", formData);
-    console.log("Required fields check:", {
-      title: !!formData.title,
-      apartmentType: !!formData.apartmentType,
-      state: !!formData.state,
-      town: !!formData.town,
-    });
-
-    // Enhanced validation with better error messages
-    const missingFields = [];
-    if (!formData.title?.trim()) missingFields.push("Listing Title");
-    if (!formData.apartmentType?.trim()) missingFields.push("Apartment Type");
-    if (!formData.state?.trim()) missingFields.push("State");
-    if (!formData.town?.trim()) missingFields.push("Town");
-
-    if (missingFields.length > 0) {
-      setError(
-        `Please fill in the following required fields: ${missingFields.join(
-          ", "
-        )}`
-      );
+    // Validate form
+    const isValid = validateForm();
+    if (!isValid) {
+      console.log("Validation errors:", fieldErrors);
       return;
     }
 
@@ -261,7 +263,9 @@ export default function BasicInfoPage() {
     return (
       <div className="flex flex-col min-h-screen bg-[#F9F9F9] px-[20px] items-center justify-center">
         <div className="text-center max-w-md">
-          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center"></div>
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <img src="/icons/error.svg" alt="Error" className="w-8 h-8" />
+          </div>
           <h2 className="text-lg font-semibold text-red-600 mb-2">
             Unable to Load Apartment
           </h2>
@@ -311,20 +315,23 @@ export default function BasicInfoPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md flex items-center">
-          <span>{error}</span>
-          <button
-            onClick={() => setError("")}
-            className="ml-auto text-red-700 hover:text-red-900"
-          >
-            ×
-          </button>
+        <div className="mt-4 mx-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            <div className="flex items-center">
+              <img
+                src="/icons/error.svg"
+                alt="Error"
+                className="w-4 h-4 mr-2"
+              />
+              <span className="text-sm">{error}</span>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Form */}
       <div className="w-full max-w-sm">
-        <form className="space-y-8" onSubmit={handleSubmit}>
+        <form className="space-y-8" onSubmit={handleSubmit} noValidate>
           {/* Listing Title */}
           <div>
             <label className="block text-[14px] font-medium text-[#333333] mt-[42px]">
@@ -335,25 +342,42 @@ export default function BasicInfoPage() {
               type="text"
               value={formData.title}
               onChange={(e) => handleInputChange("title", e.target.value)}
-              className="border mt-[8px] w-full h-[48px] bg-white rounded-md px-4 py-2 text-sm"
+              className={`border mt-[8px] w-full h-[48px] bg-white rounded-md px-4 py-2 text-sm ${
+                fieldErrors.title ? "border-[#F81A0C]" : "border-gray-300"
+              }`}
               required
             />
+            {fieldErrors.title && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.title}
+              </p>
+            )}
           </div>
 
           {/* Apartment Type */}
-          <Dropdown
-            label="Apartment Type"
-            placeholder="Choose Options"
-            heading="Select Apartment Type"
-            options={apartmentOptions}
-            selected={currentApartmentType}
-            setSelected={handleApartmentTypeSelect}
-            required
-            isOpen={openDropdown === "apartment"}
-            onToggle={() =>
-              setOpenDropdown(openDropdown === "apartment" ? null : "apartment")
-            }
-          />
+          <div>
+            <Dropdown
+              label="Apartment Type"
+              placeholder="Choose Options"
+              heading="Select Apartment Type"
+              options={apartmentOptions}
+              selected={currentApartmentType}
+              setSelected={handleApartmentTypeSelect}
+              required
+              showIndicators={false}
+              isOpen={openDropdown === "apartment"}
+              onToggle={() =>
+                setOpenDropdown(
+                  openDropdown === "apartment" ? null : "apartment"
+                )
+              }
+            />
+            {fieldErrors.apartmentType && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.apartmentType}
+              </p>
+            )}
+          </div>
 
           {/* State */}
           <div>
@@ -363,7 +387,13 @@ export default function BasicInfoPage() {
               placeholder="Choose Location"
               value={formData.state}
               onChange={handleStateChange}
+              hasError={!!fieldErrors.state}
             />
+            {fieldErrors.state && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.state}
+              </p>
+            )}
           </div>
 
           {/* Town */}
@@ -376,19 +406,28 @@ export default function BasicInfoPage() {
               type="text"
               value={formData.town}
               onChange={(e) => handleInputChange("town", e.target.value)}
-              className="border mt-[8px] w-full h-[48px] bg-white rounded-md px-4 mb-20 py-2 text-sm"
+              className={`border mt-[8px] w-full h-[48px] bg-white rounded-md px-4 py-2 text-sm ${
+                fieldErrors.town ? "border-[#F81A0C]" : "border-gray-300"
+              }`}
               required
             />
+            {fieldErrors.town && (
+              <p className="text-[#F81A0C] text-[10px] mt-1">
+                {fieldErrors.town}
+              </p>
+            )}
           </div>
 
           {/* Next button - Always shows "Next" */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#A20BA2] text-white text-[16px] font-semibold h-[57px] py-3 rounded-md disabled:opacity-50 hover:bg-[#8a1a8a] transition-colors"
-          >
-            {loading ? "Saving..." : "Next"}
-          </button>
+          <div className="pt-[120px]">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#A20BA2] text-white text-[16px] font-semibold h-[57px] py-3 rounded-md disabled:opacity-50 hover:bg-[#8a1a8a] transition-colors"
+            >
+              {loading ? "Saving..." : "Next"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -12,7 +12,7 @@ export default function Dropdown({
   setSelected,
   width = "w-[30px]",
   height = "h-[30px]",
-  showIndicators = true, // ✅ new prop
+  showIndicators = true,
 }) {
   const dropdownRef = useRef(null);
 

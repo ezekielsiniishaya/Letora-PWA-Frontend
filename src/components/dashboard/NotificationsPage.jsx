@@ -71,6 +71,43 @@ export default function NotificationsPage() {
     notificationId,
     notification
   ) => {
+    // Check if this is an availability-related notification
+    const isAvailabilityNotification =
+      notification.type === "APARTMENT_AVAILABILITY" ||
+      notification.type === "AVAILABILITY_REQUEST" || // Add this line
+      notification.title?.toLowerCase().includes("availability request") ||
+      notification.message?.toLowerCase().includes("availability request");
+
+    // If it's an availability notification, navigate directly without popup
+    if (isAvailabilityNotification) {
+      // Mark as read first (if not already read)
+      if (!notification.isRead) {
+        try {
+          setMarkingRead(true);
+          await markAsRead(notificationId);
+          // Update local state
+          setNotifications((prev) => ({
+            ...prev,
+            [section]: prev[section].map((item) =>
+              item.id === notificationId ? { ...item, isRead: true } : item
+            ),
+          }));
+        } catch (error) {
+          console.error("Error marking notification as read:", error);
+          // Still navigate even if marking read fails
+        } finally {
+          setMarkingRead(false);
+        }
+      }
+
+      // Navigate to apartment availability page with the notification data
+      navigate(`/apartment-availability`, {
+        state: { notification }, // Pass the entire notification object
+      });
+      return; // Exit early - no popup will be shown
+    }
+
+    // Existing logic for other notification types (with popups)
     // Don't do anything if already marking as read or if notification is already read
     if (markingRead || notification.isRead) {
       // Just show the popup for already read notifications without marking as read again
@@ -94,7 +131,7 @@ export default function NotificationsPage() {
           ),
         }));
 
-        // Get notification config and show popup
+        // Get notification config and show popup (for non-availability notifications)
         const popupConfig = getNotificationConfig(notification, user?.role);
         setActivePopup(popupConfig);
 
@@ -114,10 +151,14 @@ export default function NotificationsPage() {
       setMarkingRead(false);
     }
   };
-
   const handlePopupAction = () => {
     if (!activePopup) return;
-
+    // Special handling for availability confirmation popup
+    if (activePopup.booking && activePopup.apartmentId) {
+      navigate(`/shortlet-overview/${activePopup.apartmentId}`);
+      setActivePopup(null);
+      return;
+    }
     // Handle different navigation based on button text and notification type
     switch (activePopup.buttonText) {
       case "See Dashboard":
@@ -135,7 +176,7 @@ export default function NotificationsPage() {
         navigate("/revenue");
         break;
       case "Check Availability":
-        navigate("/apartments");
+        navigate("/apartment-availability");
         break;
       case "Update Details":
         navigate("/profile");
@@ -149,7 +190,7 @@ export default function NotificationsPage() {
       case "Write Review":
         navigate("/reviews");
         break;
-      case "Book Now":
+      case "Browse Around":
         navigate("/apartments");
         break;
       case "Search Again":
