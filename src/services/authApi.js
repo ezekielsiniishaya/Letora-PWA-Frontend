@@ -32,7 +32,6 @@ export const loginAPI = async (email, password) => {
 
   return response;
 };
-
 // Refresh token
 export const refreshToken = async () => {
   const refreshToken = localStorage.getItem("refreshToken");
