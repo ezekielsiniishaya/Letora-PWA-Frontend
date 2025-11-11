@@ -1,11 +1,35 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { useUser } from "../../hooks/useUser";
 
 export default function Navigation() {
   const location = useLocation();
-  const { user } = useUser();
+  const navigate = useNavigate();
+  const { user, loading } = useUser();
 
-  // Only show "New Listing" if user is a verified host
+  // 🧭 Auto-redirect to correct home after user data loads
+  useEffect(() => {
+    if (!loading && user) {
+      const homePath =
+        user.role === "HOST" && user.hostProfile?.isVerified
+          ? "/host-homepage"
+          : "/guest-homepage";
+
+      // Redirect only if the current route is mismatched
+      if (
+        (user.role === "HOST" &&
+          location.pathname.includes("guest-homepage")) ||
+        (user.role === "GUEST" && location.pathname.includes("host-homepage"))
+      ) {
+        navigate(homePath, { replace: true });
+      }
+    }
+  }, [user, loading, location.pathname, navigate]);
+
+  // 🧠 Prevent rendering before user initialization
+  if (loading) return null;
+
+  // 🏠 Dynamic nav items
   const navItems = [
     {
       name: "Home",
@@ -13,7 +37,6 @@ export default function Navigation() {
       icon: "/icons/home.svg",
       activeIcon: "/icons/home-purple.svg",
     },
-    // Conditionally include New Listing
     ...(user?.role === "HOST" && user?.hostProfile?.isVerified
       ? [
           {
@@ -26,7 +49,6 @@ export default function Navigation() {
       : []),
     {
       name: "Bookings",
-      // Only show host dashboard for verified hosts, otherwise show guest bookings
       paths:
         user?.role === "HOST" && user?.hostProfile?.isVerified
           ? ["/host-dashboard"]
@@ -48,21 +70,9 @@ export default function Navigation() {
     },
   ];
 
-  // Function to determine the correct home path based on user role
   const getHomePath = () => {
-    if (user?.role === "HOST" && user?.hostProfile?.isVerified) {
+    if (user?.role === "HOST" && user?.hostProfile?.isVerified)
       return "/host-homepage";
-    }
-
-    // Fallback: check current URL path
-    if (
-      location.pathname.includes("/host-") ||
-      location.pathname === "/host-dashboard"
-    ) {
-      return "/host-homepage";
-    }
-
-    // Default to guest homepage
     return "/guest-homepage";
   };
 
@@ -74,8 +84,6 @@ export default function Navigation() {
             location.pathname.startsWith(p)
           );
 
-          // For Home item, use dynamic path based on user role
-          // For other items, use the first path in the list
           const targetPath =
             item.name === "Home" ? getHomePath() : item.paths[0];
 
