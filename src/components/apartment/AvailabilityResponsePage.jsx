@@ -162,7 +162,7 @@ export default function ApartmentAvailability() {
 
       {/* Apartment Info */}
       <img
-        src={metadata.apartmentImage || "/images/apartment-placeholder.jpg"}
+        src={metadata.apartmentImage || "/images/apartment.jpg"}
         alt={apartmentTitle}
         className="w-full h-[192px] rounded-[5.19px] mt-[29px] object-cover"
         onError={(e) => {
