@@ -5,13 +5,13 @@ import { useUser } from "../../hooks/useUser";
 export default function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, loading } = useUser();
+  const { user, loading, isHostVerified } = useUser(); // ✅ Use the new helper
 
   // 🧭 Auto-redirect to correct home after user data loads
   useEffect(() => {
     if (!loading && user) {
       const homePath =
-        user.role === "HOST" && user.hostProfile?.isVerified
+        user.role === "HOST" && isHostVerified()
           ? "/host-homepage"
           : "/guest-homepage";
 
@@ -24,7 +24,7 @@ export default function Navigation() {
         navigate(homePath, { replace: true });
       }
     }
-  }, [user, loading, location.pathname, navigate]);
+  }, [user, loading, location.pathname, navigate, isHostVerified]);
 
   // 🧠 Prevent rendering before user initialization
   if (loading) return null;
@@ -37,7 +37,7 @@ export default function Navigation() {
       icon: "/icons/home.svg",
       activeIcon: "/icons/home-purple.svg",
     },
-    ...(user?.role === "HOST" && user?.hostProfile?.isVerified
+    ...(user?.role === "HOST" && isHostVerified()
       ? [
           {
             name: "New Listing",
@@ -50,7 +50,7 @@ export default function Navigation() {
     {
       name: "Bookings",
       paths:
-        user?.role === "HOST" && user?.hostProfile?.isVerified
+        user?.role === "HOST" && isHostVerified()
           ? ["/host-dashboard"]
           : ["/bookings"],
       icon: "/icons/booking.svg",
@@ -71,8 +71,7 @@ export default function Navigation() {
   ];
 
   const getHomePath = () => {
-    if (user?.role === "HOST" && user?.hostProfile?.isVerified)
-      return "/host-homepage";
+    if (user?.role === "HOST" && isHostVerified()) return "/host-homepage";
     return "/guest-homepage";
   };
 

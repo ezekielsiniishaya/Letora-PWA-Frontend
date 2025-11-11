@@ -238,7 +238,43 @@ const UserProvider = ({ children }) => {
       return { ...prev, ...updatedData };
     });
   }, []);
+  // Add these functions in the UserProvider, around line 350-400 (after guest verification functions)
 
+  // Host verification functions
+  const isHostVerified = useCallback(() => {
+    return (
+      user?.hostProfile?.isVerified ||
+      user?.hostVerification?.status === "VERIFIED"
+    );
+  }, [user]);
+
+  const getHostVerificationStatus = useCallback(() => {
+    return (
+      user?.hostVerification || {
+        status: user?.verificationStatus || "PENDING",
+        hasRequiredDocuments: user?.documents?.length >= 2 || false,
+        documents: user?.documents || [],
+      }
+    );
+  }, [user]);
+
+  const hasPendingHostDocuments = useCallback(() => {
+    return user?.verificationStatus === "PENDING";
+  }, [user]);
+
+  const getHostDocuments = useCallback(() => {
+    return (
+      user?.hostVerification?.documents ||
+      user?.documents?.filter(
+        (doc) => doc.type === "ID_CARD" || doc.type === "ID_PHOTOGRAPH"
+      ) ||
+      []
+    );
+  }, [user]);
+
+  const canHostListProperties = useCallback(() => {
+    return isHostVerified();
+  }, [isHostVerified]);
   // Get user notifications
   const getUserNotifications = useCallback(() => {
     return Array.isArray(user?.notifications?.items)
@@ -503,7 +539,6 @@ const UserProvider = ({ children }) => {
   const clearError = useCallback(() => {
     setError(null);
   }, []);
-
   const value = {
     user,
     loading,
@@ -526,11 +561,20 @@ const UserProvider = ({ children }) => {
     getUserFavorites,
     getUserApartments,
     getUserDocuments,
+
     // Guest verification functions
     isGuestVerified,
     getGuestVerificationStatus,
     hasPendingGuestDocuments,
     getGuestDocuments,
+
+    // ✅ ADD THESE NEW HOST VERIFICATION FUNCTIONS
+    isHostVerified,
+    getHostVerificationStatus,
+    hasPendingHostDocuments,
+    getHostDocuments,
+    canHostListProperties,
+
     // Notification functions
     getUserNotifications,
     getUnreadNotificationsCount,
@@ -538,8 +582,10 @@ const UserProvider = ({ children }) => {
     markAllAsRead,
     addNotification,
     removeNotification,
+
     // Error handling
     clearError,
+
     // Token helpers (for debugging)
     getToken,
   };
