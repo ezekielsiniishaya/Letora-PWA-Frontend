@@ -174,26 +174,49 @@ const UserProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
   const logout = useCallback(() => {
     console.log("🚪 Logging out user...");
 
-    // Clear search history for this user
+    // Clear user-specific search history
     const userId = user?.id || "anonymous";
     const storageKey = `apartmentSearchHistory_${userId}`;
     localStorage.removeItem(storageKey);
 
-    // Clear location
-    clearUserLocation();
+    // Clear all other user-related localStorage items
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(USER_LOCATION_KEY);
 
-    // Clear token and user state
+    // Clear any additional potential storage items that might contain user data
+    const userStorageKeys = [
+      "userPreferences",
+      "userSettings",
+      "recentSearches",
+      "filtersState",
+      "apartmentFilters",
+      "bookingDraft",
+      "draftListing",
+      // Add any other keys your app might use
+    ];
+
+    userStorageKeys.forEach((key) => {
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+        console.log(`🗑️ Cleared localStorage key: ${key}`);
+      }
+    });
+
+    // Clear sessionStorage as well (if used)
+    sessionStorage.clear();
+
+    // Clear all state
     setToken(null);
     setUser(null);
     setError(null);
+    setCurrentLocation(null);
+    setLoading(false);
 
-    console.log("✅ User logged out successfully");
-  }, [user?.id, clearUserLocation]);
-
+    console.log("✅ User logged out successfully - all storage cleared");
+  }, [user?.id]);
   // Update the refreshUser function to handle location updates
   const refreshUser = useCallback(async () => {
     try {
