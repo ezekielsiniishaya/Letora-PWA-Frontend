@@ -178,22 +178,47 @@ const UserProvider = ({ children }) => {
   const logout = useCallback(() => {
     console.log("🚪 Logging out user...");
 
-    // Clear search history for this user
+    // Clear all user-related data from localStorage
     const userId = user?.id || "anonymous";
+
+    // Clear search history for this user
     const storageKey = `apartmentSearchHistory_${userId}`;
     localStorage.removeItem(storageKey);
 
-    // Clear location
-    clearUserLocation();
+    // Clear authentication tokens
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
 
-    // Clear token and user state
+    // Clear location
+    localStorage.removeItem(USER_LOCATION_KEY);
+
+    // Clear any other user-specific data
+    const userSpecificKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.includes(userId)) {
+        userSpecificKeys.push(key);
+      }
+    }
+
+    userSpecificKeys.forEach((key) => {
+      localStorage.removeItem(key);
+      console.log(`🗑️ Cleared user-specific data: ${key}`);
+    });
+
+    // Clear state
     setToken(null);
     setUser(null);
     setError(null);
+    setCurrentLocation(null);
+    setLoading(false);
 
-    console.log("✅ User logged out successfully");
-  }, [user?.id, clearUserLocation]);
+    console.log("✅ User logged out completely - all data cleared");
 
+    // Redirect to login page
+    window.location.href = "/sign-in";
+  }, [user?.id]);
   // Update the refreshUser function to handle location updates
   const refreshUser = useCallback(async () => {
     try {

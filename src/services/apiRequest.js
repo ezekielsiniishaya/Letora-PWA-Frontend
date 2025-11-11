@@ -33,9 +33,16 @@ export const apiRequest = async (endpoint, options = {}) => {
       const newToken = await refreshToken();
       response = await makeRequest(newToken);
     } catch {
-      logout();
+      // Instead of calling logout here, throw a specific error
+      // that components can catch to trigger the context logout
       throw {
-        response: { status: 401, data: { error: "Authentication failed" } },
+        response: {
+          status: 401,
+          data: {
+            error: "Authentication failed",
+            shouldLogout: true, // Add this flag
+          },
+        },
       };
     }
   }
@@ -44,7 +51,6 @@ export const apiRequest = async (endpoint, options = {}) => {
     error: "Network error. Please check your connection.",
   }));
 
-  // ✅ Check if the business logic indicates failure
   if (!response.ok || responseData.success === false) {
     throw {
       response: {
@@ -55,13 +61,4 @@ export const apiRequest = async (endpoint, options = {}) => {
   }
 
   return responseData;
-};
-
-// Logout function
-export const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("user");
-  // Redirect to login page
-  window.location.href = "/sign-in";
 };
