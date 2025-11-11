@@ -1,4 +1,4 @@
-import { apiRequest, logout } from "./apiRequest";
+import { apiRequest } from "./apiRequest"; // Remove logout import from here
 import BASE_URL from "../config/config";
 
 // Register user
@@ -38,7 +38,7 @@ export const refreshToken = async () => {
   const refreshToken = localStorage.getItem("refreshToken");
 
   if (!refreshToken) {
-    logout();
+    // Instead of calling logout here, throw an error that can be handled by components
     throw new Error("No refresh token available");
   }
 
@@ -51,8 +51,7 @@ export const refreshToken = async () => {
   });
 
   if (!response.ok) {
-    // Refresh token expired, force logout
-    logout();
+    // Refresh token expired, throw error to be handled by calling component
     throw new Error("Refresh token expired");
   }
 
@@ -100,6 +99,7 @@ export const forgotPasswordAPI = async (email) => {
     body: { email },
   });
 };
+
 // Verify password reset code
 export const verifyPasswordResetCodeAPI = async (code) => {
   return apiRequest("/api/auth/verify-reset-code", {
@@ -115,6 +115,7 @@ export const resendPasswordResetCodeAPI = async (email) => {
     body: { email },
   });
 };
+
 // Reset password with token
 export const resetPasswordAPI = async (token, newPassword) => {
   return apiRequest("/api/auth/reset-password", {
@@ -123,7 +124,7 @@ export const resetPasswordAPI = async (token, newPassword) => {
   });
 };
 
-// Logout user
+// Logout user - This should be called from components that have access to UserContext
 export const logoutAPI = async () => {
   try {
     await apiRequest("/api/auth/logout", {
@@ -131,9 +132,8 @@ export const logoutAPI = async () => {
     });
   } catch (error) {
     console.error("Logout API error:", error);
-  } finally {
-    // Always clear local storage
-    logout();
+    // Note: We don't call logout() here anymore
+    // The component should handle the logout via UserContext
   }
 };
 
