@@ -90,7 +90,6 @@ export default function ShortletOverviewPage() {
         state: apiData.state,
         town: apiData.town,
       },
-      totalLikes: apiData.totalLikes || 0,
       details: {
         bedrooms: apiData.details?.bedrooms,
         bathrooms: apiData.details?.bathrooms,
@@ -119,6 +118,9 @@ export default function ShortletOverviewPage() {
       status: apiData.status,
       isListed: apiData.isListed,
       isAvailable: apiData.isAvailable,
+      // ✅ ADD THESE TWO LINES:
+      favorites: apiData.favorites || [],
+      _count: apiData._count || {},
     };
   };
 

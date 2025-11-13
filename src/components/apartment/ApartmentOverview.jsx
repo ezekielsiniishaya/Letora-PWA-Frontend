@@ -146,17 +146,46 @@ export const ApartmentOverview = ({
 
   if (!apartment) return <div>Loading apartment details...</div>;
 
-  // Extract apartment data
+  // Handle both direct apartment object and nested data structure
+  const apartmentData = apartment.data || apartment;
+
+  // Extract apartment data - handle different field names
   const {
     basicInfo = {},
-    details = {},
-    facilities = [],
-    images = [],
+    details = apartmentData.details || {},
+    facilities = apartmentData.facilities || [],
+    images = apartmentData.images || [],
     pricing = {},
-    securityDeposit = {},
-    houseRules = [],
+    securityDeposit = apartmentData.securityDeposit || {},
+    houseRules = apartmentData.houseRules || [],
     legalDocuments = [],
-  } = apartment;
+    favorites: apartmentFavorites = apartmentData.favorites || [],
+    _count = apartmentData._count || {},
+    // Also extract from top level if nested
+    title = apartmentData.title,
+    apartmentType = apartmentData.apartmentType,
+    state = apartmentData.state,
+    town = apartmentData.town,
+   } = apartmentData;
+
+  // Build basicInfo if it doesn't exist
+  const actualBasicInfo = basicInfo.title
+    ? basicInfo
+    : {
+        title: title || basicInfo.title,
+        apartmentType: apartmentType || basicInfo.apartmentType,
+        state: state || basicInfo.state,
+        town: town || basicInfo.town,
+      };
+
+
+  // Use the favorites from the extracted data
+  const actualFavorites = apartmentFavorites;
+  const totalLikes = _count.favorites || apartmentData.totalLikes || 0;
+
+  console.log("Actual favorites:", actualFavorites);
+  console.log("Total likes:", totalLikes);
+  console.log("apartmentData.totalLikes:", apartmentData.totalLikes);
 
   const displayImages =
     images.length > 0
@@ -167,7 +196,7 @@ export const ApartmentOverview = ({
         )
       : ["/images/apartment-dashboard.png"];
 
-  const propertyDetails = reverseMapPropertyDetails(details, basicInfo);
+  const propertyDetails = reverseMapPropertyDetails(details, actualBasicInfo);
   const mappedFacilities = reverseMapFacilities(facilities);
   const mappedHouseRules = reverseMapHouseRules(houseRules);
 
@@ -202,6 +231,37 @@ export const ApartmentOverview = ({
       apartment.verified
     );
   };
+
+  // Get liked users display text
+  const getLikedUsersText = () => {
+    const favorites = actualFavorites || [];
+    const actualLikeCount = favorites.length;
+
+    // If we have favorites data with user info, use it
+    if (actualLikeCount > 0) {
+      if (actualLikeCount === 1) {
+        return `${favorites[0]?.user?.firstName || "Someone"} Liked this place`;
+      } else if (actualLikeCount === 2) {
+        return `${
+          favorites[1]?.user?.firstName || "Someone"
+        } +1 Liked this place`;
+      } else if (actualLikeCount === 3) {
+        return `${
+          favorites[2]?.user?.firstName || "Someone"
+        } +2 Liked this place`;
+      } else if (actualLikeCount === 4) {
+        return `${
+          favorites[3]?.user?.firstName || "Someone"
+        } +3 Liked this place`;
+      } else if (actualLikeCount > 4) {
+        return `+${actualLikeCount} Liked this place`;
+      }
+    }
+
+    // Show 0 likes
+    return "0 people Liked this place";
+  };
+
   return (
     <div className="text-[#39302A] mb-[24px] bg-white">
       {/* Header Actions */}
@@ -356,24 +416,78 @@ export const ApartmentOverview = ({
                   {basicInfo.town || "Maryland, Lagos"},{" "}
                   {basicInfo.state || "Maryland, Lagos"}
                 </p>
-                {/* Rating and likes section */}
-                {apartment.totalLikes != null && (
-                  <div className="flex items-center mt-[10px] gap-1 md:mt-4 md:gap-2">
-                    <div className="flex -space-x-2 md:-space-x-3">
-                      <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#8B44FF] md:w-[36.62px] md:h-[36.62px]" />
-                      <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#E00E9A] md:w-[36.62px] md:h-[36.62px]" />
-                      <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#FF4444] md:w-[36.62px] md:h-[36.62px]" />
-                      <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#70E5FF] md:w-[36.62px] md:h-[36.62px]" />
-                    </div>
+                {/* Updated Rating and likes section - Always show */}
+                <div className="flex items-center justify-between mt-[10px]">
+                  <div className="flex items-center gap-1 md:gap-2">
+                    {actualFavorites && actualFavorites.length > 0 ? (
+                      <>
+                        <div className="flex -space-x-2 md:-space-x-3">
+                          {/* Display profile images based on likes count */}
+                          {actualFavorites
+                            .slice(0, Math.min(4, actualFavorites.length))
+                            .map((favorite, index) => {
+                              const profilePic = favorite.user?.profilePic;
+                              const colors = [
+                                "#8B44FF",
+                                "#E00E9A",
+                                "#FF4444",
+                                "#70E5FF",
+                              ];
 
-                    <span className="text-[12px] font-medium text-[#333333] md:text-[20px]">
-                      {apartment.totalLikes?.toString()}+ Liked this place
-                    </span>
+                              if (!profilePic) {
+                                return (
+                                  <div
+                                    key={favorite.id}
+                                    className="w-[20.56px] h-[20.56px] rounded-full border-2 border-white md:w-[36.62px] md:h-[36.62px]"
+                                    style={{
+                                      backgroundColor:
+                                        colors[index % colors.length],
+                                    }}
+                                  />
+                                );
+                              }
+
+                              return (
+                                <img
+                                  key={favorite.id}
+                                  src={profilePic}
+                                  alt={favorite.user?.firstName || "User"}
+                                  className="w-[20.56px] h-[20.56px] rounded-full border-2 border-white object-cover md:w-[36.62px] md:h-[36.62px]"
+                                  onError={(e) => {
+                                    const colors = [
+                                      "#8B44FF",
+                                      "#E00E9A",
+                                      "#FF4444",
+                                      "#70E5FF",
+                                    ];
+                                    e.target.style.display = "none";
+                                    const div = document.createElement("div");
+                                    div.className =
+                                      "w-[20.56px] h-[20.56px] rounded-full border-2 border-white md:w-[36.62px] md:h-[36.62px]";
+                                    div.style.backgroundColor =
+                                      colors[index % colors.length];
+                                    e.target.parentNode.insertBefore(
+                                      div,
+                                      e.target
+                                    );
+                                  }}
+                                />
+                              );
+                            })}
+                        </div>
+                        <span className="text-[12px] font-medium text-[#333333] md:text-[20px]">
+                          {getLikedUsersText()}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[12px] font-medium text-[#333333] md:text-[20px]">
+                        {getLikedUsersText()}
+                      </span>
+                    )}
                   </div>
-                )}{" "}
-                <div className="flex flex-col items-end">
+
                   <button
-                    className="text-white py-[6px] w-[128px] px-[6px] bg-[#A20BA2] h-[30px] font-semibold text-[12.5px] mt-[-30px] rounded-[5px] flex items-center justify-center"
+                    className="mt-[-10px] text-white py-[6px] w-[128px] px-[6px] bg-[#A20BA2] h-[30px] font-semibold text-[12.5px] rounded-[5px] flex items-center justify-center"
                     onClick={onPriceButtonClick}
                   >
                     ₦{formatPrice(pricing.pricePerNight)}/Night
