@@ -513,9 +513,9 @@ export const ApartmentDisplay = ({
                 className="flex-1 min-w-0 border-[1.5px] border-[#D1D0D0] rounded-lg bg-[#CCCCCC42] h-[98px] flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] p-1"
               >
                 <img
-                  src={getDocumentIcon(doc.name)}
+                  src={getDocumentIcon(doc)} // Pass the entire doc object
                   alt={doc.name}
-                  className="w-6 h-6 mb-1 flex-shrink-0" // slightly smaller than w-8 h-8
+                  className="w-6 h-6 mb-1 flex-shrink-0"
                 />
                 <span className="text-center px-1 text-[10px] truncate w-full">
                   {doc.name && doc.name.length > 15

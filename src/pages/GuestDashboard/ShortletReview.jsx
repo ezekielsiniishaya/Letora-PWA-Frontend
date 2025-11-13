@@ -155,7 +155,7 @@ export default function ListingOverviewPage() {
   }
 
   return (
-    <div className="bg-[#F9F9F9] min-h-screen">
+    <div className="min-h-screen">
       <ApartmentDisplay
         apartment={apartment}
         user={user}
