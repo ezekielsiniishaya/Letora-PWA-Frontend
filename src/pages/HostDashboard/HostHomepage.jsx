@@ -54,8 +54,9 @@ export default function Dashboard() {
   // Get user's actual bookings and apartments
   const userBookings = getUserBookings();
   const unreadCount = getUnreadNotificationsCount();
-  const currentBooking = userBookings.length > 0 ? userBookings[0] : null;
-
+  const currentBooking = userBookings.find(
+    (booking) => booking.status?.toLowerCase() !== "pending" || null
+  );
   // Get account balance from host profile
   const accountBalance = user?.hostProfile?.accountBalance || 0;
   const formattedBalance =
