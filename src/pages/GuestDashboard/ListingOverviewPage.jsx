@@ -40,7 +40,7 @@ export default function ListingOverviewPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const [submissionResponse, setSubmissionResponse] = useState(null);
   const { apartmentData, clearApartmentData, isEditing } =
     useApartmentCreation();
   const navigate = useNavigate();
@@ -193,14 +193,9 @@ export default function ListingOverviewPage() {
         // Success case
         console.log("🟢 Apartment operation successful:", response.apartment);
         clearApartmentData();
-        setShowSuccess(true);
+        setSubmissionResponse(response); // Store the response
 
-        navigate("/shortlet-review", {
-          state: {
-            apartment: response.apartment,
-            isUpdate: isEditing(),
-          },
-        });
+        setShowSuccess(true);
       } else {
         // Handle backend error directly
         console.log("🔴 Backend returned error:", response.error);
@@ -304,6 +299,8 @@ export default function ListingOverviewPage() {
       {showSuccess && (
         <ShowSuccess
           image="/icons/document.png"
+          width="w-[60px]"
+          imgHeight="h-[60px]"
           heading={
             isEditing()
               ? "Listing Updated Successfully"
@@ -317,7 +314,12 @@ export default function ListingOverviewPage() {
           buttonText="Done"
           onClose={() => {
             setShowSuccess(false);
-            navigate("/shortlet-review");
+            navigate("/shortlet-review", {
+              state: {
+                apartment: submissionResponse?.apartment, // Use the stored response
+                isUpdate: isEditing(),
+              },
+            });
           }}
         />
       )}

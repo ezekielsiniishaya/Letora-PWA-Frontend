@@ -121,7 +121,39 @@ export default function ShortletOverviewPage() {
       // ✅ ADD THESE TWO LINES:
       favorites: apiData.favorites || [],
       _count: apiData._count || {},
+      // ✅ ADD AVAILABILITY REQUEST
+      availabilityRequest: apiData.availabilityRequest || null,
     };
+  };
+
+  // Check if we should show the request button
+  const shouldShowRequestButton = () => {
+    if (!apartment?.availabilityRequest) {
+      return true; // No request exists, show button
+    }
+
+    const request = apartment.availabilityRequest;
+    const requestDate = new Date(request.createdAt);
+    const today = new Date();
+
+    // Check if request was made today
+    const isToday =
+      requestDate.getDate() === today.getDate() &&
+      requestDate.getMonth() === today.getMonth() &&
+      requestDate.getFullYear() === today.getFullYear();
+
+    // Check if status is pending
+    const isPending = request.status === "PENDING";
+
+    console.log("Availability request check:", {
+      request,
+      isToday,
+      isPending,
+      shouldShowButton: !(isToday || !isPending),
+    });
+
+    // Hide button if request was made today OR status is not pending
+    return !(isToday || !isPending);
   };
 
   // Check document verification status
@@ -479,6 +511,13 @@ export default function ShortletOverviewPage() {
       if (res.success) {
         // Show success popup instead of alert
         setShowSuccess(true);
+
+        // Refresh apartment data to get the updated availability request
+        const updatedRes = await getApartmentById(id);
+        if (updatedRes && updatedRes.data) {
+          const transformedApartment = transformApartmentData(updatedRes.data);
+          setApartment(transformedApartment);
+        }
       } else {
         showAlert(
           "error",
@@ -502,6 +541,10 @@ export default function ShortletOverviewPage() {
   };
   // Check if current user is the host and owner of this apartment
   const isHostAndOwner = user && host && user.id === host.id;
+
+  // Check if we should show the request button
+  const showRequestButton = shouldShowRequestButton();
+
   // Show loading spinner like in dashboard
   if (loading) {
     return (
@@ -599,8 +642,8 @@ export default function ShortletOverviewPage() {
           </p>
         </div>
 
-        {/* Request Availability Button - Hide if user is host and owner */}
-        {!isHostAndOwner && (
+        {/* Request Availability Button - Hide if user is host and owner OR if request was made today OR status is not pending */}
+        {!isHostAndOwner && showRequestButton && (
           <ButtonWhite
             text={isRequesting ? "Sending Request..." : "Request Availability"}
             className={"mt-20 mb-5"}
@@ -611,7 +654,13 @@ export default function ShortletOverviewPage() {
         {/* Book Now Button - Updated to handle guest verification */}
         <Button
           text={`Book @ ₦${apartment.pricing?.pricePerNight?.toLocaleString()}/Night`}
-          className={`mb-20 ${isHostAndOwner ? "mt-[120px]" : ""}`}
+          className={`mb-20 ${
+            !isHostAndOwner && !showRequestButton
+              ? "mt-20"
+              : isHostAndOwner
+              ? "mt-[120px]"
+              : ""
+          }`}
           onClick={handleBookNow}
         />
       </div>
