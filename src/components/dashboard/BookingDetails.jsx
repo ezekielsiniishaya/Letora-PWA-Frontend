@@ -69,7 +69,7 @@ export default function BookingDetails({ role = "guest" }) {
     },
   };
 
-  // Helper functions (keep your existing ones)
+  // Helper functions
   const getPrimaryImage = (bookingData) => {
     if (!bookingData?.apartment?.images) return "/images/default-apartment.jpg";
     const primaryImage = bookingData.apartment.images.find(
@@ -112,18 +112,25 @@ export default function BookingDetails({ role = "guest" }) {
     }).format(amount);
   };
 
-  const calculateDuration = (startDate, endDate) => {
-    if (!startDate || !endDate) return "Not specified";
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+  const getDuration = (bookingData) => {
+    if (bookingData?.duration) {
+      return `${bookingData.duration} night${
+        bookingData.duration !== 1 ? "s" : ""
+      }`;
+    }
+    // Fallback to calculation if not provided
+    if (!bookingData?.startDate || !bookingData?.endDate)
+      return "Not specified";
+    const start = new Date(bookingData.startDate);
+    const end = new Date(bookingData.endDate);
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return `${diffDays} night${diffDays !== 1 ? "s" : ""}`;
   };
 
-  // Calculate payment breakdown
-  const calculatePaymentBreakdown = (totalPrice) => {
-    if (!totalPrice) {
+  // Use actual payment data from backend instead of calculating
+  const getPaymentBreakdown = (bookingData) => {
+    if (!bookingData) {
       return {
         bookingFee: 0,
         securityDeposit: 0,
@@ -133,17 +140,13 @@ export default function BookingDetails({ role = "guest" }) {
       };
     }
 
-    const bookingFee = totalPrice * 0.1;
-    const securityDeposit = totalPrice * 0.2;
-    const convenienceFee = totalPrice * 0.05;
-    const subtotal = totalPrice - bookingFee - securityDeposit - convenienceFee;
-
+    // Use actual values from backend
     return {
-      bookingFee,
-      securityDeposit,
-      convenienceFee,
-      subtotal,
-      total: totalPrice,
+      bookingFee: parseFloat(bookingData.bookingFee) || 0,
+      securityDeposit: parseFloat(bookingData.securityDeposit) || 0,
+      convenienceFee: parseFloat(bookingData.convenienceFee) || 0,
+      subtotal: parseFloat(bookingData.baseAmount) || 0,
+      total: parseFloat(bookingData.totalPrice) || 0,
     };
   };
 
@@ -197,9 +200,7 @@ export default function BookingDetails({ role = "guest" }) {
 
   const currentStatus =
     statusMap[getBookingStatus(booking)] || statusMap.ONGOING;
-  const paymentBreakdown = booking
-    ? calculatePaymentBreakdown(booking.totalPrice)
-    : null;
+  const paymentBreakdown = booking ? getPaymentBreakdown(booking) : null;
 
   if (loading) {
     return (
@@ -323,9 +324,7 @@ export default function BookingDetails({ role = "guest" }) {
             </div>
             <div className="flex justify-between">
               <span>Duration</span>
-              <span>
-                {calculateDuration(booking.startDate, booking.endDate)}
-              </span>
+              <span>{getDuration(booking)}</span>
             </div>
           </div>
         </div>
