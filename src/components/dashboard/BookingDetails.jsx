@@ -1,6 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getBookingById } from "../../services/userApi"; // Your API service
+import {
+  getBookingById,
+  createDepositHold,
+  checkDepositHoldStatus,
+} from "../../services/userApi";
 import CancelBookingPopup from "../dashboard/CancelBookingPopup";
 import ConfirmCancelPopup from "../dashboard/ConfirmCancelPopup";
 import ShowSuccess from "../ShowSuccess";
@@ -17,6 +21,8 @@ export default function BookingDetails({ role = "guest" }) {
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
   const [depositHeld, setDepositHeld] = useState(false);
+  const [canHoldDeposit, setCanHoldDeposit] = useState(true);
+  const [isCheckingHold, setIsCheckingHold] = useState(false);
   const [showHoldSuccess, setShowHoldSuccess] = useState(false);
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,6 +59,69 @@ export default function BookingDetails({ role = "guest" }) {
       setLoading(false);
     }
   }, [id]);
+
+  // Check deposit hold status when booking is loaded and user is host
+  const checkHoldStatus = useCallback(async () => {
+    if (!booking || role !== "host") return;
+
+    try {
+      setIsCheckingHold(true);
+      const response = await checkDepositHoldStatus(booking.id);
+
+      if (response.success) {
+        setCanHoldDeposit(response.data.canRequestHold);
+
+        // If hold already exists, update state
+        if (response.data.hasExistingHold) {
+          setDepositHeld(true);
+        }
+      } else {
+        setCanHoldDeposit(false);
+      }
+    } catch (error) {
+      console.error("Error checking hold status:", error);
+      setCanHoldDeposit(false);
+    } finally {
+      setIsCheckingHold(false);
+    }
+  }, [booking, role]);
+
+  useEffect(() => {
+    if (
+      booking &&
+      role === "host" &&
+      getBookingStatus(booking) === "COMPLETED"
+    ) {
+      checkHoldStatus();
+    }
+  }, [booking, role, checkHoldStatus]);
+
+  const handleHoldDeposit = async () => {
+    if (depositHeld || !canHoldDeposit) return;
+
+    try {
+      const response = await createDepositHold(booking.id);
+
+      if (response.success) {
+        setShowHoldSuccess(true);
+        setCanHoldDeposit(false);
+        setDepositHeld(true);
+      } else {
+        alert(response.message || "Failed to hold deposit");
+      }
+    } catch (error) {
+      console.error("Error holding deposit:", error);
+      alert(error.message || "Failed to hold deposit");
+    }
+  };
+
+  // Get button text for hold deposit
+  const getHoldDepositButtonText = () => {
+    if (isCheckingHold) return "Checking...";
+    if (depositHeld) return "Deposit Held";
+    if (!canHoldDeposit) return "Hold Expired";
+    return "Hold Security Deposit";
+  };
 
   // Status styles
   const statusMap = {
@@ -104,6 +173,19 @@ export default function BookingDetails({ role = "guest" }) {
     return `${day}-${month}-${year}`;
   };
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "Date not set";
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString("en-US", { month: "short" });
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const twelveHour = hours % 12 || 12;
+    return `${day}-${month}-${year} | ${twelveHour}:${minutes} ${ampm}`;
+  };
+
   const formatCurrency = (amount) => {
     if (!amount) return "₦0";
     return new Intl.NumberFormat("en-NG", {
@@ -118,7 +200,6 @@ export default function BookingDetails({ role = "guest" }) {
         bookingData.duration !== 1 ? "s" : ""
       }`;
     }
-    // Fallback to calculation if not provided
     if (!bookingData?.startDate || !bookingData?.endDate)
       return "Not specified";
     const start = new Date(bookingData.startDate);
@@ -128,7 +209,6 @@ export default function BookingDetails({ role = "guest" }) {
     return `${diffDays} night${diffDays !== 1 ? "s" : ""}`;
   };
 
-  // Use actual payment data from backend instead of calculating
   const getPaymentBreakdown = (bookingData) => {
     if (!bookingData) {
       return {
@@ -140,7 +220,6 @@ export default function BookingDetails({ role = "guest" }) {
       };
     }
 
-    // Use actual values from backend
     return {
       bookingFee: parseFloat(bookingData.bookingFee) || 0,
       securityDeposit: parseFloat(bookingData.securityDeposit) || 0,
@@ -150,7 +229,6 @@ export default function BookingDetails({ role = "guest" }) {
     };
   };
 
-  // Determine display information based on role
   const getDisplayName = (bookingData) => {
     if (role === "host") {
       return (
@@ -164,14 +242,6 @@ export default function BookingDetails({ role = "guest" }) {
           bookingData?.apartment?.host?.lastName || ""
         }`.trim() || "Host"
       );
-    }
-  };
-
-  const getDisplayPhone = (bookingData) => {
-    if (role === "host") {
-      return bookingData?.guest?.phone || "Not provided";
-    } else {
-      return bookingData?.apartment?.host?.phone || "Not provided";
     }
   };
 
@@ -301,7 +371,7 @@ export default function BookingDetails({ role = "guest" }) {
                 {currentStatus.label}
               </span>
               <p className="text-[14px] font-semibold">
-                {formatCurrency(booking.totalPrice || 0)}
+                {formatCurrency(booking.apartment?.price || 0)}/Night
               </p>
             </div>
           </div>
@@ -312,7 +382,7 @@ export default function BookingDetails({ role = "guest" }) {
           <div className="space-y-4">
             <div className="flex justify-between">
               <span>Booking Date</span>
-              <span>{formatDate(booking.createdAt)}</span>
+              <span>{formatDateTime(booking.createdAt)}</span>
             </div>
             <div className="flex justify-between">
               <span>Check in</span>
@@ -356,17 +426,31 @@ export default function BookingDetails({ role = "guest" }) {
         {/* Host/Guest Details */}
         <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
           <h3 className="font-medium mb-2">
-            {role === "guest" ? "Your Host Details" : "Your Guest Details"}
+            {role === "guest" ? "Host Details" : "Guest Details"}
           </h3>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span>{role === "guest" ? "Host Name" : "Guest Name"}</span>
-              <span>{getDisplayName(booking)}</span>
-            </div>
-            <div className="flex justify-between">
               <span>Phone Number</span>
-              <span>{getDisplayPhone(booking)}</span>
+              <span>
+                {role === "host"
+                  ? booking?.guest?.phone
+                  : booking?.apartment?.host?.phone || "Not provided"}
+              </span>
             </div>
+
+            {(role === "host"
+              ? booking?.guest?.phone2
+              : booking?.apartment?.host?.phone2) && (
+              <div className="flex justify-between">
+                <span>Phone Number</span>
+                <span>
+                  {role === "host"
+                    ? booking?.guest?.phone2
+                    : booking?.apartment?.host?.phone2}
+                </span>
+              </div>
+            )}
+
             {role === "host" && (
               <div className="flex justify-between">
                 <span>Email</span>
@@ -423,13 +507,15 @@ export default function BookingDetails({ role = "guest" }) {
         {showHoldDepositButton && (
           <div className="pt-[40px] pb-[42px]">
             <Button
-              text="Hold Security Deposit"
+              text={getHoldDepositButtonText()}
               icon="/icons/lock.svg"
-              onClick={() => !depositHeld && setShowHoldSuccess(true)}
+              onClick={handleHoldDeposit}
               className={`h-[57px] w-full ${
-                depositHeld ? "bg-[#FBD0FB] cursor-not-allowed" : ""
+                depositHeld || !canHoldDeposit
+                  ? "bg-[#FBD0FB] cursor-not-allowed"
+                  : ""
               }`}
-              disabled={depositHeld}
+              disabled={depositHeld || !canHoldDeposit || isCheckingHold}
             />
           </div>
         )}
@@ -486,7 +572,6 @@ export default function BookingDetails({ role = "guest" }) {
           buttonText="Done"
           onClose={() => {
             setShowHoldSuccess(false);
-            setDepositHeld(true);
           }}
           height="auto"
         />

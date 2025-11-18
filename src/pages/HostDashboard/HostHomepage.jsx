@@ -15,7 +15,7 @@ export default function Dashboard() {
   const [showBalance, setShowBalance] = useState(true);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
+  const [withdrawalData, setWithdrawalData] = useState(null);
   // Get time-based greeting
   const getTimeBasedGreeting = () => {
     const currentHour = new Date().getHours();
@@ -50,6 +50,40 @@ export default function Dashboard() {
     console.log("📍 Location changed to:", newLocation);
     window.location.reload();
   };
+  const handleWithdrawalSuccess = (amount, data) => {
+    setWithdrawalData(data); // Store the withdrawal data
+    setShowWithdraw(false);
+    setShowSuccess(true);
+
+    // Refresh user data to update balance
+    refreshUser();
+  };
+
+  // Format the withdrawal amount for display
+  const getWithdrawalAmount = () => {
+    if (withdrawalData) {
+      return withdrawalData.amount.toLocaleString("en-NG", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+    return "0.00";
+  };
+
+  // Format the new balance for display
+  const getNewBalance = () => {
+    if (withdrawalData) {
+      // Use newAvailableBalance instead of newBalance
+      const balance =
+        withdrawalData.newAvailableBalance || withdrawalData.newBalance;
+      return balance.toLocaleString("en-NG", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+    return "0.00";
+  };
+
 
   // Get user's actual bookings and apartments
   const userBookings = getUserBookings();
@@ -58,7 +92,9 @@ export default function Dashboard() {
     (booking) => booking.status?.toLowerCase() !== "pending" || null
   );
   // Get account balance from host profile
-  const accountBalance = user?.hostProfile?.accountBalance || 0;
+  // NEW:
+  const accountBalance = user?.hostProfile?.availableBalance || 0;
+  const withdrawableBalance = user?.hostProfile?.withdrawableBalance || 0;
   const formattedBalance =
     accountBalance === 0
       ? "0.0"
@@ -204,7 +240,6 @@ export default function Dashboard() {
           />
         </div>
       </div>
-
       {/* Rest of your dashboard content remains the same... */}
       {/* My Booking Section */}
       <div className="px-[21px] mt-[25px]">
@@ -234,7 +269,6 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-
       {/* Hot Apartments */}
       <div className="px-[22px] mt-1">
         <div className="flex justify-between items-center">
@@ -266,7 +300,6 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-
       {/* Available Apartments */}
       <div className="px-[22px]">
         <div className="flex justify-between items-center">
@@ -302,30 +335,29 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-
       {/* Bottom Navigation */}
-      <Navigation />
-
-      {/* Withdraw Popup */}
+      <Navigation />e{/* Withdraw Popup */}
       {showWithdraw && (
         <WithdrawPopup
-          balance={formattedBalance}
+          balance={withdrawableBalance.toLocaleString("en-NG", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
           onClose={() => setShowWithdraw(false)}
-          onSuccess={() => {
-            setShowWithdraw(false);
-            setShowSuccess(true);
-          }}
+          onSuccess={handleWithdrawalSuccess} // Use the updated callback
         />
       )}
-
-      {/* Show Success Popup */}
+      {/* Show Success Popup with actual data */}
       {showSuccess && (
         <ShowSuccess
           image="/icons/Illustration.svg"
           heading="Withdrawal Successful"
-          message="₦550,000 has been moved from your Letora wallet to your bank account. Arrival time may vary by bank."
+          message={`₦${getWithdrawalAmount()} has been moved from your Letora wallet to your bank account. Your new balance is ₦${getNewBalance()}. Arrival time may vary by bank.`}
           buttonText="Done"
-          onClose={() => setShowSuccess(false)}
+          onClose={() => {
+            setShowSuccess(false);
+            setWithdrawalData(null); // Reset withdrawal data
+          }}
           height="auto"
         />
       )}

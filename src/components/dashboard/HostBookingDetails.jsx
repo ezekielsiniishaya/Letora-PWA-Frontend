@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getBookingById } from "../../services/userApi";
+import {
+  getBookingById,
+  createDepositHold,
+  checkDepositHoldStatus,
+} from "../../services/userApi";
 import ShowSuccess from "../ShowSuccess";
 import Button from "../Button";
 
@@ -10,6 +14,8 @@ export default function HostBookingDetails() {
   const location = useLocation();
 
   const [depositHeld, setDepositHeld] = useState(false);
+  const [canHoldDeposit, setCanHoldDeposit] = useState(true);
+  const [isCheckingHold, setIsCheckingHold] = useState(false);
   const [showHoldSuccess, setShowHoldSuccess] = useState(false);
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,6 +23,9 @@ export default function HostBookingDetails() {
 
   // Get current user ID from location state
   const currentUserId = location.state?.currentUserId;
+  // Check if current user owns the apartment
+  const isOwner =
+    currentUserId && booking?.apartment?.host?.id === currentUserId;
 
   // Fetch booking directly from backend
   useEffect(() => {
@@ -49,6 +58,63 @@ export default function HostBookingDetails() {
       setLoading(false);
     }
   }, [id]);
+
+  // Check deposit hold status when booking is loaded
+  useEffect(() => {
+    const checkHoldStatus = async () => {
+      if (!booking || !isOwner) return;
+
+      try {
+        setIsCheckingHold(true);
+        const response = await checkDepositHoldStatus(booking.id);
+
+        if (response.success) {
+          setCanHoldDeposit(response.data.canRequestHold);
+          if (response.data.hasExistingHold) {
+            setDepositHeld(true);
+          }
+        } else {
+          setCanHoldDeposit(false);
+        }
+      } catch (error) {
+        console.error("Error checking hold status:", error);
+        setCanHoldDeposit(false);
+      } finally {
+        setIsCheckingHold(false);
+      }
+    };
+
+    if (booking && getBookingStatus(booking) === "COMPLETED" && isOwner) {
+      checkHoldStatus();
+    }
+  }, [booking, isOwner]);
+
+  const handleHoldDeposit = async () => {
+    if (depositHeld || !canHoldDeposit) return;
+
+    try {
+      const response = await createDepositHold(booking.id);
+
+      if (response.success) {
+        setShowHoldSuccess(true);
+        setCanHoldDeposit(false);
+        setDepositHeld(true);
+      } else {
+        alert(response.message || "Failed to hold deposit");
+      }
+    } catch (error) {
+      console.error("Error holding deposit:", error);
+      alert(error.message || "Failed to hold deposit");
+    }
+  };
+
+  // Get button text for hold deposit
+  const getHoldDepositButtonText = () => {
+    if (isCheckingHold) return "Please wait...";
+    if (depositHeld) return "Hold Security Deposit";
+    if (!canHoldDeposit) return "Hold Expired";
+    return "Hold Security Deposit";
+  };
 
   // Status styles
   const statusMap = {
@@ -100,6 +166,18 @@ export default function HostBookingDetails() {
     return `${day}-${month}-${year}`;
   };
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "Date not set";
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString("en-US", { month: "short" });
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const twelveHour = hours % 12 || 12;
+    return `${day}-${month}-${year} | ${twelveHour}:${minutes} ${ampm}`;
+  };
   const formatCurrency = (amount) => {
     if (!amount) return "₦0";
     return new Intl.NumberFormat("en-NG", {
@@ -147,32 +225,11 @@ export default function HostBookingDetails() {
     if (!bookingData?.status) return "ONGOING";
     return bookingData.status;
   };
-
-  // Check if current user owns the apartment
-  const isOwner =
-    currentUserId && booking?.apartment?.host?.id === currentUserId;
-
   const currentStatus =
     statusMap[getBookingStatus(booking)] || statusMap.ONGOING;
   const paymentBreakdown = booking
     ? calculatePaymentBreakdown(booking.totalPrice)
     : null;
-
-  // Debug logging
-  useEffect(() => {
-    if (booking) {
-      console.log("=== HOST BOOKING DETAILS DEBUG ===");
-      console.log("Current User ID:", currentUserId);
-      console.log("Apartment Host ID:", booking?.apartment?.host?.id);
-      console.log("Is Owner:", isOwner);
-      console.log("Booking Status:", getBookingStatus(booking));
-      console.log(
-        "Show Hold Deposit Button:",
-        getBookingStatus(booking) === "COMPLETED" && isOwner
-      );
-      console.log("=== END DEBUG ===");
-    }
-  }, [booking, currentUserId, isOwner]);
 
   if (loading) {
     return (
@@ -246,7 +303,8 @@ export default function HostBookingDetails() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h2 className="text-[12px] font-medium text-[#333333]">
-                {booking?.guest?.firstName} {booking?.guest?.lastName}
+                {booking?.apartment?.host?.firstName}{" "}
+                {booking?.apartment?.host?.lastName}
               </h2>
 
               <div className="flex items-center text-sm text-black font-medium mt-[6px]">
@@ -282,7 +340,7 @@ export default function HostBookingDetails() {
           <div className="space-y-4">
             <div className="flex justify-between">
               <span>Booking Date</span>
-              <span>{formatDate(booking.createdAt)}</span>
+              <span>{formatDateTime(booking.createdAt)}</span>
             </div>
             <div className="flex justify-between">
               <span>Check in</span>
@@ -324,10 +382,8 @@ export default function HostBookingDetails() {
             </div>
           </div>
         )}
-
-        {/* Guest Details */}
         <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
-          <h3 className="font-medium mb-2">Guest Details</h3>
+          <h3 className="font-medium mb-2">Your Guest Details</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>Guest Name</span>
@@ -335,10 +391,21 @@ export default function HostBookingDetails() {
                 {booking?.guest?.firstName} {booking?.guest?.lastName}
               </span>
             </div>
+
+            {/* First Phone Number */}
             <div className="flex justify-between">
               <span>Phone Number</span>
               <span>{booking?.guest?.phone || "Not provided"}</span>
             </div>
+
+            {/* Second Phone Number - Only show if provided */}
+            {booking?.guest?.phone2 && (
+              <div className="flex justify-between">
+                <span>Phone Number</span>
+                <span>{booking?.guest?.phone2}</span>
+              </div>
+            )}
+
             <div className="flex justify-between">
               <span>Email</span>
               <span>{booking?.guest?.email || "Not provided"}</span>
@@ -370,13 +437,15 @@ export default function HostBookingDetails() {
         {showHoldDepositButton && (
           <div className="pt-[40px] pb-[42px]">
             <Button
-              text="Hold Security Deposit"
+              text={getHoldDepositButtonText()}
               icon="/icons/lock.svg"
-              onClick={() => !depositHeld && setShowHoldSuccess(true)}
+              onClick={handleHoldDeposit}
               className={`h-[57px] w-full ${
-                depositHeld ? "bg-[#FBD0FB] cursor-not-allowed" : ""
+                depositHeld || !canHoldDeposit
+                  ? "bg-[#FBD0FB] cursor-not-allowed"
+                  : ""
               }`}
-              disabled={depositHeld}
+              disabled={depositHeld || !canHoldDeposit || isCheckingHold}
             />
           </div>
         )}
@@ -400,7 +469,6 @@ export default function HostBookingDetails() {
           buttonText="Done"
           onClose={() => {
             setShowHoldSuccess(false);
-            setDepositHeld(true);
           }}
           height="auto"
         />

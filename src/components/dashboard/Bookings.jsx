@@ -1,9 +1,13 @@
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react"; // Add useCallback
 import CancelBookingPopup from "./CancelBookingPopup";
 import ConfirmCancelPopup from "./ConfirmCancelPopup";
 import ShowSuccess from "../ShowSuccess";
 import RatingPopup from "./RatingPopup";
+import { useNavigate } from "react-router-dom";
+import {
+  createDepositHold,
+  checkDepositHoldStatus,
+} from "../../services/userApi.js";
 
 export default function MyBooking({
   booking,
@@ -17,7 +21,10 @@ export default function MyBooking({
   const [showRating, setShowRating] = useState(false);
   const [showHoldSuccess, setShowHoldSuccess] = useState(false);
   const [actionCompleted, setActionCompleted] = useState(false);
+  const [canHoldDeposit, setCanHoldDeposit] = useState(true);
+  const [isCheckingHold, setIsCheckingHold] = useState(false);
 
+  const bookingId = booking?.id;
   const navigate = useNavigate();
 
   const statusMap = {
@@ -35,6 +42,55 @@ export default function MyBooking({
   };
 
   const currentStatus = statusMap[status];
+
+  // Wrap checkHoldStatus in useCallback to prevent infinite re-renders
+  const checkHoldStatus = useCallback(async () => {
+    try {
+      setIsCheckingHold(true);
+      const response = await checkDepositHoldStatus(bookingId);
+
+      if (response.success) {
+        setCanHoldDeposit(response.data.canRequestHold);
+
+        // If hold already exists, update button text
+        if (response.data.hasExistingHold) {
+          setActionCompleted(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking hold status:", error);
+      setCanHoldDeposit(false); // Disable button on error
+    } finally {
+      setIsCheckingHold(false);
+    }
+  }, [bookingId]); // Add dependencies here
+
+  // Check deposit hold status when component mounts
+  useEffect(() => {
+    if (
+      status === "completed" &&
+      completedButtonText === "Hold Security Deposit"
+    ) {
+      checkHoldStatus();
+    }
+  }, [bookingId, status, completedButtonText, checkHoldStatus]); // Add checkHoldStatus to dependencies
+
+  const handleHoldDeposit = async () => {
+    try {
+      const response = await createDepositHold(bookingId);
+
+      if (response.success) {
+        setShowHoldSuccess(true);
+        setCanHoldDeposit(false); // Disable button after successful hold
+        setActionCompleted(true);
+      } else {
+        alert(response.message || "Failed to hold deposit");
+      }
+    } catch (error) {
+      console.error("Error holding deposit:", error);
+      alert(error.message || "Failed to hold deposit");
+    }
+  };
 
   // Helper functions to handle backend data structure
   const getPrimaryImage = (bookingData) => {
@@ -70,9 +126,6 @@ export default function MyBooking({
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
   };
-
-  // Get booking ID
-  const bookingId = booking?.id;
 
   // Navigation handler - use onClick prop if provided, otherwise use default navigation
   const handleNavigation = () => {
@@ -205,27 +258,32 @@ export default function MyBooking({
             </button>
           </div>
         )}
-
         {status === "completed" && (
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (actionCompleted) return;
+              if (actionCompleted || !canHoldDeposit) return;
 
               if (completedButtonText === "Rate your Stay") {
                 setShowRating(true);
               } else if (completedButtonText === "Hold Security Deposit") {
-                setShowHoldSuccess(true);
+                handleHoldDeposit();
               }
             }}
-            disabled={actionCompleted}
+            disabled={actionCompleted || !canHoldDeposit || isCheckingHold}
             className={`w-[177px] h-[35px] rounded-[5px] text-[12px] font-medium ${
-              actionCompleted
+              actionCompleted || !canHoldDeposit
                 ? "bg-[#FBD0FB] text-white cursor-not-allowed"
                 : "bg-[#A20BA2] text-white"
             }`}
           >
-            {completedButtonText}
+            {isCheckingHold
+              ? "Checking..."
+              : actionCompleted
+              ? "Deposit Held"
+              : !canHoldDeposit
+              ? "Hold Expired"
+              : completedButtonText}
           </button>
         )}
 

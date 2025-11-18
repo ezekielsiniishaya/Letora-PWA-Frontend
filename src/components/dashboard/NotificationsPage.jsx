@@ -163,14 +163,24 @@ export default function NotificationsPage() {
     switch (activePopup.buttonText) {
       case "See Dashboard":
         navigate(
-          user?.role === "HOST" ? "/host-dashboard" : "/guest-dashboard"
+          user?.role === "HOST" && user?.hostVerification?.status === "VERIFIED"
+            ? "/host-dashboard"
+            : "/guest-dashboard"
         );
         break;
       case "See Bookings":
-        navigate("/bookings");
+        navigate(
+          user?.role === "HOST" && user?.hostVerification?.status === "VERIFIED"
+            ? "/host-dashboard"
+            : "/bookings"
+        );
         break;
       case "See Booking Details":
-        navigate("/bookings");
+        navigate(
+          user?.role === "HOST" && user?.hostVerification?.status === "VERIFIED"
+            ? "/host-dashboard"
+            : "/bookings"
+        );
         break;
       case "See Revenue History":
         navigate("/revenue");

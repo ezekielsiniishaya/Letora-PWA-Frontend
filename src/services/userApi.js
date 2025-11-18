@@ -237,3 +237,22 @@ export const holdSecurityDeposit = async (bookingId) => {
     method: "PUT",
   });
 };
+
+// Process withdrawal (only amount needed)
+export const processWithdrawal = async (amount) => {
+  return apiRequest("/api/users/withdraw", {
+    method: "POST",
+    body: { amount },
+  });
+};
+export const createDepositHold = async (bookingId) => {
+  return apiRequest(`/api/bookings/${bookingId}/hold-deposit`, {
+    method: "PUT",
+  });
+};
+// In userApi.js - add this function
+export const checkDepositHoldStatus = async (bookingId) => {
+  return apiRequest(`/api/bookings/${bookingId}/deposit-hold/status`, {
+    method: "GET",
+  });
+};
