@@ -377,7 +377,7 @@ export default function BookingDetails({ role = "guest" }) {
           <img
             src={getProfilePicture(booking)}
             alt={role === "host" ? "Guest" : "Host"}
-            className="absolute left-1 bottom-0 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
+            className="absolute left-[5px] bottom-0 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover"
           />
         </div>
 
