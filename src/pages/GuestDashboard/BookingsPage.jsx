@@ -1,11 +1,17 @@
 import { useState, useEffect, useContext } from "react";
 import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
+import Alert from "../../components/utils/Alerts"; // Import your Alert component
 import { useUser } from "../../hooks/useUser";
 import { UserContext } from "../../contexts/UserContext";
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState("ongoing");
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "error",
+    message: "",
+  });
   const { refreshUser } = useContext(UserContext);
 
   // Use the user context to get actual bookings data
@@ -16,6 +22,23 @@ export default function BookingsPage() {
     getUserBookings,
   } = useUser();
 
+  // Show alert function
+  const showAlert = (type, message, timeout = 5000) => {
+    setAlert({ show: true, type, message });
+
+    // Auto-dismiss after timeout
+    if (timeout > 0) {
+      setTimeout(() => {
+        setAlert((prev) => ({ ...prev, show: false }));
+      }, timeout);
+    }
+  };
+
+  // Dismiss alert function
+  const dismissAlert = () => {
+    setAlert((prev) => ({ ...prev, show: false }));
+  };
+
   // Refresh user data when component mounts
   useEffect(() => {
     const refreshUserData = async () => {
@@ -23,7 +46,8 @@ export default function BookingsPage() {
         await refreshUser?.();
       } catch (err) {
         console.error("Failed to refresh user data:", err);
-        // Silently fail - don't show error to user for background refresh
+        // Use custom alert instead of browser alert
+        showAlert("error", "Failed to refresh user data. Please try again.");
       }
     };
 
@@ -99,6 +123,18 @@ export default function BookingsPage() {
 
   return (
     <div className="flex px-[2px] flex-col min-h-screen bg-[#F9F9F9]">
+      {/* Alert Container */}
+      {alert.show && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <Alert
+            type={alert.type}
+            message={alert.message}
+            onDismiss={dismissAlert}
+            timeout={5000}
+          />
+        </div>
+      )}
+
       {/* Heading */}
       <header className="px-[21px] pt-4 pb-[20px]">
         <h1 className="text-[24px] font-medium text-[#0D1321]">Bookings</h1>
@@ -137,6 +173,8 @@ export default function BookingsPage() {
                   ? "Rate your Stay"
                   : undefined
               }
+              // Pass the showAlert function to Bookings component if it needs to show alerts
+              onShowAlert={showAlert}
             />
           ))
         ) : (

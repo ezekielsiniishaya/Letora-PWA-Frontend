@@ -4,11 +4,12 @@ import CancelBookingPopup from "./CancelBookingPopup";
 import ConfirmCancelPopup from "./ConfirmCancelPopup";
 import ShowSuccess from "../ShowSuccess";
 import RatingPopup from "./RatingPopup";
+import Alert from "../../components/utils/Alerts.jsx"; // Import your Alert component
 import { useNavigate } from "react-router-dom";
 import {
   createDepositHold,
   checkDepositHoldStatus,
-  cancelBooking, // ✅ ADDED: Import cancellation API
+  cancelBooking,
 } from "../../services/userApi.js";
 
 export default function MyBooking({
@@ -16,6 +17,8 @@ export default function MyBooking({
   status,
   completedButtonText = "Rate your Stay",
   onClick,
+  onShowAlert, // ADDED: Alert function from parent
+  user, // ADDED: User data to determine role
 }) {
   const [showCancelBooking, setShowCancelBooking] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
@@ -26,7 +29,12 @@ export default function MyBooking({
   const [canHoldDeposit, setCanHoldDeposit] = useState(true);
   const [isCheckingHold, setIsCheckingHold] = useState(false);
   const [hasReviewed, setHasReviewed] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false); // ✅ ADDED: Loading state for cancellation
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "error",
+    message: "",
+  }); // ADDED: Alert state
 
   const bookingId = booking?.id;
   const navigate = useNavigate();
@@ -47,6 +55,27 @@ export default function MyBooking({
 
   const currentStatus = statusMap[status];
 
+  // Show alert function
+  const showAlert = (type, message, timeout = 5000) => {
+    // Use parent's alert function if available, otherwise use local
+    if (onShowAlert) {
+      onShowAlert(type, message, timeout);
+    } else {
+      setAlert({ show: true, type, message });
+
+      if (timeout > 0) {
+        setTimeout(() => {
+          setAlert((prev) => ({ ...prev, show: false }));
+        }, timeout);
+      }
+    }
+  };
+
+  // Dismiss alert function
+  const dismissAlert = () => {
+    setAlert((prev) => ({ ...prev, show: false }));
+  };
+
   // Check if review exists when component mounts
   useEffect(() => {
     if (status === "completed" && completedButtonText === "Rate your Stay") {
@@ -59,7 +88,7 @@ export default function MyBooking({
     }
   }, [booking, status, completedButtonText]);
 
-  // ✅ ADDED: Cancellation function
+  // UPDATED: Cancellation function with custom alerts
   const handleCancelBooking = async (reasons) => {
     try {
       setIsCancelling(true);
@@ -72,17 +101,16 @@ export default function MyBooking({
           onClick(); // Trigger parent refresh
         }
       } else {
-        alert(response.message || "Failed to cancel booking");
+        showAlert("error", response.message || "Failed to cancel booking");
       }
     } catch (error) {
       console.error("Cancellation error:", error);
-      alert(error.message || "Failed to cancel booking");
+      showAlert("error", error.message || "Failed to cancel booking");
     } finally {
       setIsCancelling(false);
     }
   };
 
-  // Wrap checkHoldStatus in useCallback to prevent infinite re-renders
   const checkHoldStatus = useCallback(async () => {
     try {
       setIsCheckingHold(true);
@@ -91,18 +119,27 @@ export default function MyBooking({
       if (response.success) {
         setCanHoldDeposit(response.data.canRequestHold);
 
-        // If hold already exists, update button text
         if (response.data.hasExistingHold) {
           setActionCompleted(true);
         }
       }
     } catch (error) {
       console.error("Error checking hold status:", error);
-      setCanHoldDeposit(false); // Disable button on error
+      setCanHoldDeposit(false);
+      if (onShowAlert) {
+        onShowAlert("error", "Failed to check deposit hold status");
+      } else {
+        // Fallback to local alert state
+        setAlert({
+          show: true,
+          type: "error",
+          message: "Failed to check deposit hold status",
+        });
+      }
     } finally {
       setIsCheckingHold(false);
     }
-  }, [bookingId]);
+  }, [bookingId, onShowAlert]); // Use onShowAlert prop which is more stable
 
   // Check deposit hold status when component mounts
   useEffect(() => {
@@ -114,6 +151,7 @@ export default function MyBooking({
     }
   }, [bookingId, status, completedButtonText, checkHoldStatus]);
 
+  // UPDATED: handleHoldDeposit with custom alerts
   const handleHoldDeposit = async () => {
     try {
       const response = await createDepositHold(bookingId);
@@ -123,11 +161,11 @@ export default function MyBooking({
         setCanHoldDeposit(false); // Disable button after successful hold
         setActionCompleted(true);
       } else {
-        alert(response.message || "Failed to hold deposit");
+        showAlert("error", response.message || "Failed to hold deposit");
       }
     } catch (error) {
       console.error("Error holding deposit:", error);
-      alert(error.message || "Failed to hold deposit");
+      showAlert("error", error.message || "Failed to hold deposit");
     }
   };
 
@@ -180,19 +218,34 @@ export default function MyBooking({
     return completedButtonText;
   };
 
-  // ✅ ADDED: Get cancel button text with loading state
+  // Get cancel button text with loading state
   const getCancelButtonText = () => {
     if (isCancelling) return "Cancelling...";
     return "Cancel Booking";
   };
 
-  // Navigation handler - use onClick prop if provided, otherwise use default navigation
+  // UPDATED: Navigation handler with role-based redirection
   const handleNavigation = () => {
     if (onClick) {
       onClick(); // Use the passed onClick function
     } else {
       // Fallback to default navigation
       navigate(`/bookings/${bookingId}`, { state: { booking, status } });
+    }
+  };
+
+  // UPDATED: Handle success popup close with role-based navigation
+  const handleSuccessClose = () => {
+    setShowCancelSuccess(false);
+
+    // Determine user role and navigate accordingly
+    const userRole = user?.role?.toLowerCase();
+
+    if (userRole === "verified host") {
+      navigate("/host-dashboard");
+    } else {
+      // Default to bookings page for guests and other roles
+      navigate("/bookings");
     }
   };
 
@@ -221,22 +274,10 @@ export default function MyBooking({
     }
   };
 
-  // Handle success popup close with navigation fallback
-  const handleSuccessClose = () => {
-    setShowCancelSuccess(false);
-    // Use onClick prop if provided, otherwise navigate back
-    if (onClick) {
-      onClick(); // This might need to be adjusted based on what onClick should do here
-    } else {
-      navigate(-1);
-    }
-  };
-
   // Handle hold success close
   const handleHoldSuccessClose = () => {
     setShowHoldSuccess(false);
     setActionCompleted(true);
-    // No navigation needed here as it's just a state update
   };
 
   // Handle rating popup close
@@ -244,11 +285,22 @@ export default function MyBooking({
     setShowRating(false);
     setHasReviewed(true); // Set review as submitted
     setActionCompleted(true);
-    // No navigation needed here as it's just a state update
   };
 
   return (
     <div className="bg-white rounded-[5px] w-full h-[158px] pt-[10px] px-[10px] relative">
+      {/* Alert Container - Only show if using local alerts */}
+      {alert.show && !onShowAlert && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <Alert
+            type={alert.type}
+            message={alert.message}
+            onDismiss={dismissAlert}
+            timeout={5000}
+          />
+        </div>
+      )}
+
       <div
         className={`flex gap-[6px] ${
           status !== "ongoing" ? "cursor-pointer" : ""
@@ -318,12 +370,12 @@ export default function MyBooking({
                 e.stopPropagation();
                 setShowConfirmCancel(true);
               }}
-              disabled={isCancelling} // ✅ ADDED: Disable during cancellation
+              disabled={isCancelling}
               className={`border-[#A20BA2] border bg-white text-[#A20BA2] text-[12px] font-semibold w-[129px] h-[35px] rounded-[5px] ${
                 isCancelling ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {getCancelButtonText()} {/* ✅ UPDATED: Use dynamic text */}
+              {getCancelButtonText()}
             </button>
             <button
               onClick={handleViewBookingClick}
@@ -377,7 +429,6 @@ export default function MyBooking({
         <CancelBookingPopup
           onClose={() => setShowCancelBooking(false)}
           onSubmit={(reasons) => {
-            // ✅ UPDATED: Actually call the cancellation API
             handleCancelBooking(reasons);
             setShowCancelBooking(false);
           }}
@@ -390,7 +441,7 @@ export default function MyBooking({
           heading="Booking Successfully Cancelled!"
           message="Your booking has been cancelled. If you're eligible for a refund, it will be processed within 7–10 business days."
           buttonText="Done"
-          onClose={handleSuccessClose}
+          onClose={handleSuccessClose} // UPDATED: Now uses role-based navigation
           height="auto"
         />
       )}
@@ -398,8 +449,9 @@ export default function MyBooking({
       {showRating && (
         <RatingPopup
           apartmentId={booking?.apartment?.id}
-          bookingId={booking?.id} // Pass bookingId here
+          bookingId={booking?.id}
           onClose={handleRatingClose}
+          onShowAlert={showAlert} // PASSED: Alert function to RatingPopup
         />
       )}
 
