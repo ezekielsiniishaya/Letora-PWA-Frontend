@@ -13,10 +13,12 @@ import RatingPopup from "../dashboard/RatingPopup";
 import ButtonWhite from "../ButtonWhite";
 import Button from "../Button";
 import { cancelBooking } from "../../services/userApi";
+import { useUser } from "../../hooks/useUser.js";
 
 export default function BookingDetails({ role = "guest" }) {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user: currentUser } = useUser(); // Get current user from useUser hook
 
   const [showRating, setShowRating] = useState(false);
   const [showCancelBooking, setShowCancelBooking] = useState(false);
@@ -29,7 +31,12 @@ export default function BookingDetails({ role = "guest" }) {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [hasReviewed, setHasReviewed] = useState(false); // NEW: Track review status
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const { refreshUser } = useUser();
+
+  // Get current user ID and apartment host ID
+  const currentUserId = currentUser?.id; // Current user's ID
+  const apartmentHostId = booking?.apartment?.hostId; // Apartment owner's ID
 
   // Fetch booking directly from backend
   useEffect(() => {
@@ -64,6 +71,7 @@ export default function BookingDetails({ role = "guest" }) {
       setLoading(false);
     }
   }, [id]);
+
   const handleCancelBooking = async (bookingId, reasons) => {
     try {
       const response = await cancelBooking(bookingId, reasons.join(", "));
@@ -71,7 +79,7 @@ export default function BookingDetails({ role = "guest" }) {
       if (response.success) {
         // Show success message and navigate back
         setShowCancelSuccess(true);
-
+        await refreshUser();
         // ✅ OPTIONAL: Refresh booking data to show cancelled status
         const updatedBooking = await getBookingById(bookingId);
         if (updatedBooking.success) {
@@ -85,6 +93,7 @@ export default function BookingDetails({ role = "guest" }) {
       alert(error.message || "Failed to cancel booking");
     }
   };
+
   // Check deposit hold status when booking is loaded and user is host
   const checkHoldStatus = useCallback(async () => {
     if (!booking || role !== "host") return;
@@ -573,6 +582,8 @@ export default function BookingDetails({ role = "guest" }) {
             // ✅ FIXED: Actually call the cancellation API
             handleCancelBooking(booking.id, reasons);
           }}
+          currentUserId={currentUserId}
+          apartmentHostId={apartmentHostId}
         />
       )}
 

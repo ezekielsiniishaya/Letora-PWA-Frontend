@@ -11,12 +11,14 @@ const hostNotificationConfigs = {
     width: "w-[60px]",
   }),
   GUEST_CHECKED_OUT: (notification) => ({
-    image: "/icons/stopwatch.svg",
+    image: "/icons/stopwatch.png",
     heading: "Guest Checked Out",
     message:
       notification.message ||
       "Your guest has successfully checked out of your apartment. You can now prepare the space for your next guest.",
     buttonText: "See Dashboard",
+    width: "w-[60px]",
+    imgHeight: "h-[60px]"
   }),
   GUEST_CHECKED_IN: (notification) => ({
     image: "/icons/success.svg",
@@ -59,13 +61,14 @@ const hostNotificationConfigs = {
     buttonText: "Update Details",
   }),
   BOOKING_CANCELLED: (notification) => ({
-    image: "/icons/cancelled.svg",
+    image: "/icons/cancelled.png",
     heading: "Cancelled Booking!",
     message:
       notification.message ||
       "Your booking has been cancelled. Refunds will be issued as outlined in our Guest Refund Policy.",
-    buttonText: "See Bookings",
     booking: true,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
   }),
   APARTMENT_POPULAR: (notification) => ({
     image: "/icons/trending.svg",

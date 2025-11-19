@@ -123,9 +123,11 @@ export default function ShortletOverviewPage() {
       _count: apiData._count || {},
       // ✅ ADD AVAILABILITY REQUEST
       availabilityRequest: apiData.availabilityRequest || null,
+      // ✅ ADD REVIEWS DATA
+      reviews: apiData.reviews || [],
+      ratings: apiData.ratings || {},
     };
   };
-
   // Check if we should show the request button
   const shouldShowRequestButton = () => {
     if (!apartment?.availabilityRequest) {

@@ -5,6 +5,8 @@ import Facilities from "../dashboard/Facilities";
 import HouseRules from "../dashboard/HouseRules";
 import { useNavigate } from "react-router-dom";
 import { toggleFavoriteAPI } from "../../services/apartmentApi";
+import Reviews from "../dashboard/ReviewsSections"; // Add this import
+import { Star } from "lucide-react"; // Add this import if not already there
 import { useUser } from "../../hooks/useUser";
 import {
   parkingSpaceMap,
@@ -161,12 +163,12 @@ export const ApartmentOverview = ({
     legalDocuments = [],
     favorites: apartmentFavorites = apartmentData.favorites || [],
     _count = apartmentData._count || {},
-    // Also extract from top level if nested
+    reviews: rawReviews,
     title = apartmentData.title,
     apartmentType = apartmentData.apartmentType,
     state = apartmentData.state,
     town = apartmentData.town,
-   } = apartmentData;
+  } = apartmentData;
 
   // Build basicInfo if it doesn't exist
   const actualBasicInfo = basicInfo.title
@@ -177,8 +179,19 @@ export const ApartmentOverview = ({
         state: state || basicInfo.state,
         town: town || basicInfo.town,
       };
-
-
+  // Ensure reviews are properly extracted
+  const actualReviews = rawReviews ?? [];
+  console.log(
+    "DEBUG: apartmentData keys:",
+    apartmentData && Object.keys(apartmentData)
+  );
+  console.log("DEBUG: apartmentData.reviews:", apartmentData?.reviews);
+  console.log("DEBUG: apartment.reviews:", apartment?.reviews);
+  console.log(
+    "DEBUG: apartmentData.data?.reviews:",
+    apartmentData?.data?.reviews
+  );
+  console.log("DEBUG: findReviewsDeep result length:", actualReviews.length);
   // Use the favorites from the extracted data
   const actualFavorites = apartmentFavorites;
   const totalLikes = _count.favorites || apartmentData.totalLikes || 0;
@@ -231,7 +244,10 @@ export const ApartmentOverview = ({
       apartment.verified
     );
   };
-
+  // Get total reviews count
+  const getTotalReviews = () => {
+    return apartmentData.reviews?.length || 0;
+  };
   // Get liked users display text
   const getLikedUsersText = () => {
     const favorites = actualFavorites || [];
@@ -524,6 +540,28 @@ export const ApartmentOverview = ({
           )}
         </div>
 
+        {/* Reviews Section - Only render if there are reviews */}
+        {getTotalReviews() > 0 && (
+          <div className="mt-[31.66px]">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-[14px] font-semibold">
+                Reviews ({getTotalReviews()})
+              </h2>
+            </div>
+            <Reviews reviews={actualReviews} limit={3} />
+            {/* Make "See more" a clickable button */}
+            <div className="flex justify-end mt-[8px]">
+              <button
+                onClick={() =>
+                  navigate(`/reviews`, { state: { reviews: actualReviews } })
+                }
+                className="text-[12px] font-semibold text-[#A20BA2] hover:text-[#8E0A8E] transition-colors"
+              >
+                See more...
+              </button>
+            </div>
+          </div>
+        )}
         {/* House Rules */}
         <div className="mt-[31.66px]">
           <h2 className="text-[14px] font-semibold">House Rules</h2>

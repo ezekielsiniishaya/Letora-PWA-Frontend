@@ -23,7 +23,6 @@ const guestNotificationConfigs = {
     message:
       notification.message ||
       "It's check-out day. We hope you had a great stay at the property.",
-    buttonText: "See Booking Details",
     booking: true,
   }),
   GUEST_CHECKED_IN: (notification) => ({
@@ -52,13 +51,14 @@ const guestNotificationConfigs = {
     buttonText: "Update Details",
   }),
   BOOKING_CANCELLED: (notification) => ({
-    image: "/icons/cancelled.svg",
-    heading: "Booking Cancelled",
+    image: "/icons/cancelled.png",
+    heading: "Cancelled Booking!",
     message:
       notification.message ||
       "Your booking has been cancelled. Refunds will be issued as outlined in our Guest Refund Policy.",
-    buttonText: "See Bookings",
     booking: true,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
   }),
   REVIEW_REQUEST: (notification) => ({
     image: "/icons/rating.svg",

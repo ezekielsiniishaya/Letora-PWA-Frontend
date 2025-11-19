@@ -4,21 +4,22 @@ import CancelBookingPopup from "./CancelBookingPopup";
 import ConfirmCancelPopup from "./ConfirmCancelPopup";
 import ShowSuccess from "../ShowSuccess";
 import RatingPopup from "./RatingPopup";
-import Alert from "../../components/utils/Alerts.jsx"; // Import your Alert component
+import Alert from "../../components/utils/Alerts.jsx";
 import { useNavigate } from "react-router-dom";
 import {
   createDepositHold,
   checkDepositHoldStatus,
   cancelBooking,
 } from "../../services/userApi.js";
+import { useUser } from "../../hooks/useUser.js";
 
 export default function MyBooking({
   booking,
   status,
   completedButtonText = "Rate your Stay",
   onClick,
-  onShowAlert, // ADDED: Alert function from parent
-  user, // ADDED: User data to determine role
+  onShowAlert,
+  user, // This should be the current user object from useUser hook
 }) {
   const [showCancelBooking, setShowCancelBooking] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
@@ -34,10 +35,23 @@ export default function MyBooking({
     show: false,
     type: "error",
     message: "",
-  }); // ADDED: Alert state
+  });
 
   const bookingId = booking?.id;
+
+  // FIXED: Get current user ID and apartment host ID correctly
+  const currentUserId = user?.id; // Current user's ID from useUser hook
+  const apartmentHostId = booking?.apartment?.hostId; // Apartment owner's ID from booking data
+
   const navigate = useNavigate();
+  const { refreshUser } = useUser();
+
+  // Debug logging to check the values
+  useEffect(() => {
+    console.log("Current User ID:", currentUserId);
+    console.log("Apartment Host ID:", apartmentHostId);
+    console.log("Is Apartment Owner:", currentUserId === apartmentHostId);
+  }, [currentUserId, apartmentHostId]);
 
   const statusMap = {
     ongoing: { label: "Ongoing", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" },
@@ -57,7 +71,6 @@ export default function MyBooking({
 
   // Show alert function
   const showAlert = (type, message, timeout = 5000) => {
-    // Use parent's alert function if available, otherwise use local
     if (onShowAlert) {
       onShowAlert(type, message, timeout);
     } else {
@@ -97,6 +110,7 @@ export default function MyBooking({
       if (response.success) {
         setShowCancelSuccess(true);
         // Optionally refresh parent component data
+        await refreshUser();
         if (onClick) {
           onClick(); // Trigger parent refresh
         }
@@ -129,7 +143,6 @@ export default function MyBooking({
       if (onShowAlert) {
         onShowAlert("error", "Failed to check deposit hold status");
       } else {
-        // Fallback to local alert state
         setAlert({
           show: true,
           type: "error",
@@ -139,7 +152,7 @@ export default function MyBooking({
     } finally {
       setIsCheckingHold(false);
     }
-  }, [bookingId, onShowAlert]); // Use onShowAlert prop which is more stable
+  }, [bookingId, onShowAlert]);
 
   // Check deposit hold status when component mounts
   useEffect(() => {
@@ -241,7 +254,7 @@ export default function MyBooking({
     // Determine user role and navigate accordingly
     const userRole = user?.role?.toLowerCase();
 
-    if (userRole === "verified host") {
+    if (userRole === "verified host" || userRole === "host") {
       navigate("/host-dashboard");
     } else {
       // Default to bookings page for guests and other roles
@@ -432,6 +445,8 @@ export default function MyBooking({
             handleCancelBooking(reasons);
             setShowCancelBooking(false);
           }}
+          currentUserId={currentUserId}
+          apartmentHostId={apartmentHostId}
         />
       )}
 
@@ -441,7 +456,7 @@ export default function MyBooking({
           heading="Booking Successfully Cancelled!"
           message="Your booking has been cancelled. If you're eligible for a refund, it will be processed within 7–10 business days."
           buttonText="Done"
-          onClose={handleSuccessClose} // UPDATED: Now uses role-based navigation
+          onClose={handleSuccessClose}
           height="auto"
         />
       )}
@@ -451,7 +466,7 @@ export default function MyBooking({
           apartmentId={booking?.apartment?.id}
           bookingId={booking?.id}
           onClose={handleRatingClose}
-          onShowAlert={showAlert} // PASSED: Alert function to RatingPopup
+          onShowAlert={showAlert}
         />
       )}
 

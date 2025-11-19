@@ -1,7 +1,12 @@
 import { useState } from "react";
 
-export default function CancelBookingPopup({ onClose, onSubmit }) {
-  const reasonsList = [
+export default function CancelBookingPopup({
+  onClose,
+  onSubmit,
+  currentUserId,
+  apartmentHostId,
+}) {
+  const guestReasons = [
     "I no longer need this space",
     "I found a better accomodation",
     "Host is unreachable",
@@ -10,6 +15,21 @@ export default function CancelBookingPopup({ onClose, onSubmit }) {
     "I have cleanliness concerns",
     "Specify other reason",
   ];
+
+  const hostReasons = [
+    "I have concerns about the guest",
+    "The property is no longer available",
+    "Guest violated house rules",
+    "I have an emergency situation",
+    "I have safety concerns",
+    "Specify other reason",
+  ];
+
+  // Check if current user is the actual owner of this apartment
+  const isApartmentOwner = currentUserId === apartmentHostId;
+
+  // Use host reasons if user is the apartment owner, otherwise use guest reasons
+  const reasonsList = isApartmentOwner ? hostReasons : guestReasons;
 
   const [selectedReasons, setSelectedReasons] = useState([]);
   const [otherReason, setOtherReason] = useState("");
@@ -43,7 +63,7 @@ export default function CancelBookingPopup({ onClose, onSubmit }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50  z-[9999]"
+      className="fixed inset-0 bg-black/50 z-[9999]"
       onClick={() => {
         if (!showOtherReasonPopup) onClose();
       }}

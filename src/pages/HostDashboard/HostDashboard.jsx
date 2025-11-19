@@ -205,6 +205,8 @@ export default function HostDashboardPage() {
               key={booking.id}
               booking={booking}
               status={booking.displayStatus} // Use the lowercase status
+              // ADD THIS LINE - pass the user prop
+              user={user}
               onClick={() => handleBookingClick(booking, booking.displayStatus)}
               completedButtonText={
                 booking.displayStatus === "completed"

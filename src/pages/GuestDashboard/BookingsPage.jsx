@@ -173,6 +173,8 @@ export default function BookingsPage() {
                   ? "Rate your Stay"
                   : undefined
               }
+              // ADD THIS LINE - pass the user prop
+              user={user}
               // Pass the showAlert function to Bookings component if it needs to show alerts
               onShowAlert={showAlert}
             />

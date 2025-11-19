@@ -116,8 +116,8 @@ export default function PaymentPage() {
   };
 
   const handleConfirmPayment = async () => {
-    if (timeLeft === 0) {
-      return;
+    if (confirming || timeLeft === 0) {
+      return; // Prevent any action if button should be disabled
     }
 
     if (!paymentData) {
@@ -363,7 +363,11 @@ export default function PaymentPage() {
           text={confirming ? "Please wait..." : "Proceed"}
           onClick={handleConfirmPayment}
           disabled={confirming || timeLeft === 0}
-          className="w-full h-[48px] text-[14px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full h-[48px] text-[14px] font-semibold ${
+            confirming || timeLeft === 0
+              ? "bg-gray-400 cursor-not-allowed opacity-50"
+              : "bg-[#A20BA2] hover:bg-[#8a1a8a]"
+          } text-white rounded-md`}
         />
       </div>
 

@@ -1,3 +1,4 @@
+// components/dashboard/ReviewsSections.jsx
 import { Star } from "lucide-react";
 
 function StarsMobile({ rating }) {
@@ -16,44 +17,63 @@ function StarsMobile({ rating }) {
   );
 }
 
-export default function Reviews({ count = 10 }) {
-  const review = {
-    author: "Seun",
-    date: "07-June-2025",
-    content:
-      "I could write a long note about this seller, due to i'm limited to 500 text I'II keep it short. She's incredible, very professional and knows how to handle business. Top notch to her a. Wonderful experience, successful & peaceful trade carried out.",
-    avatar: "/images/review_guest.jpg",
-    rating: 4,
+export default function Reviews({ reviews = [], limit }) {
+  console.log("🔍 Reviews component received:", reviews);
+
+  // Apply limit if provided, otherwise show all reviews
+  const displayReviews = limit ? reviews.slice(0, limit) : reviews;
+
+  // Format date function
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   };
 
-  const reviewsArray = Array(count)
-    .fill(review)
-    .map((item, index) => ({
-      ...item,
-      id: index + 1,
-    }));
+  // Get default avatar if profilePic is null
+  const getAvatar = (profilePic) => {
+    return profilePic || "/images/default-avatar.jpg";
+  };
+
+  if (!reviews || reviews.length === 0) {
+    return (
+      <div className="mx-auto mt-2 w-full">
+        <p className="text-[#505050] text-[12px] text-center py-4">
+          No reviews yet
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto space-y-[10px] mt-2 w-full">
-      {reviewsArray.map(({ id, author, date, content, avatar, rating }) => (
-        <div key={id} className="bg-white">
+      {displayReviews.map((review) => (
+        <div key={review.id} className="bg-white">
           <div className="flex justify-between items-start mb-[10px]">
             <div className="flex gap-[9px] items-center">
               <img
-                src={avatar}
-                alt={author}
+                src={getAvatar(review.guest?.profilePic)}
+                alt={review.guest?.firstName || "Guest"}
                 className="w-[30px] h-[30px] rounded-full object-cover"
+                onError={(e) => {
+                  e.target.src = "/images/profile-image.png";
+                }}
               />
               <div>
                 <h3 className="font-semibold text-[13px] text-[#333333]">
-                  {author}
+                  {review.guest?.firstName} {review.guest?.lastName}
                 </h3>
-                <p className="text-[#56575B] text-[10px]">{date}</p>
+                <p className="text-[#56575B] text-[10px]">
+                  {formatDate(review.createdAt)}
+                </p>
               </div>
             </div>
-            <StarsMobile rating={rating} />
+            <StarsMobile rating={review.rating} />
           </div>
-          <p className="text-[#505050] text-[12px]">{content}</p>
+          <p className="text-[#505050] text-[12px]">{review.comment}</p>
         </div>
       ))}
     </div>
