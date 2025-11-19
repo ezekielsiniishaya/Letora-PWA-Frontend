@@ -26,11 +26,12 @@ export default function RevenuePage() {
       maximumFractionDigits: 0,
     }).format(amount);
 
-    // Add decimal part with styling
+    // Replace NGN with ₦ and add decimal styling
     return (
       <>
-        {formatted.replace("NGN", "N")}
-        <span className="text-[#FBD0FB] text-[18px]">00</span>
+        
+        {formatted.replace("NGN", "").trim()}
+        <span className="text-[#FBD0FB] text-[18px]">.00</span>
       </>
     );
   }, []);
@@ -44,7 +45,7 @@ export default function RevenuePage() {
 
     return (
       <>
-        {type === "credit" ? "+" : "-"}N{mainAmount}.
+        {type === "credit" ? "+" : "-"}₦{mainAmount}.
         <span
           className={`text-[11.5px] ${
             type === "credit" ? "text-[#008751]" : "text-[#909090]"
@@ -262,7 +263,7 @@ export default function RevenuePage() {
             This week Inflow
           </p>
           <h3 className="text-[18px] mt-1 font-medium text-[#333333]">
-            N{walletData.weeklyInflow.toLocaleString()}.
+            ₦{walletData.weeklyInflow.toLocaleString()}.
             <span className="text-[14px] text-[#909090]">00</span>
           </h3>
           <div className="bg-[#008751] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center absolute top-7 right-4">
@@ -278,7 +279,7 @@ export default function RevenuePage() {
             This week outflow
           </p>
           <h3 className="text-[18px] mt-1 font-medium text-[#333333]">
-            N{walletData.weeklyOutflow.toLocaleString()}.
+            ₦{walletData.weeklyOutflow.toLocaleString()}.
             <span className="text-[14px] text-[#909090]">00</span>
           </h3>
           <div className="bg-[#FF2416] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center absolute top-7 right-4">
@@ -291,15 +292,27 @@ export default function RevenuePage() {
         </div>
       </div>
 
-      {/* Transaction History */}
-      <h3 className="text-[14px] font-medium text-black pt-[10px] mb-3">
-        Transaction History
-      </h3>
+      {/* Transaction History - Only show when there are transactions */}
+      {transactions.length > 0 && (
+        <h3 className="text-[14px] font-medium text-black pt-[10px] mb-3">
+          Transaction History
+        </h3>
+      )}
+
       <div className="flex flex-col gap-3">
         {transactions.length === 0 ? (
-          <div className="text-center py-8 text-[#666]">
-            <p>No transactions yet</p>
-            <p className="text-sm mt-1">Your transactions will appear here</p>
+          <div className="flex flex-col items-center justify-center mt-[80px] py-8">
+            <img
+              src="/icons/revenue-empty.png"
+              className="w-[70px] h-[70px] grayscale"
+              alt="No transactions"
+            />
+            <p className="text-[#505050] font-medium text-[14px] text-center">
+              No Transaction History
+            </p>
+            <p className="text-[12px] text-[#807F7F] mt-1 text-center">
+              You haven't recorded any revenue yet
+            </p>
           </div>
         ) : (
           transactions.map((tx) => (
