@@ -65,13 +65,12 @@ export const respondToAvailability = async (
   });
 };
 // Create rating
-export const createRating = async (apartmentId, rating, comment) => {
+export const createRating = async (apartmentId, rating, comment, bookingId) => {
   return apiRequest("/api/users/rating", {
     method: "POST",
-    body: { apartmentId, rating, comment },
+    body: { apartmentId, rating, comment, bookingId },
   });
 };
-
 // ========== BOOKING APIS ==========
 export const createBooking = async (bookingData) => {
   return apiRequest("/api/bookings", {
@@ -92,12 +91,6 @@ export const getUserBookings = async () => {
   });
 };
 
-export const cancelBooking = async (bookingId, cancellationReason) => {
-  return apiRequest(`/api/bookings/${bookingId}/cancel`, {
-    method: "PUT",
-    body: { cancellationReason },
-  });
-};
 
 export const updateBookingPaymentStatus = async (bookingId, paymentData) => {
   return apiRequest(`/api/bookings/${bookingId}/payment`, {
@@ -253,6 +246,42 @@ export const createDepositHold = async (bookingId) => {
 // In userApi.js - add this function
 export const checkDepositHoldStatus = async (bookingId) => {
   return apiRequest(`/api/bookings/${bookingId}/deposit-hold/status`, {
+    method: "GET",
+  });
+};
+// ========== CANCELLATION APIS ==========
+
+/**
+ * Check if a booking can be cancelled and what the financial impact would be
+ * @param {string} bookingId - The booking ID to check
+ * @returns {Promise<Object>} Response with cancellation eligibility details
+ */
+export const checkCancellationEligibility = async (bookingId) => {
+  return apiRequest(`/api/bookings/${bookingId}/cancellation/eligibility`, {
+    method: "GET",
+  });
+};
+
+/**
+ * Cancel a booking
+ * @param {string} bookingId - The booking ID to cancel
+ * @param {string} reason - Reason for cancellation
+ * @returns {Promise<Object>} Response with cancellation details
+ */
+export const cancelBooking = async (bookingId, reason) => {
+  return apiRequest(`/api/bookings/${bookingId}/cancel`, {
+    method: "PUT",
+    body: { reason },
+  });
+};
+
+/**
+ * Get cancellation dispute details for a booking
+ * @param {string} bookingId - The booking ID
+ * @returns {Promise<Object>} Response with dispute details
+ */
+export const getCancellationDispute = async (bookingId) => {
+  return apiRequest(`/api/bookings/${bookingId}/cancellation/dispute`, {
     method: "GET",
   });
 };

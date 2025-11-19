@@ -1,3 +1,4 @@
+// BookingDetails.jsx
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -11,6 +12,7 @@ import ShowSuccess from "../ShowSuccess";
 import RatingPopup from "../dashboard/RatingPopup";
 import ButtonWhite from "../ButtonWhite";
 import Button from "../Button";
+import { cancelBooking } from "../../services/userApi";
 
 export default function BookingDetails({ role = "guest" }) {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ export default function BookingDetails({ role = "guest" }) {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasReviewed, setHasReviewed] = useState(false); // NEW: Track review status
 
   // Fetch booking directly from backend
   useEffect(() => {
@@ -39,6 +42,8 @@ export default function BookingDetails({ role = "guest" }) {
 
         if (response.success) {
           setBooking(response.data);
+          // Check if review exists
+          setHasReviewed(!!response.data.review);
         } else {
           setError(response.message || "Failed to fetch booking");
         }
@@ -59,7 +64,27 @@ export default function BookingDetails({ role = "guest" }) {
       setLoading(false);
     }
   }, [id]);
+  const handleCancelBooking = async (bookingId, reasons) => {
+    try {
+      const response = await cancelBooking(bookingId, reasons.join(", "));
 
+      if (response.success) {
+        // Show success message and navigate back
+        setShowCancelSuccess(true);
+
+        // ✅ OPTIONAL: Refresh booking data to show cancelled status
+        const updatedBooking = await getBookingById(bookingId);
+        if (updatedBooking.success) {
+          setBooking(updatedBooking.data);
+        }
+      } else {
+        alert(response.message || "Failed to cancel booking");
+      }
+    } catch (error) {
+      console.error("Cancellation error:", error);
+      alert(error.message || "Failed to cancel booking");
+    }
+  };
   // Check deposit hold status when booking is loaded and user is host
   const checkHoldStatus = useCallback(async () => {
     if (!booking || role !== "host") return;
@@ -121,6 +146,12 @@ export default function BookingDetails({ role = "guest" }) {
     if (depositHeld) return "Deposit Held";
     if (!canHoldDeposit) return "Hold Expired";
     return "Hold Security Deposit";
+  };
+
+  // Get button text for review
+  const getReviewButtonText = () => {
+    if (hasReviewed) return "Drop your Review";
+    return "Drop your Review";
   };
 
   // Status styles
@@ -494,12 +525,15 @@ export default function BookingDetails({ role = "guest" }) {
         {showReviewButton && (
           <div className="pt-[40px] pb-[42px]">
             <Button
-              text="Drop your Review"
+              text={getReviewButtonText()}
               onClick={(e) => {
                 e.stopPropagation();
                 setShowRating(true);
               }}
-              className="h-[57px] w-full"
+              className={`h-[57px] w-full ${
+                hasReviewed ? "bg-[#FBD0FB] cursor-not-allowed" : ""
+              }`}
+              disabled={hasReviewed}
             />
           </div>
         )}
@@ -536,9 +570,8 @@ export default function BookingDetails({ role = "guest" }) {
         <CancelBookingPopup
           onClose={() => setShowCancelBooking(false)}
           onSubmit={(reasons) => {
-            console.log("User reasons:", reasons);
-            setShowCancelBooking(false);
-            setShowCancelSuccess(true);
+            // ✅ FIXED: Actually call the cancellation API
+            handleCancelBooking(booking.id, reasons);
           }}
         />
       )}
@@ -560,6 +593,7 @@ export default function BookingDetails({ role = "guest" }) {
       {showRating && (
         <RatingPopup
           apartmentId={booking.apartment?.id}
+          bookingId={booking.id} // Pass bookingId here
           onClose={() => setShowRating(false)}
         />
       )}

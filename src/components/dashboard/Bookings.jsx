@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react"; // Add useCallback
+// MyBooking.jsx
+import { useState, useEffect, useCallback } from "react";
 import CancelBookingPopup from "./CancelBookingPopup";
 import ConfirmCancelPopup from "./ConfirmCancelPopup";
 import ShowSuccess from "../ShowSuccess";
@@ -7,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import {
   createDepositHold,
   checkDepositHoldStatus,
+  cancelBooking, // ✅ ADDED: Import cancellation API
 } from "../../services/userApi.js";
 
 export default function MyBooking({
@@ -23,6 +25,8 @@ export default function MyBooking({
   const [actionCompleted, setActionCompleted] = useState(false);
   const [canHoldDeposit, setCanHoldDeposit] = useState(true);
   const [isCheckingHold, setIsCheckingHold] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false); // ✅ ADDED: Loading state for cancellation
 
   const bookingId = booking?.id;
   const navigate = useNavigate();
@@ -42,6 +46,41 @@ export default function MyBooking({
   };
 
   const currentStatus = statusMap[status];
+
+  // Check if review exists when component mounts
+  useEffect(() => {
+    if (status === "completed" && completedButtonText === "Rate your Stay") {
+      const hasReview = !!booking?.review || !!booking?.reviewId;
+      setHasReviewed(hasReview);
+
+      if (booking?.reviewId && !booking?.review) {
+        setHasReviewed(true);
+      }
+    }
+  }, [booking, status, completedButtonText]);
+
+  // ✅ ADDED: Cancellation function
+  const handleCancelBooking = async (reasons) => {
+    try {
+      setIsCancelling(true);
+      const response = await cancelBooking(bookingId, reasons.join(", "));
+
+      if (response.success) {
+        setShowCancelSuccess(true);
+        // Optionally refresh parent component data
+        if (onClick) {
+          onClick(); // Trigger parent refresh
+        }
+      } else {
+        alert(response.message || "Failed to cancel booking");
+      }
+    } catch (error) {
+      console.error("Cancellation error:", error);
+      alert(error.message || "Failed to cancel booking");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   // Wrap checkHoldStatus in useCallback to prevent infinite re-renders
   const checkHoldStatus = useCallback(async () => {
@@ -63,7 +102,7 @@ export default function MyBooking({
     } finally {
       setIsCheckingHold(false);
     }
-  }, [bookingId]); // Add dependencies here
+  }, [bookingId]);
 
   // Check deposit hold status when component mounts
   useEffect(() => {
@@ -73,7 +112,7 @@ export default function MyBooking({
     ) {
       checkHoldStatus();
     }
-  }, [bookingId, status, completedButtonText, checkHoldStatus]); // Add checkHoldStatus to dependencies
+  }, [bookingId, status, completedButtonText, checkHoldStatus]);
 
   const handleHoldDeposit = async () => {
     try {
@@ -127,6 +166,26 @@ export default function MyBooking({
     return `${day}-${month}-${year}`;
   };
 
+  // Get button text based on review status
+  const getCompletedButtonText = () => {
+    if (completedButtonText === "Rate your Stay") {
+      if (hasReviewed) return "Rate your Stay";
+      return "Rate your Stay";
+    }
+
+    // For deposit hold button
+    if (isCheckingHold) return "Checking...";
+    if (actionCompleted) return "Deposit Held";
+    if (!canHoldDeposit) return "Hold Expired";
+    return completedButtonText;
+  };
+
+  // ✅ ADDED: Get cancel button text with loading state
+  const getCancelButtonText = () => {
+    if (isCancelling) return "Cancelling...";
+    return "Cancel Booking";
+  };
+
   // Navigation handler - use onClick prop if provided, otherwise use default navigation
   const handleNavigation = () => {
     if (onClick) {
@@ -150,6 +209,18 @@ export default function MyBooking({
     handleNavigation();
   };
 
+  // Handle completed button click
+  const handleCompletedButtonClick = (e) => {
+    e.stopPropagation();
+
+    if (completedButtonText === "Rate your Stay") {
+      setShowRating(true);
+    } else if (completedButtonText === "Hold Security Deposit") {
+      if (hasReviewed || actionCompleted || !canHoldDeposit) return;
+      handleHoldDeposit();
+    }
+  };
+
   // Handle success popup close with navigation fallback
   const handleSuccessClose = () => {
     setShowCancelSuccess(false);
@@ -171,6 +242,7 @@ export default function MyBooking({
   // Handle rating popup close
   const handleRatingClose = () => {
     setShowRating(false);
+    setHasReviewed(true); // Set review as submitted
     setActionCompleted(true);
     // No navigation needed here as it's just a state update
   };
@@ -187,19 +259,19 @@ export default function MyBooking({
         <img
           src={getPrimaryImage(booking)}
           alt={getTitle(booking)}
-          className="w-[105.32px] h-[86px] rounded-[2.3px] object-cover"
+          className="w-[105.32px] h-[86px] min-w-[105.32px] rounded-[2.3px] object-cover flex-shrink-0"
         />
 
         {/* Apartment Info */}
-        <div className="flex-1 mt-1 ml-1 text-[#333333] flex flex-col">
+        <div className="mt-1 ml-1 text-[#333333] flex flex-col">
           {/* Title + Status */}
-          <div className="flex items-center justify-between w-[92%]">
-            <h4 className="font-medium text-[12px] truncate flex-1 max-w-[70%]">
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium text-[12px] truncate w-[160px]">
               {getTitle(booking)}
             </h4>
             {status !== "cancelled" && currentStatus && (
               <span
-                className={`text-[10px] px-2 font-medium rounded-full flex-shrink-0 ${currentStatus.bg} ${currentStatus.text}`}
+                className={`text-[10px] px-2 py-0.5 font-medium rounded-full whitespace-nowrap ${currentStatus.bg} ${currentStatus.text}`}
               >
                 {currentStatus.label}
               </span>
@@ -246,9 +318,12 @@ export default function MyBooking({
                 e.stopPropagation();
                 setShowConfirmCancel(true);
               }}
-              className="border-[#A20BA2] border bg-white text-[#A20BA2] text-[12px] font-semibold w-[129px] h-[35px] rounded-[5px]"
+              disabled={isCancelling} // ✅ ADDED: Disable during cancellation
+              className={`border-[#A20BA2] border bg-white text-[#A20BA2] text-[12px] font-semibold w-[129px] h-[35px] rounded-[5px] ${
+                isCancelling ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Cancel Booking
+              {getCancelButtonText()} {/* ✅ UPDATED: Use dynamic text */}
             </button>
             <button
               onClick={handleViewBookingClick}
@@ -260,33 +335,26 @@ export default function MyBooking({
         )}
         {status === "completed" && (
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (actionCompleted || !canHoldDeposit) return;
-
-              if (completedButtonText === "Rate your Stay") {
-                setShowRating(true);
-              } else if (completedButtonText === "Hold Security Deposit") {
-                handleHoldDeposit();
-              }
-            }}
-            disabled={actionCompleted || !canHoldDeposit || isCheckingHold}
+            onClick={handleCompletedButtonClick}
+            disabled={
+              completedButtonText === "Hold Security Deposit"
+                ? hasReviewed ||
+                  actionCompleted ||
+                  !canHoldDeposit ||
+                  isCheckingHold
+                : hasReviewed // Only disable Rate your Stay if already reviewed
+            }
             className={`w-[177px] h-[35px] rounded-[5px] text-[12px] font-medium ${
-              actionCompleted || !canHoldDeposit
+              (completedButtonText === "Hold Security Deposit" &&
+                (hasReviewed || actionCompleted || !canHoldDeposit)) ||
+              (completedButtonText === "Rate your Stay" && hasReviewed)
                 ? "bg-[#FBD0FB] text-white cursor-not-allowed"
                 : "bg-[#A20BA2] text-white"
             }`}
           >
-            {isCheckingHold
-              ? "Checking..."
-              : actionCompleted
-              ? "Deposit Held"
-              : !canHoldDeposit
-              ? "Hold Expired"
-              : completedButtonText}
+            {getCompletedButtonText()}
           </button>
         )}
-
         {status === "cancelled" && (
           <button className="bg-[#FFF1F0] border border-[#F81A0C] text-[#F81A0C] w-[179px] h-[35px] rounded-[5px] text-[12px] font-semibold">
             Under Dispute
@@ -309,10 +377,9 @@ export default function MyBooking({
         <CancelBookingPopup
           onClose={() => setShowCancelBooking(false)}
           onSubmit={(reasons) => {
-            console.log("User reasons:", reasons);
+            // ✅ UPDATED: Actually call the cancellation API
+            handleCancelBooking(reasons);
             setShowCancelBooking(false);
-            setShowConfirmCancel(false);
-            setShowCancelSuccess(true);
           }}
         />
       )}
@@ -331,6 +398,7 @@ export default function MyBooking({
       {showRating && (
         <RatingPopup
           apartmentId={booking?.apartment?.id}
+          bookingId={booking?.id} // Pass bookingId here
           onClose={handleRatingClose}
         />
       )}
