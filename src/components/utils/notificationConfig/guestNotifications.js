@@ -61,13 +61,12 @@ const guestNotificationConfigs = {
     width: "w-[60px]",
   }),
   REVIEW_REQUEST: (notification) => ({
-    image: "/icons/rating.svg",
+    image: "/icons/rating.png",
     heading: "Rate & Review",
     message:
       notification.message ||
-      "How was your stay? Share your thoughts to help the host improve and inform other guests.",
-    buttonText: "Write Review",
-    booking: true,
+      "Share your thoughts on your recent stay so the host can improve and guests can make informed choices.",
+     booking: true,
   }),
   AVAILABILITY_REQUEST_SENT: (notification) => ({
     image: "/icons/calendar.svg",
