@@ -17,8 +17,8 @@ export default function MediaUploadPage() {
   const images = apartmentData?.images || [];
 
   // Convert files to base64 objects
-  const filesToBase64 = (filesArray) => {
-    return Promise.all(
+  const filesToBase64 = async (filesArray) => {
+    const results = await Promise.all(
       filesArray.map(
         (file) =>
           new Promise((resolve) => {
@@ -39,7 +39,8 @@ export default function MediaUploadPage() {
             reader.readAsDataURL(file);
           })
       )
-    ).then((results) => results.filter((r) => r !== null));
+    );
+    return results.filter((r) => r !== null);
   };
 
   // Validate form
@@ -73,8 +74,8 @@ export default function MediaUploadPage() {
         setError("Please select only image files.");
         return false;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        setError("File size should be less than 5MB.");
+      if (file.size > 10 * 1024 * 1024) {
+        setError("File size should be less than 10MB.");
         return false;
       }
       return true;
@@ -168,22 +169,6 @@ export default function MediaUploadPage() {
         <p className="text-[14px] text-[#666666] mt-[4px]">
           Show everyone how nice your apartment is
         </p>
-
-        {/* Error Message */}
-        {error && (
-          <div className="mt-4 mx-4">
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-              <div className="flex items-center">
-                <img
-                  src="/icons/error.svg"
-                  alt="Error"
-                  className="w-4 h-4 mr-2"
-                />
-                <span className="text-sm">{error}</span>
-              </div>
-            </div>
-          </div>
-        )}
 
         <form
           className="mt-[25px] flex flex-col"
@@ -310,6 +295,8 @@ export default function MediaUploadPage() {
               ? ""
               : `Selected ${images.length} images (max 10). First image is primary.`}
           </p>
+          {/* Error Message - Moved to bottom */}
+          {error && <p className="text-[#F81A0C] text-[10px] mt-1">{error}</p>}
 
           {/* Next Button */}
           <div className="mt-[169px]">
