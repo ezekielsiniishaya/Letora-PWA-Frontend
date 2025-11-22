@@ -14,7 +14,7 @@ export default function BookingsPage() {
     message: "",
   });
   const { refreshUser } = useContext(UserContext);
-const navigate = useNavigate();
+  const navigate = useNavigate();
   // Use the user context to get actual bookings data
   const {
     loading: userLoading,
@@ -212,7 +212,6 @@ const navigate = useNavigate();
         <h1 className="text-[24px] font-medium text-[#0D1321]">Bookings</h1>
         <p className="text-[#666666] text-[14px]">
           Manage your Bookings here as a {user?.role?.toLowerCase() || "user"}
-          {user?.role === "HOST" && " (both as guest and host)"}
         </p>
       </header>
 
