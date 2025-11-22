@@ -5,6 +5,7 @@ export const parkingSpaceMap = {
   SMALL: "Small",
   MEDIUM: "Medium",
   LARGE: "Large",
+  NONE: "None",
 };
 
 export const guestNumberMap = {
@@ -12,8 +13,7 @@ export const guestNumberMap = {
   TWO: "2",
   THREE: "3",
   FOUR: "4",
-  FIVE: "5",
-  SIX: "6",
+  MANY: "Many",
 };
 
 export const electricityMap = {
@@ -21,12 +21,13 @@ export const electricityMap = {
   BAND_A: "Band A",
   BAND_B: "Band B",
   BAND_C: "Band C",
+  UNSTABLE: "Unstable",
 };
 
 export const kitchenSizeMap = {
   SMALL: "Small",
   MEDIUM: "Medium",
-  LARGE: "Large",
+  BIG: "Big",
 };
 
 export const apartmentTypeMap = {
