@@ -21,7 +21,6 @@ export default function BankAccount() {
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [canUpdateBankDetails, setCanUpdateBankDetails] = useState(true);
-  const [nextUpdateDate, setNextUpdateDate] = useState(null);
 
   // Get user data from context
   const { user, loading, refreshUser } = useContext(UserContext);
@@ -39,13 +38,9 @@ export default function BankAccount() {
       const canUpdate = now >= threeMonthsFromLastUpdate;
 
       setCanUpdateBankDetails(canUpdate);
-      setNextUpdateDate(threeMonthsFromLastUpdate);
 
       if (!canUpdate) {
-        setAlert({
-          type: "warning",
-          message: `Bank details can only be updated every 3 months. You can update again after ${threeMonthsFromLastUpdate.toLocaleDateString()}`,
-        });
+        return;
       }
     }
   }, [user]);
@@ -90,10 +85,6 @@ export default function BankAccount() {
 
     // Check if update is allowed
     if (!canUpdateBankDetails) {
-      showAlert(
-        "error",
-        "Bank details cannot be updated yet due to 3-month restriction"
-      );
       return;
     }
 
@@ -379,21 +370,25 @@ export default function BankAccount() {
             <span>
               {canUpdateBankDetails
                 ? "Submitted account details cannot be modified for the first 3 months."
-                : `You can update your bank details after ${nextUpdateDate?.toLocaleDateString()}`}
+                : `Submitted account details cannot be modified for the first 3 months.`}
             </span>
           </div>
-
           <Button
             text={isSubmitting ? "Submitting..." : "Submit"}
-            className="mt-[20px] w-full"
+            className={`mt-[20px] w-full ${
+              !canUpdateBankDetails ? "cursor-not-allowed bg-[#FFBEFF]" : ""
+            }`}
             onClick={handleCreateAccount}
             type="submit"
             disabled={
               isSubmitting ||
               !selectedBank ||
               accountNumber.length !== 10 ||
-              !canUpdateBankDetails // Disable if cannot update
+              !canUpdateBankDetails
             }
+            style={{
+              backgroundColor: !canUpdateBankDetails ? "#FFBEFF" : "",
+            }}
           />
 
           {isSuccessOpen && (

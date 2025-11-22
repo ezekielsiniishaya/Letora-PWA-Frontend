@@ -74,13 +74,8 @@ export default function HostReviews() {
             </div>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <img
-              src="/icons/no-reviews.svg"
-              alt="No reviews"
-              className="w-16 h-16 mb-4 grayscale opacity-50"
-            />
-            <p className="text-[#666666] text-[14px]">
+          <div className="flex flex-col mt-[280px] items-center justify-center py-12 text-center">
+                       <p className="text-[#666666] text-[14px]">
               No reviews yet for your apartments
             </p>
           </div>
