@@ -292,8 +292,11 @@ export default function HostBookingDetails() {
           </div>
 
           <img
-            src={booking?.guest?.profilePic || "/images/profile-image.png"}
-            alt="Guest"
+            src={
+              booking?.apartment?.host?.profilePic ||
+              "/images/profile-image.png"
+            }
+            alt="Host"
             className="absolute left-1 bottom-0 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
           />
         </div>

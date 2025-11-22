@@ -309,16 +309,11 @@ export default function BookingDetails({ role = "guest" }) {
       return bookingData?.apartment?.host?.email || "Not provided";
     }
   };
-
   const getProfilePicture = (bookingData) => {
-    if (actualRole === "host") {
-      // Change role to actualRole
-      return bookingData?.guest?.profilePic || "/images/profile-image.png";
-    } else {
-      return (
-        bookingData?.apartment?.host?.profilePic || "/images/profile-image.png"
-      );
-    }
+    // Always return the host's profile picture
+    return (
+      bookingData?.apartment?.host?.profilePic || "/images/profile-image.png"
+    );
   };
 
   const getBookingStatus = (bookingData) => {
@@ -399,7 +394,7 @@ export default function BookingDetails({ role = "guest" }) {
 
           <img
             src={getProfilePicture(booking)}
-            alt={role === "host" ? "Guest" : "Host"}
+            alt="Host"
             className="absolute left-[5px] bottom-0 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover"
           />
         </div>
