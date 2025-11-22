@@ -46,8 +46,40 @@ export default function ApartmentCard({ apt, role = "guest" }) {
     return apt.rating || "0.0";
   };
 
-  const getLikes = () => {
-    return apt.totalLikes?.toString() || apt.likes || "0";
+  // Get liked users display text - Using the exact logic from ApartmentOverview
+  const getLikedUsersText = () => {
+    const favorites = apt.favorites || [];
+    const actualLikeCount = favorites.length;
+
+    // If we have favorites data with user info, use it
+    if (actualLikeCount > 0) {
+      if (actualLikeCount === 1) {
+        return `${favorites[0]?.user?.firstName || "Someone"} Liked this place`;
+      } else if (actualLikeCount === 2) {
+        return `${
+          favorites[1]?.user?.firstName || "Someone"
+        } +1 Liked this place`;
+      } else if (actualLikeCount === 3) {
+        return `${
+          favorites[2]?.user?.firstName || "Someone"
+        } +2 Liked this place`;
+      } else if (actualLikeCount === 4) {
+        return `${
+          favorites[3]?.user?.firstName || "Someone"
+        } +3 Liked this place`;
+      } else if (actualLikeCount > 4) {
+        return `+${actualLikeCount} Liked this place`;
+      }
+    }
+
+    // Show 0 likes
+    return "0 people Liked this place";
+  };
+
+
+  // Get favorites array
+  const getFavorites = () => {
+    return apt.favorites || [];
   };
 
   const isVerified = () => {
@@ -57,7 +89,7 @@ export default function ApartmentCard({ apt, role = "guest" }) {
   return (
     <Link
       to={link}
-      className="bg-white rounded-[5px] p-[8px] flex gap-2  mb-2 w-full"
+      className="bg-white rounded-[5px] p-[8px] flex gap-2 mb-2 w-full"
     >
       {/* Image */}
       <img
@@ -102,25 +134,75 @@ export default function ApartmentCard({ apt, role = "guest" }) {
           <span className="truncate">{getLocation()}</span>
         </div>
 
-        {/* Bottom row: circles + liked / price */}
-        <div className="flex items-center gap-2 text-[12px] text-[#505050]">
-          {/* Circles + liked */}
+        {/* Bottom row: profile images + liked text / price - Using ApartmentOverview logic */}
+        <div className="flex items-center justify-between text-[12px] text-[#505050]">
+          {/* Profile images + liked text */}
           <div className="flex items-center gap-1 flex-1 min-w-0">
-            <div className="flex -space-x-[6px] flex-shrink-0">
-              <div
-                className="w-4 h-4 rounded-full border border-white"
-                style={{ backgroundColor: "#008751" }}
-              ></div>
-              <div
-                className="w-4 h-4 rounded-full border border-white"
-                style={{ backgroundColor: "#F711F7" }}
-              ></div>
-            </div>
-            <span className="truncate">+{getLikes()} people liked this</span>
+            {getFavorites().length > 0 ? (
+              <>
+                <div className="flex -space-x-[6px] flex-shrink-0">
+                  {/* Display profile images based on likes count */}
+                  {getFavorites()
+                    .slice(0, Math.min(4, getFavorites().length))
+                    .map((favorite, index) => {
+                      const profilePic = favorite.user?.profilePic;
+                      const colors = [
+                        "#8B44FF",
+                        "#E00E9A",
+                        "#FF4444",
+                        "#70E5FF",
+                      ];
+
+                      if (!profilePic) {
+                        return (
+                          <div
+                            key={favorite.id || index}
+                            className="w-4 h-4 rounded-full border border-white"
+                            style={{
+                              backgroundColor: colors[index % colors.length],
+                            }}
+                          />
+                        );
+                      }
+
+                      return (
+                        <img
+                          key={favorite.id}
+                          src={profilePic}
+                          alt={favorite.user?.firstName || "User"}
+                          className="w-4 h-4 rounded-full border border-white object-cover"
+                          onError={(e) => {
+                            const colors = [
+                              "#8B44FF",
+                              "#E00E9A",
+                              "#FF4444",
+                              "#70E5FF",
+                            ];
+                            e.target.style.display = "none";
+                            const div = document.createElement("div");
+                            div.className =
+                              "w-4 h-4 rounded-full border border-white";
+                            div.style.backgroundColor =
+                              colors[index % colors.length];
+                            e.target.parentNode.insertBefore(div, e.target);
+                          }}
+                        />
+                      );
+                    })}
+                </div>
+                <span className="text-[12px] font-medium text-[#333333] truncate">
+                  {getLikedUsersText()}
+                </span>
+              </>
+            ) : (
+              <span className="text-[12px] font-medium text-[#333333]">
+                {getLikedUsersText()}
+              </span>
+            )}
           </div>
 
           {/* Price */}
-          <span className="font-semibold text-[12px] text-[#333333] flex-shrink-0">
+          <span className="font-semibold text-[12px] text-[#333333] flex-shrink-0 ml-2">
             {getPrice()}
           </span>
         </div>

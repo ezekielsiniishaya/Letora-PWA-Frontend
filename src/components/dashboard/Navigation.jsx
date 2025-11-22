@@ -51,7 +51,7 @@ export default function Navigation() {
       name: "Bookings",
       paths:
         user?.role === "HOST" && isHostVerified()
-          ? ["/host-dashboard"]
+          ? ["/bookings"]
           : ["/bookings"],
       icon: "/icons/booking.svg",
       activeIcon: "/icons/booking-purple.svg",

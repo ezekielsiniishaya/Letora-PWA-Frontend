@@ -39,7 +39,7 @@ export default function HotApartmentsPage() {
           <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 rounded-lg">
             <img
               src="/icons/no-hot-apartment.png"
-              alt="No bookings"
+              alt="No bookingsa"
               className="w-[44px] h-[44px] mb-2 grayscale"
             />
             <p className="text-[#505050] mt-2 text-[14px] font-medium w-[250px] text-center">

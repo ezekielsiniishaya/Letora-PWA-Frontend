@@ -17,7 +17,7 @@ const guestNotificationConfigs = {
     buttonText: "See Booking Details",
     booking: true,
   }),
-  GUEST_CHECKED_OUT: (notification) => ({
+  CHECK_OUT: (notification) => ({
     image: "/icons/stopwatch.svg",
     heading: "Check-out Reminder",
     message:
@@ -67,6 +67,8 @@ const guestNotificationConfigs = {
       notification.message ||
       "Share your thoughts on your recent stay so the host can improve and guests can make informed choices.",
      booking: true,
+     imgHeight: "h-[60px]",
+     width: "w-[60px]"
   }),
   AVAILABILITY_REQUEST_SENT: (notification) => ({
     image: "/icons/calendar.svg",

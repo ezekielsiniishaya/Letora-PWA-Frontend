@@ -10,12 +10,38 @@ import Navigation from "../../components/dashboard/Navigation";
 import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useUser } from "../../hooks/useUser";
 import CurrentLocationDropdown from "../../components/dashboard/SelectState";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   const [showBalance, setShowBalance] = useState(true);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [withdrawalData, setWithdrawalData] = useState(null);
+  const [allBookings, setAllBookings] = useState([]);
+  const [alert, setAlert] = useState({
+    show: false,
+    type: "error",
+    message: "",
+  });
+
+  // Show alert function
+  const showAlert = (type, message, timeout = 5000) => {
+    setAlert({ show: true, type, message });
+
+    // Auto-dismiss after timeout
+    if (timeout > 0) {
+      setTimeout(() => {
+        setAlert((prev) => ({ ...prev, show: false }));
+      }, timeout);
+    }
+  };
+
+  // Dismiss alert function
+  const dismissAlert = () => {
+    setAlert((prev) => ({ ...prev, show: false }));
+  };
   // Get time-based greeting
   const getTimeBasedGreeting = () => {
     const currentHour = new Date().getHours();
@@ -84,11 +110,47 @@ export default function Dashboard() {
     return "0.00";
   };
 
-
-  // Get user's actual bookings and apartments
-  const userBookings = getUserBookings();
   const unreadCount = getUnreadNotificationsCount();
-  const currentBooking = userBookings.find(
+
+  // Update bookings whenever user data changes
+  useEffect(() => {
+    const getAllBookings = () => {
+      const userBookings = getUserBookings().map((booking) => ({
+        ...booking,
+        role: "guest", // ADD THIS - same as BookingsPage
+      }));
+
+      // Bookings where host's apartments are booked by others
+      const hostApartmentBookings =
+        user?.apartments?.flatMap(
+          (apartment) =>
+            apartment.bookings?.map((booking) => ({
+              ...booking,
+              isHostBooking: true, // Keep this for backward compatibility
+              role: "host", // ADD THIS - same as BookingsPage
+              apartment: {
+                ...apartment,
+                host: user, // Set current user as host
+              },
+            })) || []
+        ) || [];
+
+      // Combine both types of bookings and sort by creation date (newest first)
+      const allBookingsCombined = [...userBookings, ...hostApartmentBookings]
+        .filter((booking) => booking && booking.id) // Remove any null/undefined bookings
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      return allBookingsCombined;
+    };
+
+    if (user) {
+      const bookings = getAllBookings();
+      setAllBookings(bookings);
+    }
+  }, [user, getUserBookings]); // Add getUserBookings to dependencies
+
+  // Get current/active booking (most recent non-cancelled booking)
+  const currentBooking = allBookings.find(
     (booking) => booking.status?.toLowerCase() !== "pending" || null
   );
   // Get account balance from host profile
@@ -242,10 +304,21 @@ export default function Dashboard() {
       </div>
       {/* Rest of your dashboard content remains the same... */}
       {/* My Booking Section */}
+      {/* Alert Container */}
+      {alert.show && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <alert
+            type={alert.type}
+            message={alert.message}
+            onDismiss={dismissAlert}
+            timeout={5000}
+          />
+        </div>
+      )}
       <div className="px-[21px] mt-[25px]">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
-          <Link to="/host-dashboard">
+          <Link to="/bookings">
             <button className="text-[12px] font-medium text-[#A20BA2]">
               See all
             </button>
@@ -255,6 +328,39 @@ export default function Dashboard() {
           <Bookings
             booking={currentBooking}
             status={currentBooking.status?.toLowerCase() || "ongoing"}
+            isHostBooking={currentBooking.isHostBooking}
+            completedButtonText={
+              currentBooking.status?.toLowerCase() === "completed"
+                ? currentBooking.role === "host"
+                  ? "Hold Security Deposit" // For host's apartments
+                  : "Rate your Stay" // For guest bookings
+                : undefined
+            }
+            user={user}
+            role={currentBooking.role} // ADD THIS - pass the role
+            onShowAlert={showAlert} // You might need to add this function
+            onClick={() => {
+              // ADD THIS - navigate with proper role information
+              if (currentBooking.role === "host") {
+                navigate(`/host-booking-details/${currentBooking.id}`, {
+                  state: {
+                    booking: currentBooking,
+                    status: currentBooking.status?.toLowerCase(),
+                    role: "host",
+                    currentUserId: user?.id,
+                  },
+                });
+              } else {
+                navigate(`/bookings/${currentBooking.id}`, {
+                  state: {
+                    booking: currentBooking,
+                    status: currentBooking.status?.toLowerCase(),
+                    role: "guest",
+                    currentUserId: user?.id,
+                  },
+                });
+              }
+            }}
           />
         ) : (
           <div className="flex flex-col items-center justify-center py-8 rounded-lg">
@@ -336,7 +442,8 @@ export default function Dashboard() {
         </div>
       </div>
       {/* Bottom Navigation */}
-      <Navigation />e{/* Withdraw Popup */}
+      <Navigation />
+      {/* Withdraw Popup */}
       {showWithdraw && (
         <WithdrawPopup
           balance={withdrawableBalance.toLocaleString("en-NG", {

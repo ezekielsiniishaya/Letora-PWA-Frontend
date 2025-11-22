@@ -447,10 +447,6 @@ export default function BankAccount() {
           </div>
 
           {/* Terms */}
-          <p className="text-[12px] text-[#666666] font-medium text-center mb-[20px] leading-snug">
-            By clicking on Submit, you accept the Terms and Conditions, and
-            Privacy Policies
-          </p>
 
           <Button
             text={isLoading ? "Please wait..." : "Submit"}

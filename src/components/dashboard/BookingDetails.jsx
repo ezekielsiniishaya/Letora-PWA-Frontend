@@ -20,6 +20,9 @@ export default function BookingDetails({ role = "guest" }) {
   const { id } = useParams();
   const { user: currentUser } = useUser(); // Get current user from useUser hook
 
+  // Determine the actual role based on the booking data and current user
+  const [actualRole, setActualRole] = useState(role);
+
   const [showRating, setShowRating] = useState(false);
   const [showCancelBooking, setShowCancelBooking] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
@@ -38,7 +41,6 @@ export default function BookingDetails({ role = "guest" }) {
   const currentUserId = currentUser?.id; // Current user's ID
   const apartmentHostId = booking?.apartment?.hostId; // Apartment owner's ID
 
-  // Fetch booking directly from backend
   useEffect(() => {
     const fetchBooking = async () => {
       try {
@@ -51,6 +53,11 @@ export default function BookingDetails({ role = "guest" }) {
           setBooking(response.data);
           // Check if review exists
           setHasReviewed(!!response.data.review);
+
+          // DETERMINE ROLE: Check if current user is the apartment host
+          const isHostBooking =
+            response.data.apartment?.hostId === currentUser?.id;
+          setActualRole(isHostBooking ? "host" : "guest");
         } else {
           setError(response.message || "Failed to fetch booking");
         }
@@ -70,8 +77,7 @@ export default function BookingDetails({ role = "guest" }) {
       setError("No booking ID provided");
       setLoading(false);
     }
-  }, [id]);
-
+  }, [id, currentUser?.id]); // Add currentUser.id to dependencies
   const handleCancelBooking = async (bookingId, reasons) => {
     try {
       const response = await cancelBooking(bookingId, reasons.join(", "));
@@ -96,7 +102,7 @@ export default function BookingDetails({ role = "guest" }) {
 
   // Check deposit hold status when booking is loaded and user is host
   const checkHoldStatus = useCallback(async () => {
-    if (!booking || role !== "host") return;
+    if (!booking || actualRole !== "host") return; // Change role to actualRole
 
     try {
       setIsCheckingHold(true);
@@ -118,18 +124,16 @@ export default function BookingDetails({ role = "guest" }) {
     } finally {
       setIsCheckingHold(false);
     }
-  }, [booking, role]);
-
+  }, [booking, actualRole]); // Change role to actualRole in dependencies
   useEffect(() => {
     if (
       booking &&
-      role === "host" &&
+      actualRole === "host" && // This is already correct
       getBookingStatus(booking) === "COMPLETED"
     ) {
       checkHoldStatus();
     }
-  }, [booking, role, checkHoldStatus]);
-
+  }, [booking, actualRole, checkHoldStatus]); // This is already correct
   const handleHoldDeposit = async () => {
     if (depositHeld || !canHoldDeposit) return;
 
@@ -249,6 +253,17 @@ export default function BookingDetails({ role = "guest" }) {
     return `${diffDays} night${diffDays !== 1 ? "s" : ""}`;
   };
 
+  // And update the useEffect for checkHoldStatus:
+  useEffect(() => {
+    if (
+      booking &&
+      actualRole === "host" &&
+      getBookingStatus(booking) === "COMPLETED"
+    ) {
+      checkHoldStatus();
+    }
+  }, [booking, actualRole, checkHoldStatus]);
+
   const getPaymentBreakdown = (bookingData) => {
     if (!bookingData) {
       return {
@@ -270,7 +285,8 @@ export default function BookingDetails({ role = "guest" }) {
   };
 
   const getDisplayName = (bookingData) => {
-    if (role === "host") {
+    if (actualRole === "host") {
+      // Change role to actualRole
       return (
         `${bookingData?.guest?.firstName || ""} ${
           bookingData?.guest?.lastName || ""
@@ -286,7 +302,8 @@ export default function BookingDetails({ role = "guest" }) {
   };
 
   const getDisplayEmail = (bookingData) => {
-    if (role === "host") {
+    if (actualRole === "host") {
+      // Change role to actualRole
       return bookingData?.guest?.email || "Not provided";
     } else {
       return bookingData?.apartment?.host?.email || "Not provided";
@@ -294,7 +311,8 @@ export default function BookingDetails({ role = "guest" }) {
   };
 
   const getProfilePicture = (bookingData) => {
-    if (role === "host") {
+    if (actualRole === "host") {
+      // Change role to actualRole
       return bookingData?.guest?.profilePic || "/images/profile-image.png";
     } else {
       return (
@@ -336,13 +354,18 @@ export default function BookingDetails({ role = "guest" }) {
     );
   }
 
-  // Determine which actions to show based on status and role
+  // Update all these lines:
   const showCancelButton =
-    ["ONGOING"].includes(getBookingStatus(booking)) && role === "guest";
+    ["ONGOING"].includes(getBookingStatus(booking)) && actualRole === "guest";
   const showReviewButton =
-    getBookingStatus(booking) === "COMPLETED" && role === "guest";
+    getBookingStatus(booking) === "COMPLETED" && actualRole === "guest";
   const showHoldDepositButton =
-    getBookingStatus(booking) === "COMPLETED" && role === "host";
+    getBookingStatus(booking) === "COMPLETED" && actualRole === "host";
+
+  // And update the header:
+  <h3 className="font-medium mb-2">
+    {actualRole === "guest" ? "Host Details" : "Guest Details"}
+  </h3>;
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] flex flex-col items-center">

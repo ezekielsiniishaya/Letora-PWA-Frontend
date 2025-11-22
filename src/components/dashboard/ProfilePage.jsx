@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Navigation from "./Navigation";
-import LogoutConfirmPopup from "./LogoutConfirmPopup";
+import Navigation from "../../components/dashboard/Navigation";
+import LogoutConfirmPopup from "../../components/dashboard/LogoutConfirmPopup";
 import { useUser } from "../../hooks/useUser";
-import BecomeHostBanner from "./BecomeHostBanner";
+import BecomeHostBanner from "../../components/dashboard/BecomeHostBanner";
 
 export default function ProfilePage() {
   const [showLogout, setShowLogout] = useState(false);
@@ -13,6 +13,17 @@ export default function ProfilePage() {
   // Check if user is a verified host
   const isVerifiedHost =
     user?.role === "HOST" && user?.verificationStatus === "VERIFIED";
+
+  // Calculate total reviews count for host's apartments - FIXED
+  const getTotalReviewsCount = () => {
+    if (!isVerifiedHost || !user?.apartments?.length) return 0;
+
+    return user.apartments.reduce((total, apartment) => {
+      return total + (apartment.totalReviews || 0);
+    }, 0);
+  };
+
+  const totalReviews = getTotalReviewsCount();
 
   const handleLogout = () => {
     logout();
@@ -103,6 +114,7 @@ export default function ProfilePage() {
           icon="/icons/review.svg"
           text="Reviews"
           link="/host-reviews"
+          badgeCount={totalReviews}
         />
       </div>
 
@@ -139,7 +151,7 @@ export default function ProfilePage() {
   );
 }
 
-function OptionItem({ icon, text, link, noArrow, onClick }) {
+function OptionItem({ icon, text, link, noArrow, onClick, badgeCount }) {
   const content = (
     <div className="flex items-center justify-between px-4 py-6">
       <div className="flex items-center gap-3">
@@ -153,14 +165,15 @@ function OptionItem({ icon, text, link, noArrow, onClick }) {
         </span>
       </div>
 
-      {!noArrow &&
-        (text === "Reviews" ? (
-          <span className="bg-[#A20BA2] text-white text-xs font-medium w-[22px] h-[22px] px-2 py-1 items-center rounded-full">
-            2
+      {!noArrow ? (
+        badgeCount > 0 ? (
+          <span className="bg-[#A20BA2] text-white text-xs font-medium w-[22px] h-[22px] flex items-center justify-center rounded-full">
+            {badgeCount}
           </span>
         ) : (
           <img src="/icons/greater-than.svg" alt=">" className="w-3 h-3" />
-        ))}
+        )
+      ) : null}
     </div>
   );
 

@@ -20,9 +20,35 @@ export default function BankAccount() {
   const navigate = useNavigate();
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [canUpdateBankDetails, setCanUpdateBankDetails] = useState(true);
+  const [nextUpdateDate, setNextUpdateDate] = useState(null);
 
   // Get user data from context
   const { user, loading, refreshUser } = useContext(UserContext);
+
+  // Check if bank details can be updated (3-month restriction)
+  useEffect(() => {
+    if (user?.hostProfile?.bankDetailsUpdatedAt) {
+      const lastUpdated = new Date(user.hostProfile.bankDetailsUpdatedAt);
+      const threeMonthsFromLastUpdate = new Date(lastUpdated);
+      threeMonthsFromLastUpdate.setMonth(
+        threeMonthsFromLastUpdate.getMonth() + 3
+      );
+
+      const now = new Date();
+      const canUpdate = now >= threeMonthsFromLastUpdate;
+
+      setCanUpdateBankDetails(canUpdate);
+      setNextUpdateDate(threeMonthsFromLastUpdate);
+
+      if (!canUpdate) {
+        setAlert({
+          type: "warning",
+          message: `Bank details can only be updated every 3 months. You can update again after ${threeMonthsFromLastUpdate.toLocaleDateString()}`,
+        });
+      }
+    }
+  }, [user]);
 
   const showAlert = (type, message) => {
     setAlert({ type, message });
@@ -61,6 +87,15 @@ export default function BankAccount() {
   const handleCreateAccount = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Check if update is allowed
+    if (!canUpdateBankDetails) {
+      showAlert(
+        "error",
+        "Bank details cannot be updated yet due to 3-month restriction"
+      );
+      return;
+    }
 
     // Clear previous errors
     clearFieldErrors();
@@ -271,7 +306,7 @@ export default function BankAccount() {
             : "Yeah, We need to pay you 😏"}
         </p>
 
-        {/* ✅ Alert display - ONLY for backend responses */}
+        {/* ✅ Alert display - for backend responses and update restrictions */}
         {alert && (
           <div className="mt-4">
             <Alert type={alert.type} message={alert.message} />
@@ -297,6 +332,7 @@ export default function BankAccount() {
               setSelected={handleBankSelect}
               hasError={!!fieldErrors.bank}
               showIndicators={false}
+              disabled={!canUpdateBankDetails} // Disable if cannot update
             />
             {/* ✅ Inline error for bank selection */}
             {fieldErrors.bank && (
@@ -319,8 +355,11 @@ export default function BankAccount() {
               maxLength={10}
               className={`border mt-[8px] w-full h-[48px] rounded-md px-3 py-2 text-sm focus:ring-[#A20BA2] focus:border-[#A20BA2] outline-none ${
                 fieldErrors.accountNumber ? "border-[#F81A0C]" : "border-[#CCC]"
+              } ${
+                !canUpdateBankDetails ? "bg-gray-100 cursor-not-allowed" : ""
               }`}
               placeholder="Enter account number"
+              disabled={!canUpdateBankDetails} // Disable if cannot update
             />
             {/* ✅ Inline error for account number */}
             {fieldErrors.accountNumber && (
@@ -338,16 +377,11 @@ export default function BankAccount() {
               className="w-[25px] h-[25px] mt-[5px]"
             />
             <span>
-              Submitted account details cannot be modified for the first 3
-              months.
+              {canUpdateBankDetails
+                ? "Submitted account details cannot be modified for the first 3 months."
+                : `You can update your bank details after ${nextUpdateDate?.toLocaleDateString()}`}
             </span>
           </div>
-
-          {/* Terms */}
-          <p className="text-[12px] text-[#666666] font-medium text-center mb-[20px] leading-snug">
-            By clicking on Submit, you accept the Terms and Conditions, and
-            Privacy Policies
-          </p>
 
           <Button
             text={isSubmitting ? "Submitting..." : "Submit"}
@@ -355,7 +389,10 @@ export default function BankAccount() {
             onClick={handleCreateAccount}
             type="submit"
             disabled={
-              isSubmitting || !selectedBank || accountNumber.length !== 10
+              isSubmitting ||
+              !selectedBank ||
+              accountNumber.length !== 10 ||
+              !canUpdateBankDetails // Disable if cannot update
             }
           />
 

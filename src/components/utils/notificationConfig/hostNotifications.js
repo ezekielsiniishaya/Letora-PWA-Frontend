@@ -10,6 +10,14 @@ const hostNotificationConfigs = {
     imgHeight: "h-[60px]",
     width: "w-[60px]",
   }),
+    CHECK_OUT: (notification) => ({
+    image: "/icons/stopwatch.svg",
+    heading: "Check-out Reminder",
+    message:
+      notification.message ||
+      "It's check-out day. We hope you had a great stay at the property.",
+    booking: true,
+  }),
   GUEST_CHECKED_OUT: (notification) => ({
     image: "/icons/stopwatch.png",
     heading: "Guest Checked Out",
@@ -18,7 +26,7 @@ const hostNotificationConfigs = {
       "Your guest has successfully checked out of your apartment. You can now prepare the space for your next guest.",
     buttonText: "See Dashboard",
     width: "w-[60px]",
-    imgHeight: "h-[60px]"
+    imgHeight: "h-[60px]",
   }),
   GUEST_CHECKED_IN: (notification) => ({
     image: "/icons/success.svg",
@@ -109,7 +117,7 @@ const hostNotificationConfigs = {
     imgHeight: "h-[60px]",
     width: "w-[60px]",
   }),
-  WALLET_DEBITED: (notification) => ({
+  HOST_PAYMENT_PROCESSED: (notification) => ({
     image: "/icons/money.png",
     heading: "Wallet Debited",
     message:
@@ -168,6 +176,25 @@ const hostNotificationConfigs = {
     message:
       notification.message ||
       "A guest has successfully completed their stay. The security deposit will be processed accordingly.",
+    buttonText: "See Booking Details",
+    booking: true,
+  }),
+  REVIEW_REQUEST: (notification) => ({
+    image: "/icons/rating.png",
+    heading: "Rate & Review",
+    message:
+      notification.message ||
+      "Share your thoughts on your recent stay so the host can improve and guests can make informed choices.",
+    booking: true,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
+  }),
+  BOOKING_CONFIRMED: (notification) => ({
+    image: "/icons/firework.svg",
+    heading: "Successful Booking!!!",
+    message:
+      notification.message ||
+      "Well done, your stay at the apartment is locked in. Check your booking details anytime in your dashboard.",
     buttonText: "See Booking Details",
     booking: true,
   }),

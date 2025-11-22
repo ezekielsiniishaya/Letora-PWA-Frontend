@@ -4,6 +4,7 @@ import Navigation from "../../components/dashboard/Navigation";
 import Alert from "../../components/utils/Alerts"; // Import your Alert component
 import { useUser } from "../../hooks/useUser";
 import { UserContext } from "../../contexts/UserContext";
+import { useNavigate } from "react-router-dom";
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState("ongoing");
@@ -13,7 +14,7 @@ export default function BookingsPage() {
     message: "",
   });
   const { refreshUser } = useContext(UserContext);
-
+const navigate = useNavigate();
   // Use the user context to get actual bookings data
   const {
     loading: userLoading,
@@ -60,30 +61,101 @@ export default function BookingsPage() {
     { key: "cancelled", label: "Cancelled" },
   ];
 
-  // Get user's actual bookings from backend
-  const userBookings = getUserBookings();
+  // Get ALL bookings from TWO sources:
+  // 1. User's own bookings as GUEST (from getUserBookings)
+  const guestBookings = getUserBookings().map((booking) => ({
+    ...booking,
+    role: "guest", // Mark as guest booking
+  }));
 
-  // Filter bookings based on active tab
-  const filteredBookings = userBookings.filter(
-    (userBooking) => userBooking.status?.toLowerCase() === activeTab
+  // 2. Bookings on user's apartments (if user is a host)
+  const hostApartmentBookings = (user?.apartments || []).flatMap(
+    (apartment) =>
+      apartment.bookings?.map((booking) => ({
+        ...booking,
+        apartment: {
+          ...apartment,
+          // Remove the bookings array from the apartment object to avoid circular reference
+          bookings: undefined,
+        },
+        role: "host", // Mark as host booking
+      })) || []
   );
 
-  // Dynamic empty messages
+  // Combine ALL bookings
+  const allBookings = [...guestBookings, ...hostApartmentBookings];
+
+  // Remove duplicates based on booking ID
+  const uniqueBookings = allBookings.filter(
+    (booking, index, self) =>
+      index === self.findIndex((b) => b.id === booking.id)
+  );
+
+  // Filter bookings based on active tab AND status mapping
+  const filteredBookings = uniqueBookings.filter((booking) => {
+    // Map your actual booking statuses to the tab keys
+    const statusMap = {
+      ongoing: ["ONGOING", "ACTIVE", "CONFIRMED"],
+      completed: ["COMPLETED", "ENDED", "FINISHED"],
+      cancelled: ["CANCELLED", "CANCELED"],
+    };
+
+    return statusMap[activeTab]?.includes(booking.status?.toUpperCase());
+  });
+
+  // Convert booking status to lowercase for the Bookings component
+  const bookingsWithLowercaseStatus = filteredBookings.map((booking) => ({
+    ...booking,
+    displayStatus: booking.status?.toLowerCase() || "ongoing",
+  }));
+
+  // Handler for booking clicks - navigates to appropriate booking details based on role
+  const handleBookingClick = (booking) => {
+    if (booking.role === "host") {
+      // Navigate to host booking details for bookings on user's apartments
+      navigate(`/host-booking-details/${booking.id}`, {
+        state: {
+          booking: booking,
+          status: booking.displayStatus,
+          role: "host",
+          currentUserId: user?.id,
+        },
+      });
+    } else {
+      // Navigate to guest booking details for user's own bookings
+      navigate(`/bookings/${booking.id}`, {
+        state: {
+          booking: booking,
+          status: booking.displayStatus,
+          role: "guest",
+          currentUserId: user?.id,
+        },
+      });
+    }
+  };
+
+  // Dynamic empty messages - updated to reflect both guest and host bookings
   const emptyMessages = {
     ongoing: {
       title: "No Ongoing Bookings",
       subtitle:
-        "Your next adventure is just around the corner. Start booking now",
+        user?.role === "HOST"
+          ? "You have no ongoing bookings for your apartments or your own stays"
+          : "Your next adventure is just around the corner. Start booking now",
     },
     completed: {
       title: "No Completed Bookings",
       subtitle:
-        "Your next adventure is just around the corner. Start booking now",
+        user?.role === "HOST"
+          ? "You have no completed bookings for your apartments or your own stays"
+          : "Your next adventure is just around the corner. Start booking now",
     },
     cancelled: {
       title: "No Cancelled Bookings",
       subtitle:
-        "Your next adventure is just around the corner. Start booking now",
+        user?.role === "HOST"
+          ? "You have no cancelled bookings for your apartments or your own stays"
+          : "Your next adventure is just around the corner. Start booking now",
     },
   };
 
@@ -140,6 +212,7 @@ export default function BookingsPage() {
         <h1 className="text-[24px] font-medium text-[#0D1321]">Bookings</h1>
         <p className="text-[#666666] text-[14px]">
           Manage your Bookings here as a {user?.role?.toLowerCase() || "user"}
+          {user?.role === "HOST" && " (both as guest and host)"}
         </p>
       </header>
 
@@ -162,21 +235,27 @@ export default function BookingsPage() {
 
       {/* Main content */}
       <main className="flex-1 mt-[15px] p-4 space-y-4">
-        {filteredBookings.length > 0 ? (
-          filteredBookings.map((booking) => (
+        {bookingsWithLowercaseStatus.length > 0 ? (
+          bookingsWithLowercaseStatus.map((booking) => (
             <Bookings
               key={booking.id}
               booking={booking}
-              status={booking.status?.toLowerCase() || "ongoing"}
+              status={booking.displayStatus}
               completedButtonText={
-                booking.status?.toLowerCase() === "completed"
-                  ? "Rate your Stay"
+                booking.displayStatus === "completed"
+                  ? booking.role === "guest"
+                    ? "Rate your Stay"
+                    : "Hold Security Deposit"
                   : undefined
               }
-              // ADD THIS LINE - pass the user prop
+              // Pass the user prop
               user={user}
+              // Pass the role to the Bookings component if needed
+              role={booking.role}
               // Pass the showAlert function to Bookings component if it needs to show alerts
               onShowAlert={showAlert}
+              // Add onClick handler
+              onClick={() => handleBookingClick(booking)}
             />
           ))
         ) : (

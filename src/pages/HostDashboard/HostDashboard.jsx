@@ -35,8 +35,9 @@ export default function HostDashboardPage() {
   // Use actual listings from user context
   const listings = user?.apartments || [];
 
-  // Get ALL bookings from apartments (nested in each apartment)
-  const allBookings = listings.flatMap(
+  // Get ALL bookings from TWO sources:
+  // 1. Bookings where user is HOST (from their apartments)
+  const hostApartmentBookings = listings.flatMap(
     (apartment) =>
       apartment.bookings?.map((booking) => ({
         ...booking,
@@ -45,12 +46,23 @@ export default function HostDashboardPage() {
           // Remove the bookings array from the apartment object to avoid circular reference
           bookings: undefined,
         },
+        role: "host", // Mark as host booking
       })) || []
   );
 
-  // Filter bookings where the user is the HOST (all bookings here are for host's apartments)
-  const hostBookings = allBookings.filter(
-    (booking) => booking.apartment?.hostId === user?.id
+  // 2. Bookings where user is GUEST (from user.bookings array)
+  const guestBookings = (user?.bookings || []).map((booking) => ({
+    ...booking,
+    role: "guest", // Mark as guest booking
+  }));
+
+  // Combine ALL bookings
+  const allBookings = [...hostApartmentBookings, ...guestBookings];
+
+  // Remove duplicates based on booking ID (in case a booking appears in both arrays)
+  const uniqueBookings = allBookings.filter(
+    (booking, index, self) =>
+      index === self.findIndex((b) => b.id === booking.id)
   );
 
   const tabs = [
@@ -61,7 +73,7 @@ export default function HostDashboardPage() {
   ];
 
   // Filter bookings based on active tab AND convert status to lowercase for the component
-  const filteredBookings = hostBookings.filter((booking) => {
+  const filteredBookings = uniqueBookings.filter((booking) => {
     if (activeTab === "myListings") return false;
 
     // Map your actual booking statuses to the tab keys
@@ -80,16 +92,29 @@ export default function HostDashboardPage() {
     displayStatus: booking.status.toLowerCase(), // Convert ONGOING -> ongoing, COMPLETED -> completed
   }));
 
-  // Handler for booking clicks - always navigates to host booking details
+  // Handler for booking clicks - navigates to appropriate booking details based on role
   const handleBookingClick = (booking, displayStatus) => {
-    navigate(`/host-booking-details/${booking.id}`, {
-      state: {
-        booking: booking,
-        status: displayStatus,
-        role: "host",
-        currentUserId: user?.id,
-      },
-    });
+    if (booking.role === "host") {
+      // Navigate to host booking details for bookings on host's apartments
+      navigate(`/host-booking-details/${booking.id}`, {
+        state: {
+          booking: booking,
+          status: displayStatus,
+          role: "host",
+          currentUserId: user?.id,
+        },
+      });
+    } else {
+      // Navigate to guest booking details for host's own bookings
+      navigate(`/bookings/${booking.id}`, {
+        state: {
+          booking: booking,
+          status: displayStatus,
+          role: "guest",
+          currentUserId: user?.id,
+        },
+      });
+    }
   };
 
   // Empty state messages
@@ -101,15 +126,18 @@ export default function HostDashboardPage() {
     },
     ongoing: {
       title: "No Ongoing Bookings",
-      subtitle: "There are no ongoing booking on your apartments yet",
+      subtitle:
+        "There are no ongoing bookings for your apartments or your own stays",
     },
     completed: {
       title: "No Completed Bookings",
-      subtitle: "There are no completed booking on your apartment yet.",
+      subtitle:
+        "There are no completed bookings for your apartments or your own stays",
     },
     cancelled: {
       title: "No Cancelled Bookings",
-      subtitle: "There are no cancellations on your apartments yet",
+      subtitle:
+        "There are no cancellations for your apartments or your own stays",
     },
   };
 
@@ -205,11 +233,12 @@ export default function HostDashboardPage() {
               key={booking.id}
               booking={booking}
               status={booking.displayStatus} // Use the lowercase status
-              // ADD THIS LINE - pass the user prop
               user={user}
+              // Pass the role to the MyBooking component if needed
+              role={booking.role}
               onClick={() => handleBookingClick(booking, booking.displayStatus)}
               completedButtonText={
-                booking.displayStatus === "completed"
+                booking.displayStatus === "completed" && booking.role === "host"
                   ? "Hold Security Deposit"
                   : undefined
               }

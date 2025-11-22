@@ -180,13 +180,13 @@ export default function BookingStatusPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-[#F9F9F9] text-center px-5 py-6">
+    <div className="min-h-screen relative flex flex-col items-center bg-[#F9F9F9] text-center px-5 py-6">
       {/* Header */}
       <div className="w-full max-w-md flex items-center justify-start mb-4">
         <img
           src="/icons/arrow-left.svg"
           alt="Back"
-          className="w-4 h-4 cursor-pointer hover:opacity-70"
+          className="w-4 h-4 cursor-pointer z-50  hover:opacity-70"
           onClick={() => navigate("/bookings")}
         />
       </div>
@@ -195,7 +195,7 @@ export default function BookingStatusPage() {
       <img
         src="/icons/success.svg"
         alt="Success"
-        className="w-[141px] h-[75px] mb-2"
+        className="w-[141px] mt-[35px] h-[75px] mb-2"
       />
 
       {/* Success Message */}
@@ -204,9 +204,13 @@ export default function BookingStatusPage() {
         Your stay at {booking.apartment?.title} is confirmed. A confirmation
         email has been sent to you.
       </p>
-
+      <img
+        src="/icons/payment.png"
+        alt="success-icon2"
+        className="absolute h-[315px] w-full top-0 left-0"
+      />
       {/* Booking Summary */}
-      <div className="bg-white w-full max-w-md rounded-xl text-left p-4 mb-4">
+      <div className="bg-white w-full max-w-md rounded-xl text-left px-2 py-[10px] mb-4">
         <p className="text-[13px] font-medium mb-3 flex">
           <img
             src="/icons/booking-info.png"
@@ -215,7 +219,7 @@ export default function BookingStatusPage() {
           />
           Booking Summary
         </p>
-        <div className="flex items-center mb-3">
+        <div className="flex items-center mb-1">
           <img
             src={getPrimaryImage()}
             alt={booking.apartment?.title}
@@ -225,8 +229,11 @@ export default function BookingStatusPage() {
             }}
           />
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-[#333] truncate mb-1">
-              {booking.apartment?.title}
+            <p className="text-[14px] font-semibold max-w-[200px] text-[#333] truncate mb-1">
+              {booking.apartment?.apartmentType
+                ?.toLowerCase()
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, (c) => c.toUpperCase())}
             </p>
             <div className="flex space-x-1">
               <img
@@ -269,7 +276,7 @@ export default function BookingStatusPage() {
       </div>
 
       {/* Booking ID */}
-      <div className="w-full max-w-md bg-[#E9E9E9] rounded-[40px] px-4 py-3 mb-6">
+      <div className="w-full max-w-md bg-[#E9E9E970] rounded-[40px] px-4 py-3 mb-6">
         <div className="flex items-center justify-between">
           {/* Left side - Booking ID label and value */}
           <div className="flex-1 min-w-0">
