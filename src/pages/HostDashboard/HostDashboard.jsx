@@ -3,6 +3,7 @@ import ApartmentCard from "../../components/dashboard/ApartmentCard";
 import MyBooking from "../../components/dashboard/Bookings";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../hooks/useUser";
+import { apiRequest } from "../../services/apiRequest"; // Add this import
 
 export default function HostDashboardPage() {
   const [activeTab, setActiveTab] = useState("myListings");
@@ -14,6 +15,9 @@ export default function HostDashboardPage() {
     isAuthenticated,
     refreshUser,
   } = useUser();
+
+  // Add state for apartments fetched from API
+  const [apartments, setApartments] = useState([]);
 
   // Refresh user data when component mounts
   useEffect(() => {
@@ -32,8 +36,29 @@ export default function HostDashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Use actual listings from user context
-  const listings = user?.apartments || [];
+  // Fetch apartments from API (same as Reviews page)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchHostApartments = async () => {
+      try {
+        const response = await apiRequest(`/api/apartments/host/${user.id}`, {
+          method: "GET",
+        });
+
+        if (response?.success) {
+          setApartments(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to load host apartments:", error);
+      }
+    };
+
+    fetchHostApartments();
+  }, [user?.id]);
+
+  // Use apartments from API instead of user context for proper price display
+  const listings = apartments;
 
   // Get ALL bookings from TWO sources:
   // 1. Bookings where user is HOST (from their apartments)
