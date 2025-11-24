@@ -255,9 +255,9 @@ export default function RevenuePage() {
         </div>
       </div>
       {/* Inflow / Outflow */}
-      <div className="relative grid grid-cols-2 justify-center gap-4 mb-6">
+      <div className="relative grid grid-cols-2 gap-2 mb-6 w-full">
         {/* Inflow Card */}
-        <div className="relative w-[175px] bg-white border border-[#DADADA] h-[74px] rounded-[5px] py-3 px-2 flex flex-col">
+        <div className="bg-white border border-[#DADADA] h-[74px] rounded-[5px] py-3 px-2 flex flex-col">
           <div className="flex items-start justify-between">
             {/* Icon moved to left */}
             <div className="bg-[#008751] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
@@ -281,7 +281,7 @@ export default function RevenuePage() {
         </div>
 
         {/* Outflow Card */}
-        <div className="relative w-[175px] bg-white border border-[#DADADA] h-[74px] rounded-[5px] py-3 px-2 flex flex-col">
+        <div className="bg-white border border-[#DADADA] h-[74px] rounded-[5px] py-3 px-2 flex flex-col">
           <div className="flex items-start justify-between">
             {/* Icon moved to left */}
             <div className="bg-[#FF2416] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
