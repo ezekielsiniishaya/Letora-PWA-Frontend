@@ -413,7 +413,9 @@ export default function BookingDetails({ role = "guest" }) {
                   alt="Verified"
                   className="w-4 h-4 mr-1"
                 />
-                <span>{getTitle(booking)}</span>
+                <div className="truncate" style={{ maxWidth: "190px" }}>
+                  <span>{getTitle(booking)}</span>
+                </div>
               </div>
 
               <p className="text-[12px] text-[#333333] mt-1">

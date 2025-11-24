@@ -1,10 +1,9 @@
 // components/apartment/ApartmentDisplay.jsx
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PropertyDetails from "../dashboard/PropertyDetails";
 import Facilities from "../dashboard/Facilities";
 import HouseRules from "../dashboard/HouseRules";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useCallback } from "react";
 import Alert from "../utils/Alerts";
 import { getDocumentIcon } from "./fileIcon";
 
@@ -71,14 +70,21 @@ const reverseMapPropertyDetails = (details = {}, basicInfo = {}) => {
 
 const reverseMapFacilities = (facilities = []) =>
   facilities.map((facility) => ({
-    icon: facilityMap[facility.value]?.icon || "/icons/default-facility.svg",
-    text: facilityMap[facility.value]?.label || facility.value,
+    icon:
+      facilityMap[facility.value || facility.name]?.icon ||
+      "/icons/default-facility.svg",
+    text:
+      facilityMap[facility.value || facility.name]?.label ||
+      facility.value ||
+      facility.name,
   }));
 
 const reverseMapHouseRules = (houseRules = []) =>
   houseRules.map((rule) => ({
-    icon: houseRuleMap[rule.value]?.icon || "/icons/default-rule.svg",
-    text: houseRuleMap[rule.value]?.label || rule.value,
+    icon:
+      houseRuleMap[rule.value || rule.rule]?.icon || "/icons/default-rule.svg",
+    text:
+      houseRuleMap[rule.value || rule.rule]?.label || rule.value || rule.rule,
   }));
 
 export const ApartmentDisplay = ({
@@ -90,8 +96,8 @@ export const ApartmentDisplay = ({
   showLegalDocuments = true,
   backToHostDashboard = false,
   onPriceButtonClick,
-  error = null, // Add error prop
-  onClearError, // Add error clearing function
+  error = null,
+  onClearError,
 }) => {
   const [showGallery, setShowGallery] = useState(false);
   const [localError, setLocalError] = useState(null);
@@ -101,16 +107,12 @@ export const ApartmentDisplay = ({
   const displayError = error || localError;
 
   const getApartmentId = useCallback(() => {
-    return apartment?.securityDeposit?.apartmentId;
-  }, [apartment?.securityDeposit?.apartmentId]);
+    return apartment?.securityDeposit?.apartmentId || apartment?.id;
+  }, [apartment?.securityDeposit?.apartmentId, apartment?.id]);
 
   useEffect(() => {
     const apartmentId = getApartmentId();
     console.log("🎯 Found apartment ID:", apartmentId);
-    console.log(
-      "📍 From securityDeposit:",
-      apartment?.securityDeposit?.apartmentId
-    );
   }, [apartment, getApartmentId]);
 
   // Clear error when component unmounts or when explicitly cleared
@@ -127,23 +129,15 @@ export const ApartmentDisplay = ({
     }
   };
 
-  // Function to set local errors (for internal component errors)
-  const setError = (errorMessage, errorType = "error") => {
-    setLocalError({
-      type: errorType,
-      message: errorMessage,
-    });
-  };
-
   // Enhanced error handling for image loading
   const handleImageError = (e, imageType = "apartment") => {
     console.error(`Failed to load ${imageType} image:`, e.target.src);
     e.target.src = "/images/apartment-dashboard.png";
 
-    // Only show error for critical images (main image)
-    if (imageType === "main") {
-      setError("Failed to load apartment image", "network");
-    }
+    // Don't show alert for image errors - it's handled by fallback
+    // if (imageType === "main") {
+    //   setError("Failed to load apartment image", "network");
+    // }
   };
 
   // Enhanced error handling for avatar
@@ -162,7 +156,6 @@ export const ApartmentDisplay = ({
       }
     } catch (navError) {
       console.error("Navigation error:", navError);
-      setError("Navigation failed. Please try again.", "error");
     }
   };
 
@@ -171,12 +164,9 @@ export const ApartmentDisplay = ({
     try {
       if (onPriceButtonClick) {
         onPriceButtonClick();
-      } else {
-        console.warn("No price button handler provided");
       }
     } catch (buttonError) {
       console.error("Price button click error:", buttonError);
-      setError("Action failed. Please try again.", "error");
     }
   };
 
@@ -185,13 +175,9 @@ export const ApartmentDisplay = ({
     try {
       if (onEdit) {
         onEdit();
-      } else {
-        console.warn("No edit handler provided");
-        setError("Edit functionality not available", "error");
       }
     } catch (editError) {
       console.error("Edit action error:", editError);
-      setError("Failed to initiate edit. Please try again.", "error");
     }
   };
 
@@ -205,30 +191,99 @@ export const ApartmentDisplay = ({
     );
   }
 
-  // Destructure apartment data with defaults
+  // ✅ Handle both direct apartment object and nested data structure
+  const apartmentData = apartment.data || apartment;
+
+  console.log("🔍 DEBUG: Full apartmentData:", apartmentData);
+  console.log("🔍 DEBUG: apartmentData.images:", apartmentData.images);
+
+  // ✅ Destructure apartment data with fallbacks to handle both structures
   const {
     basicInfo = {},
-    details = {},
-    facilities = [],
-    images = [],
+    details = apartmentData.details || {},
+    facilities = apartmentData.facilities || [],
+    images = apartmentData.images || [],
     pricing = {},
-    securityDeposit = {},
-    houseRules = [],
+    securityDeposit = apartmentData.securityDeposit || {},
+    houseRules = apartmentData.houseRules || [],
     legalDocuments = [],
-  } = apartment;
+    documents = apartmentData.documents || [],
+    title = apartmentData.title,
+    apartmentType = apartmentData.apartmentType,
+    state = apartmentData.state,
+    town = apartmentData.town,
+    price = apartmentData.price,
+  } = apartmentData;
 
-  // Prepare images with error handling
-  const displayImages =
-    images && images.length > 0
-      ? images.map((img) =>
-          typeof img === "string"
-            ? img
-            : img.url || img.data || "/images/apartment-dashboard.png"
-        )
-      : Array(4).fill("/images/apartment-dashboard.png");
+  console.log("🔍 DEBUG: Extracted images:", images);
+  console.log("🔍 DEBUG: Images length:", images?.length);
+  console.log("🔍 DEBUG: First image:", images?.[0]);
 
-  // Reverse mappings
-  const propertyDetails = reverseMapPropertyDetails(details, basicInfo);
+  // ✅ Build basicInfo if it doesn't exist (for flat structure)
+  const actualBasicInfo = basicInfo.title
+    ? basicInfo
+    : {
+        title: title || basicInfo.title || "Apartment",
+        apartmentType: apartmentType || basicInfo.apartmentType,
+        state: state || basicInfo.state,
+        town: town || basicInfo.town,
+      };
+
+  // ✅ Build pricing if it doesn't exist (for flat structure)
+  const actualPricing = pricing.pricePerNight
+    ? pricing
+    : {
+        pricePerNight: price || pricing.pricePerNight,
+      };
+
+  // ✅ Use documents if legalDocuments doesn't exist
+  const actualDocuments = legalDocuments.documents || documents || [];
+
+  // ✅ IMPROVED: Better image extraction and validation
+  const extractImageUrl = (img) => {
+    if (!img) return null;
+
+    // If it's already a string URL
+    if (typeof img === "string" && img.trim() !== "") {
+      return img;
+    }
+
+    // If it's an object, try different properties
+    if (typeof img === "object") {
+      return img.url || img.data || img.secure_url || img.imageUrl || null;
+    }
+
+    return null;
+  };
+
+  // Prepare images with MUCH better error handling
+  const displayImages = (() => {
+    // Check if we have images array
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      console.warn("⚠️ No images found, using placeholder");
+      return ["/images/apartment-dashboard.png"];
+    }
+
+    // Extract and validate URLs
+    const extractedImages = images
+      .map(extractImageUrl)
+      .filter((url) => url && url.trim() !== "");
+
+    console.log("✅ Extracted image URLs:", extractedImages);
+
+    // If no valid images, use placeholder
+    if (extractedImages.length === 0) {
+      console.warn("⚠️ No valid image URLs found, using placeholder");
+      return ["/images/apartment-dashboard.png"];
+    }
+
+    return extractedImages;
+  })();
+
+  console.log("🖼️ Final displayImages:", displayImages);
+
+  // Reverse mappings - use actualBasicInfo
+  const propertyDetails = reverseMapPropertyDetails(details, actualBasicInfo);
   const mappedFacilities = reverseMapFacilities(facilities);
   const mappedHouseRules = reverseMapHouseRules(houseRules);
 
@@ -286,9 +341,9 @@ export const ApartmentDisplay = ({
   // Check if apartment is verified
   const isVerified = () => {
     return (
-      apartment.isVerified ||
-      apartment.status === "VERIFIED" ||
-      apartment.verified
+      apartmentData.isVerified ||
+      apartmentData.status === "VERIFIED" ||
+      apartmentData.verified
     );
   };
 
@@ -388,17 +443,17 @@ export const ApartmentDisplay = ({
               {/* Verified badge and title */}
               <div className="flex items-center gap-1 mb-1">
                 <h1 className="text-[14px] font-semibold leading-snug">
-                  {basicInfo.title || "Exquisite Three Bedroom Apartment"}
+                  {actualBasicInfo.title || "Exquisite Three Bedroom Apartment"}
                 </h1>
               </div>
 
               <p className="font-medium text-[12px]">
-                {basicInfo.town || "Maryland, Lagos"},{" "}
-                {basicInfo.state || "Maryland, Lagos"}
+                {actualBasicInfo.town || "Maryland, Lagos"},{" "}
+                {actualBasicInfo.state || "Maryland, Lagos"}
               </p>
 
               {/* Rating and likes section */}
-              {apartment.totalLikes != null && (
+              {apartmentData.totalLikes != null && (
                 <div className="flex items-center mt-2 gap-1 md:mt-4 md:gap-2">
                   <div className="flex -space-x-2 md:-space-x-3">
                     <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#8B44FF] md:w-[36.62px] md:h-[36.62px]" />
@@ -408,7 +463,7 @@ export const ApartmentDisplay = ({
                   </div>
 
                   <span className="text-[12px] font-medium text-[#333333] md:text-[20px]">
-                    {apartment.totalLikes?.toString()}+ Liked this place
+                    {apartmentData.totalLikes?.toString()}+ Liked this place
                   </span>
                 </div>
               )}
@@ -430,7 +485,7 @@ export const ApartmentDisplay = ({
                 className="text-white py-[6px] px-[6px] bg-[#A20BA2] h-[25px] font-semibold text-[12px] mt-[19px] rounded flex items-center justify-center hover:bg-[#8A0A8A] transition-colors"
                 onClick={handlePriceButtonClick}
               >
-                ₦{formatPrice(pricing.pricePerNight)}/Night
+                ₦{formatPrice(actualPricing.pricePerNight)}/Night
               </button>
             </div>
           </div>
@@ -501,19 +556,19 @@ export const ApartmentDisplay = ({
       </div>
 
       {/* Documentation Upload */}
-      {showLegalDocuments && legalDocuments?.documents && (
+      {showLegalDocuments && actualDocuments.length > 0 && (
         <div className="mt-[31.66px]">
           <h2 className="text-[#333333] text-[14px] font-semibold">
             Documentations
           </h2>
           <div className="flex gap-[7.5px] mt-[10px]">
-            {legalDocuments.documents.slice(0, 3).map((doc, index) => (
+            {actualDocuments.slice(0, 3).map((doc, index) => (
               <div
                 key={index}
                 className="flex-1 min-w-0 border-[1.5px] border-[#D1D0D0] rounded-lg bg-[#CCCCCC42] h-[98px] flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] p-1"
               >
                 <img
-                  src={getDocumentIcon(doc)} // Pass the entire doc object
+                  src={getDocumentIcon(doc)}
                   alt={doc.name}
                   className="w-6 h-6 mb-1 flex-shrink-0"
                 />

@@ -61,7 +61,7 @@ export default function MyBooking({
       text: "text-[#059669]",
     },
     cancelled: {
-      label: "Cancelled",
+      label: "Under Dispute",
       bg: "bg-[#FFE2E2]",
       text: "text-[#E11D48]",
     },
@@ -298,6 +298,7 @@ export default function MyBooking({
     setShowRating(false);
     setHasReviewed(true); // Set review as submitted
     setActionCompleted(true);
+    if (onClick) onClick(); // force parent reload of booking data
   };
 
   return (

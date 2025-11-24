@@ -29,7 +29,6 @@ export default function RevenuePage() {
     // Replace NGN with ₦ and add decimal styling
     return (
       <>
-        
         {formatted.replace("NGN", "").trim()}
         <span className="text-[#FBD0FB] text-[18px]">.00</span>
       </>
@@ -255,39 +254,53 @@ export default function RevenuePage() {
           </h2>
         </div>
       </div>
-
       {/* Inflow / Outflow */}
       <div className="relative grid grid-cols-2 justify-center gap-4 mb-6">
+        {/* Inflow Card */}
         <div className="relative w-[175px] bg-white border border-[#DADADA] h-[74px] rounded-[5px] p-3 flex flex-col">
-          <p className="text-[12.15px] font-medium text-[#666666]">
-            This week Inflow
-          </p>
-          <h3 className="text-[18px] mt-1 font-medium text-[#333333]">
-            ₦{walletData.weeklyInflow.toLocaleString()}.
-            <span className="text-[14px] text-[#909090]">00</span>
-          </h3>
-          <div className="bg-[#008751] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center absolute top-7 right-4">
-            <img
-              src="/icons/arrow-down.svg"
-              alt="inflow"
-              className="w-[6.29px] h-[9.17px]"
-            />
+          <div className="flex items-start justify-between">
+            {/* Icon moved to left */}
+            <div className="bg-[#008751] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <img
+                src="/icons/arrow-down.svg"
+                alt="inflow"
+                className="w-[6.29px] h-[9.17px]"
+              />
+            </div>
+            {/* Content shifted to right with 12px gap */}
+            <div className="flex-1 ml-2">
+              <p className="text-[12.15px] font-medium text-[#666666]">
+                This week Inflow
+              </p>
+              <h3 className="text-[18px] mt-1 font-medium text-[#333333]">
+                ₦{walletData.weeklyInflow.toLocaleString()}.
+                <span className="text-[14px] text-[#909090]">00</span>
+              </h3>
+            </div>
           </div>
         </div>
+
+        {/* Outflow Card */}
         <div className="relative w-[175px] bg-white border border-[#DADADA] h-[74px] rounded-[5px] p-3 flex flex-col">
-          <p className="text-[12.15px] font-medium text-[#666666]">
-            This week outflow
-          </p>
-          <h3 className="text-[18px] mt-1 font-medium text-[#333333]">
-            ₦{walletData.weeklyOutflow.toLocaleString()}.
-            <span className="text-[14px] text-[#909090]">00</span>
-          </h3>
-          <div className="bg-[#FF2416] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center absolute top-7 right-4">
-            <img
-              src="/icons/arrow-up.svg"
-              alt="outflow"
-              className="w-[6.29px] h-[9.17px]"
-            />
+          <div className="flex items-start justify-between">
+            {/* Icon moved to left */}
+            <div className="bg-[#FF2416] w-[18.1px] h-[18.1px] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <img
+                src="/icons/arrow-up.svg"
+                alt="outflow"
+                className="w-[6.29px] h-[9.17px]"
+              />
+            </div>
+            {/* Content shifted to right with 12px gap */}
+            <div className="flex-1 ml-2">
+              <p className="text-[12.15px] font-medium text-[#666666]">
+                This week Outflow
+              </p>
+              <h3 className="text-[18px] mt-1 font-medium text-[#333333]">
+                ₦{walletData.weeklyOutflow.toLocaleString()}.
+                <span className="text-[14px] text-[#909090]">00</span>
+              </h3>
+            </div>
           </div>
         </div>
       </div>

@@ -58,7 +58,7 @@ export default function BookingsPage() {
   const tabs = [
     { key: "ongoing", label: "Ongoing" },
     { key: "completed", label: "Completed" },
-    { key: "cancelled", label: "Cancelled" },
+    { key: "cancelled", label: "Under Dispute" },
   ];
 
   // Get ALL bookings from TWO sources:
