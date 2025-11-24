@@ -9,6 +9,15 @@ export default function ReviewsPage() {
 
   // Get reviews from navigation state or default to empty array
   const reviews = location.state?.reviews || [];
+  const prev = location.state?.from;
+
+  const handleBack = () => {
+    if (prev) {
+      navigate(prev, { replace: true }); // ← This removes the loop
+    } else {
+      navigate(-1);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -31,8 +40,9 @@ export default function ReviewsPage() {
             src="/icons/arrow-left.svg"
             alt="Back"
             className="w-[27px] p-1 ml-[20px] md:hidden h-[33px] cursor-pointer"
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
           />
+
           <h1 className="text-[14px] ml-1 font-medium">Reviews</h1>
           <div />
         </div>

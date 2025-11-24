@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../../hooks/useUser";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
 import { apiRequest } from "../../services/apiRequest"; // used for fetching host apartments
 
 export default function HostReviews() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const { user } = useUser();
 
   const [apartments, setApartments] = useState([]);
@@ -40,6 +42,7 @@ export default function HostReviews() {
     navigate(`/reviews`, {
       state: {
         reviews: apt.reviews || [],
+        from: location.pathname,
       },
     });
   };
@@ -48,7 +51,7 @@ export default function HostReviews() {
     <div className="flex flex-col min-h-screen bg-[#F9F9F9] px-[20px]">
       {/* Top bar */}
       <div className="flex justify-between items-center mt-5">
-        <button onClick={() => navigate(-1)}>
+        <button onClick={() => navigate("/profile")} className="flex items-center">
           <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-4" />
         </button>
       </div>
@@ -75,7 +78,7 @@ export default function HostReviews() {
           ))
         ) : (
           <div className="flex flex-col mt-[280px] items-center justify-center py-12 text-center">
-                       <p className="text-[#666666] text-[14px]">
+            <p className="text-[#666666] text-[14px]">
               No reviews yet for your apartments
             </p>
           </div>
