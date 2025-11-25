@@ -26,6 +26,7 @@ export default function MyBooking({
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
   const [showRating, setShowRating] = useState(false);
   const [showHoldSuccess, setShowHoldSuccess] = useState(false);
+  const [showConfirmHold, setShowConfirmHold] = useState(false);
   const [actionCompleted, setActionCompleted] = useState(false);
   const [canHoldDeposit, setCanHoldDeposit] = useState(true);
   const [isCheckingHold, setIsCheckingHold] = useState(false);
@@ -53,6 +54,7 @@ export default function MyBooking({
     console.log("Is Apartment Owner:", currentUserId === apartmentHostId);
   }, [currentUserId, apartmentHostId]);
 
+  // Update the statusMap to check cancellationDispute status
   const statusMap = {
     ongoing: { label: "Ongoing", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" },
     completed: {
@@ -61,9 +63,18 @@ export default function MyBooking({
       text: "text-[#059669]",
     },
     cancelled: {
-      label: "Under Dispute",
-      bg: "bg-[#FFE2E2]",
-      text: "text-[#E11D48]",
+      label:
+        booking?.cancellationDispute?.status === "RESOLVED"
+          ? "Settled"
+          : "Under Dispute",
+      bg:
+        booking?.cancellationDispute?.status === "RESOLVED"
+          ? "bg-[#F5F5F5]"
+          : "bg-[#FFE2E2]",
+      text:
+        booking?.cancellationDispute?.status === "RESOLVED"
+          ? "text-[#666666]"
+          : "text-[#E11D48]",
     },
   };
 
@@ -167,6 +178,9 @@ export default function MyBooking({
   // UPDATED: handleHoldDeposit with custom alerts
   const handleHoldDeposit = async () => {
     try {
+      // Show loading state immediately
+      setIsCheckingHold(true);
+
       const response = await createDepositHold(bookingId);
 
       if (response.success) {
@@ -179,7 +193,28 @@ export default function MyBooking({
     } catch (error) {
       console.error("Error holding deposit:", error);
       showAlert("error", error.message || "Failed to hold deposit");
+    } finally {
+      setIsCheckingHold(false);
     }
+  };
+
+  // Handle completed button click - UPDATED
+  const handleCompletedButtonClick = (e) => {
+    e.stopPropagation();
+
+    if (completedButtonText === "Rate your Stay") {
+      setShowRating(true);
+    } else if (completedButtonText === "Hold Security Deposit") {
+      if (hasReviewed || actionCompleted || !canHoldDeposit) return;
+
+      // Show confirmation popup immediately instead of checking status
+      setShowConfirmHold(true);
+    }
+  };
+
+  const handleConfirmHold = () => {
+    setShowConfirmHold(false);
+    handleHoldDeposit();
   };
 
   // Helper functions to handle backend data structure
@@ -273,18 +308,6 @@ export default function MyBooking({
   const handleViewBookingClick = (e) => {
     e.stopPropagation();
     handleNavigation();
-  };
-
-  // Handle completed button click
-  const handleCompletedButtonClick = (e) => {
-    e.stopPropagation();
-
-    if (completedButtonText === "Rate your Stay") {
-      setShowRating(true);
-    } else if (completedButtonText === "Hold Security Deposit") {
-      if (hasReviewed || actionCompleted || !canHoldDeposit) return;
-      handleHoldDeposit();
-    }
   };
 
   // Handle hold success close
@@ -422,8 +445,16 @@ export default function MyBooking({
           </button>
         )}
         {status === "cancelled" && (
-          <button className="bg-[#FFF1F0] border border-[#F81A0C] text-[#F81A0C] w-[179px] h-[35px] rounded-[5px] text-[12px] font-semibold">
-            Under Dispute
+          <button
+            className={`border w-[179px] h-[35px] rounded-[5px] text-[12px] font-semibold ${
+              booking?.cancellationDispute?.status === "RESOLVED"
+                ? "bg-[#E9E9E9] border-[#E9E9E9] text-[#666666]"
+                : "bg-[#FFF1F0] border-[#F81A0C] text-[#F81A0C]"
+            }`}
+          >
+            {booking?.cancellationDispute?.status === "RESOLVED"
+              ? "Settled"
+              : "Under Dispute"}
           </button>
         )}
       </div>
@@ -468,6 +499,22 @@ export default function MyBooking({
           bookingId={booking?.id}
           onClose={handleRatingClose}
           onShowAlert={showAlert}
+        />
+      )}
+
+      {/* Hold Deposit Confirmation Popup */}
+      {showConfirmHold && (
+        <ShowSuccess
+          image="/icons/lock.png"
+          heading="Hold Security Deposit?"
+          message="Are you sure you want to hold the security deposit? This action will cancel the booking and start a dispute process."
+          buttonText="Confirm Hold"
+          secondaryButtonText="Cancel"
+          onClose={() => setShowConfirmHold(false)}
+          onSecondaryAction={() => setShowConfirmHold(false)}
+          onPrimaryAction={handleConfirmHold}
+          height="auto"
+          width="w-[70px]"
         />
       )}
 

@@ -230,10 +230,9 @@ export default function ListingOverviewPage() {
         user={user}
         showActions={true}
         onEdit={() => navigate("/basic-info")}
-        status="draft"
+        status="DRAFT"
         showLegalDocuments={true}
       />
-
       {/* Agreements Section */}
       <div className="mx-[18px] mt-[20px] space-y-3 text-[12px] text-[#0D132180]">
         <label className="flex items-center gap-2">
@@ -264,7 +263,6 @@ export default function ListingOverviewPage() {
           policy, Content and Listing policy
         </label>
       </div>
-
       {error && (
         <div className="fixed top-4 right-4 z-50">
           <Alert
@@ -275,7 +273,6 @@ export default function ListingOverviewPage() {
           />
         </div>
       )}
-
       {/* Submit Button */}
       <button
         onClick={handleSubmit}
@@ -294,8 +291,6 @@ export default function ListingOverviewPage() {
           ? "Update Listing"
           : "Submit Listing"}
       </button>
-
-      {/* Success Modal */}
       {showSuccess && (
         <ShowSuccess
           image="/icons/document.png"
@@ -314,12 +309,16 @@ export default function ListingOverviewPage() {
           buttonText="Done"
           onClose={() => {
             setShowSuccess(false);
-            navigate("/shortlet-review", {
-              state: {
-                apartment: submissionResponse?.apartment, // Use the stored response
-                isUpdate: isEditing(),
-              },
-            });
+
+            // ✅ FIXED: Navigate to view-listing with the apartment ID
+            const apartmentId =
+              submissionResponse?.apartment?.id || existingApartmentId;
+            if (apartmentId) {
+              navigate(`/view-listing/${apartmentId}`);
+            } else {
+              // Fallback to host dashboard if no ID
+              navigate("/host-dashboard");
+            }
           }}
         />
       )}

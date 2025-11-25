@@ -50,13 +50,20 @@ export default function ViewListing() {
   // Transform API data to match ApartmentDisplay component structure
   const transformApartmentData = (apiData) => {
     return {
+      // ✅ FIXED: Include the raw data structure that ApartmentDisplay expects
+      data: apiData, // Pass the raw data for proper favorites access
       basicInfo: {
         title: apiData.title,
         apartmentType: apiData.apartmentType,
         state: apiData.state,
         town: apiData.town,
       },
-      totalLikes: apiData.totalLikes || 0,
+      // ✅ FIXED: Include favorites data directly
+      favorites: apiData.favorites || [],
+      _count: {
+        favorites: apiData._count?.favorites || 0,
+      },
+      totalLikes: apiData.totalLikes || apiData._count?.favorites || 0,
       details: {
         bedrooms: apiData.details?.bedrooms,
         bathrooms: apiData.details?.bathrooms,
@@ -87,6 +94,13 @@ export default function ViewListing() {
       isListed: apiData.isListed,
       isAvailable: apiData.isAvailable,
       isVerified: apiData.status === "VERIFIED",
+      // ✅ FIXED: Include direct properties for flat structure access
+      id: apiData.id,
+      title: apiData.title,
+      apartmentType: apiData.apartmentType,
+      state: apiData.state,
+      town: apiData.town,
+      price: apiData.price,
     };
   };
 
@@ -156,6 +170,7 @@ export default function ViewListing() {
         showActions={true}
         onEdit={handleEdit}
         showLegalDocuments={true}
+        backToHostDashboard={true}  
       />
 
       {/* Delete Button */}

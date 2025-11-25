@@ -5,7 +5,6 @@ import Facilities from "../dashboard/Facilities";
 import HouseRules from "../dashboard/HouseRules";
 import { useNavigate } from "react-router-dom";
 import Alert from "../utils/Alerts";
-import { getDocumentIcon } from "./fileIcon";
 
 import {
   parkingSpaceMap,
@@ -92,11 +91,11 @@ export const ApartmentDisplay = ({
   user,
   showActions = false,
   onEdit,
-  status = "draft",
   showLegalDocuments = true,
   backToHostDashboard = false,
   onPriceButtonClick,
   error = null,
+  status = "Draft",
   onClearError,
 }) => {
   const [showGallery, setShowGallery] = useState(false);
@@ -133,11 +132,6 @@ export const ApartmentDisplay = ({
   const handleImageError = (e, imageType = "apartment") => {
     console.error(`Failed to load ${imageType} image:`, e.target.src);
     e.target.src = "/images/apartment-dashboard.png";
-
-    // Don't show alert for image errors - it's handled by fallback
-    // if (imageType === "main") {
-    //   setError("Failed to load apartment image", "network");
-    // }
   };
 
   // Enhanced error handling for avatar
@@ -145,7 +139,19 @@ export const ApartmentDisplay = ({
     console.error("Failed to load avatar:", e.target.src);
     e.target.src = "/images/default-avatar.jpg";
   };
+  // Add this function to your ApartmentDisplay component
+  const getDocumentIconFromType = (documentType) => {
+    const iconMap = {
+      PROOF_OF_OWNERSHIP: "/icons/pdf.svg",
+      UTILITY_BILL: "/icons/camera.svg",
+      TENANCY_AGREEMENT: "/icons/pdf.svg",
+      AUTHORIZATION_DOCUMENT: "/icons/pdf.svg",
+      PROFESSIONAL_LICENSE: "/icons/pdf.svg",
+      CONSENT_LETTER: "/icons/pdf.svg",
+    };
 
+    return iconMap[documentType] || "/icons/document.svg";
+  };
   // Safe navigation with error handling
   const handleNavigation = () => {
     try {
@@ -194,8 +200,17 @@ export const ApartmentDisplay = ({
   // ✅ Handle both direct apartment object and nested data structure
   const apartmentData = apartment.data || apartment;
 
-  console.log("🔍 DEBUG: Full apartmentData:", apartmentData);
-  console.log("🔍 DEBUG: apartmentData.images:", apartmentData.images);
+  // ✅ IMPROVED: Better favorites data extraction
+  const actualFavorites = apartmentData.favorites || [];
+  const totalLikes =
+    apartmentData._count?.favorites || actualFavorites.length || 0;
+
+  // ✅ ADD DEBUG LOGS FOR FAVORITES
+  console.log("🔍 DEBUG - Raw apartmentData:", apartmentData);
+  console.log("🔍 DEBUG - Raw favorites array:", apartmentData.favorites);
+  console.log("🔍 DEBUG - _count.favorites:", apartmentData._count?.favorites);
+  console.log("🔍 DEBUG - actualFavorites:", actualFavorites);
+  console.log("🔍 DEBUG - totalLikes:", totalLikes);
 
   // ✅ Destructure apartment data with fallbacks to handle both structures
   const {
@@ -214,10 +229,6 @@ export const ApartmentDisplay = ({
     town = apartmentData.town,
     price = apartmentData.price,
   } = apartmentData;
-
-  console.log("🔍 DEBUG: Extracted images:", images);
-  console.log("🔍 DEBUG: Images length:", images?.length);
-  console.log("🔍 DEBUG: First image:", images?.[0]);
 
   // ✅ Build basicInfo if it doesn't exist (for flat structure)
   const actualBasicInfo = basicInfo.title
@@ -279,8 +290,6 @@ export const ApartmentDisplay = ({
 
     return extractedImages;
   })();
-
-  console.log("🖼️ Final displayImages:", displayImages);
 
   // Reverse mappings - use actualBasicInfo
   const propertyDetails = reverseMapPropertyDetails(details, actualBasicInfo);
@@ -347,6 +356,66 @@ export const ApartmentDisplay = ({
     );
   };
 
+  // ✅ FIXED: Get liked users display text with proper logic
+  const getLikedUsersText = () => {
+    console.log("🔍 getLikedUsersText called - totalLikes:", totalLikes);
+    console.log("🔍 actualFavorites:", actualFavorites);
+
+    if (totalLikes === 0) {
+      return "0 people Liked this place";
+    }
+
+    // Get the most recent favorites (assuming they're ordered by createdAt)
+    const recentFavorites = [...actualFavorites].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    console.log("🔍 recentFavorites:", recentFavorites);
+
+    if (totalLikes === 1) {
+      const firstName = recentFavorites[0]?.user?.firstName || "Someone";
+      console.log("🔍 Showing 1 like:", firstName);
+      return `${firstName} Liked this place`;
+    } else if (totalLikes === 2) {
+      const firstName = recentFavorites[0]?.user?.firstName || "Someone";
+      console.log("🔍 Showing 2 likes:", firstName);
+      return `${firstName} +1 Liked this place`;
+    } else if (totalLikes === 3) {
+      const firstName = recentFavorites[0]?.user?.firstName || "Someone";
+      console.log("🔍 Showing 3 likes:", firstName);
+      return `${firstName} +2 Liked this place`;
+    } else if (totalLikes === 4) {
+      const firstName = recentFavorites[0]?.user?.firstName || "Someone";
+      console.log("🔍 Showing 4 likes:", firstName);
+      return `${firstName} +3 Liked this place`;
+    } else if (totalLikes > 4) {
+      console.log("🔍 Showing more than 4 likes:", totalLikes);
+      return `+${totalLikes} Liked this place`;
+    }
+
+    return `${totalLikes} people Liked this place`;
+  };
+
+  // ✅ FIXED: Get profile images for display with proper ordering
+  const getProfileImages = () => {
+    if (totalLikes === 0) return [];
+
+    // Get the most recent favorites for display
+    const recentFavorites = [...actualFavorites]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 4);
+
+    return recentFavorites.map((favorite, index) => ({
+      id: favorite.id,
+      profilePic: favorite.user?.profilePic,
+      firstName: favorite.user?.firstName,
+      index,
+    }));
+  };
+
+  const profileImages = getProfileImages();
+  console.log("🔍 profileImages for display:", profileImages);
+
   return (
     <div className="mx-[18px] text-[#39302A] mb-[24px] mt-[10px] bg-white">
       {/* Alert Display */}
@@ -360,8 +429,6 @@ export const ApartmentDisplay = ({
           />
         </div>
       )}
-
-      {/* Header Actions */}
       {showActions && (
         <div className="flex items-center mb-[20px] justify-between">
           <button
@@ -370,22 +437,22 @@ export const ApartmentDisplay = ({
           >
             <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
           </button>
-          {status === "draft" && onEdit && (
+
+          {/* ✅ UPDATED: Show Edit for both verified AND draft status apartments */}
+          {(isVerified() || status === "DRAFT") && onEdit ? (
             <button
               onClick={handleEdit}
               className="bg-[#686464] text-[12px] font-medium w-[65px] h-[21px] text-white px-4 rounded-full hover:bg-gray-800 transition-colors"
             >
               Edit
             </button>
-          )}
-          {status === "under_review" && (
+          ) : (
             <button className="bg-[#167DDD] text-[12px] font-medium w-[151px] h-[21px] text-white px-4 rounded-full">
               Undergoing Review
             </button>
           )}
         </div>
       )}
-
       {/* Apartment Images */}
       <div className="flex h-[249px] flex-row gap-x-[7px] md:hidden relative">
         <div className="flex-1">
@@ -424,7 +491,6 @@ export const ApartmentDisplay = ({
           ))}
         </div>
       </div>
-
       {/* Host info & price - Fixed positioning */}
       <div className="flex flex-col mt-4 relative">
         <div className="flex flex-col items-start">
@@ -442,6 +508,13 @@ export const ApartmentDisplay = ({
             <div className="flex-1">
               {/* Verified badge and title */}
               <div className="flex items-center gap-1 mb-1">
+                {isVerified() && (
+                  <img
+                    src="/icons/tick-black.svg"
+                    alt="Verified icon"
+                    className="w-[16px] h-[18px]"
+                  />
+                )}
                 <h1 className="text-[14px] font-semibold leading-snug">
                   {actualBasicInfo.title || "Exquisite Three Bedroom Apartment"}
                 </h1>
@@ -452,46 +525,89 @@ export const ApartmentDisplay = ({
                 {actualBasicInfo.state || "Maryland, Lagos"}
               </p>
 
-              {/* Rating and likes section */}
-              {apartmentData.totalLikes != null && (
-                <div className="flex items-center mt-2 gap-1 md:mt-4 md:gap-2">
-                  <div className="flex -space-x-2 md:-space-x-3">
-                    <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#8B44FF] md:w-[36.62px] md:h-[36.62px]" />
-                    <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#E00E9A] md:w-[36.62px] md:h-[36.62px]" />
-                    <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#FF4444] md:w-[36.62px] md:h-[36.62px]" />
-                    <span className="w-[20.56px] h-[20.56px] rounded-full bg-[#70E5FF] md:w-[36.62px] md:h-[36.62px]" />
-                  </div>
+              {/* ✅ FIXED: Rating and likes section */}
+              <div className="flex items-center justify-between mt-[10px]">
+                <div className="flex items-center gap-1 md:gap-2">
+                  {totalLikes > 0 ? (
+                    <>
+                      <div className="flex -space-x-2 md:-space-x-3">
+                        {/* Display profile images based on likes count */}
+                        {profileImages.map(
+                          ({ id, profilePic, firstName, index }) => {
+                            const colors = [
+                              "#8B44FF",
+                              "#E00E9A",
+                              "#FF4444",
+                              "#70E5FF",
+                            ];
 
-                  <span className="text-[12px] font-medium text-[#333333] md:text-[20px]">
-                    {apartmentData.totalLikes?.toString()}+ Liked this place
-                  </span>
+                            if (!profilePic) {
+                              return (
+                                <div
+                                  key={id}
+                                  className="w-[20.56px] h-[20.56px] rounded-full border-2 border-white md:w-[36.62px] md:h-[36.62px]"
+                                  style={{
+                                    backgroundColor:
+                                      colors[index % colors.length],
+                                  }}
+                                  title={firstName || "User"}
+                                />
+                              );
+                            }
+
+                            return (
+                              <img
+                                key={id}
+                                src={profilePic}
+                                alt={firstName || "User"}
+                                className="w-[20.56px] h-[20.56px] rounded-full border-2 border-white object-cover md:w-[36.62px] md:h-[36.62px]"
+                                onError={(e) => {
+                                  const colors = [
+                                    "#8B44FF",
+                                    "#E00E9A",
+                                    "#FF4444",
+                                    "#70E5FF",
+                                  ];
+                                  e.target.style.display = "none";
+                                  const div = document.createElement("div");
+                                  div.className =
+                                    "w-[20.56px] h-[20.56px] rounded-full border-2 border-white md:w-[36.62px] md:h-[36.62px]";
+                                  div.style.backgroundColor =
+                                    colors[index % colors.length];
+                                  div.title = firstName || "User";
+                                  e.target.parentNode.insertBefore(
+                                    div,
+                                    e.target
+                                  );
+                                }}
+                                title={firstName || "User"}
+                              />
+                            );
+                          }
+                        )}
+                      </div>
+                      <span className="text-[12px] font-medium text-[#333333] md:text-[20px]">
+                        {getLikedUsersText()}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-[12px] font-medium text-[#333333] md:text-[20px]">
+                      {getLikedUsersText()}
+                    </span>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="flex flex-col items-end">
-              {/* Verified badge for larger screens */}
-              {isVerified() && (
-                <span className="bg-black w-[67px] h-[18px] text-white text-[10px] px-[5px] font-medium rounded-[30px] flex items-center justify-center gap-1 mb-2">
-                  <img
-                    src="/icons/tick-white.svg"
-                    alt="Verified icon"
-                    className="w-[12px] h-[12px]"
-                  />
-                  Verified
-                </span>
-              )}
-              <button
-                className="text-white py-[6px] px-[6px] bg-[#A20BA2] h-[25px] font-semibold text-[12px] mt-[19px] rounded flex items-center justify-center hover:bg-[#8A0A8A] transition-colors"
-                onClick={handlePriceButtonClick}
-              >
-                ₦{formatPrice(actualPricing.pricePerNight)}/Night
-              </button>
+                <button
+                  className="mt-[-10px] text-white py-[6px] w-[128px] px-[6px] bg-[#A20BA2] h-[30px] font-semibold text-[12.5px] rounded-[5px] flex items-center justify-center"
+                  onClick={handlePriceButtonClick}
+                >
+                  ₦{formatPrice(actualPricing.pricePerNight)}/Night
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
       {/* Property Details */}
       <div className="mt-[31.66px]">
         <h2 className="text-[#39302A] text-[14px] font-semibold">
@@ -499,7 +615,6 @@ export const ApartmentDisplay = ({
         </h2>
         <PropertyDetails list={propertyDetails} />
       </div>
-
       {/* Description */}
       <div className="mt-[31.66px]">
         <h2 className="text-[#39302A] text-[14px] font-semibold">
@@ -509,7 +624,6 @@ export const ApartmentDisplay = ({
           {details.description || "No description provided"}
         </p>
       </div>
-
       {/* Facilities */}
       <div className="mt-[31.66px]">
         <h2 className="text-[#39302A] text-[14px] font-semibold">
@@ -523,7 +637,6 @@ export const ApartmentDisplay = ({
           </p>
         )}
       </div>
-
       {/* House Rules */}
       <div className="mt-[31.66px]">
         <h2 className="text-[#333333] text-[14px] font-semibold">
@@ -537,7 +650,6 @@ export const ApartmentDisplay = ({
           </p>
         )}
       </div>
-
       {/* Security Deposit */}
       <div className="mt-[31.66px]">
         <h2 className="text-[#333333] text-[14px] font-semibold">
@@ -554,35 +666,32 @@ export const ApartmentDisplay = ({
           </p>
         </div>
       </div>
-
-      {/* Documentation Upload */}
-      {showLegalDocuments && actualDocuments.length > 0 && (
-        <div className="mt-[31.66px]">
-          <h2 className="text-[#333333] text-[14px] font-semibold">
-            Documentations
-          </h2>
-          <div className="flex gap-[7.5px] mt-[10px]">
-            {actualDocuments.slice(0, 3).map((doc, index) => (
-              <div
-                key={index}
-                className="flex-1 min-w-0 border-[1.5px] border-[#D1D0D0] rounded-lg bg-[#CCCCCC42] h-[98px] flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] p-1"
-              >
-                <img
-                  src={getDocumentIcon(doc)}
-                  alt={doc.name}
-                  className="w-6 h-6 mb-1 flex-shrink-0"
-                />
-                <span className="text-center px-1 text-[10px] truncate w-full">
-                  {doc.name && doc.name.length > 15
-                    ? `${doc.name.substring(0, 12)}...`
-                    : doc.name}
-                </span>
-              </div>
-            ))}
-          </div>
+  {showLegalDocuments && actualDocuments.length > 0 && (
+  <div className="mt-[31.66px]">
+    <h2 className="text-[#333333] text-[14px] font-semibold">
+      Documentations
+    </h2>
+    <div className="flex gap-[7.5px] mt-[10px]">
+      {actualDocuments.slice(0, 3).map((doc, index) => (
+        <div
+          key={index}
+          className="flex-1 min-w-0 border-[1.5px] border-[#D1D0D0] rounded-lg bg-[#CCCCCC42] h-[98px] flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] p-1"
+        >
+          <img
+            src={doc.icon || getDocumentIconFromType(doc.documentType)} 
+            alt={doc.name}
+            className="w-6 h-6 mb-1 flex-shrink-0"
+          />
+          <span className="text-center px-1 text-[10px] truncate w-full">
+            {doc.name && doc.name.length > 15
+              ? `${doc.name.substring(0, 12)}...`
+              : doc.name}
+          </span>
         </div>
-      )}
-
+      ))}
+    </div>
+  </div>
+)}
       {/* Gallery Overlay */}
       {showGallery && (
         <div

@@ -1,6 +1,5 @@
 // utils/fileIcons.js
 export const getDocumentIcon = (doc) => {
-  // Handle both string (backward compatibility) and object inputs
   let url = "";
   let name = "";
 
@@ -12,29 +11,47 @@ export const getDocumentIcon = (doc) => {
     name = doc.name || "";
   }
 
-  console.log("🔍 Processing document:", { name, url }); // Debug log
+  // === FIXED EXTENSION EXTRACTION ===
+  let ext = "";
 
-  if (!url) {
-    console.log("❌ No URL found, returning default");
-    return "/icons/pdf.svg";
+  // 1. Try URL
+  const urlPart = url.split("/").pop();
+  const urlExt = urlPart.includes(".")
+    ? urlPart.split(".").pop().toLowerCase()
+    : "";
+  if (urlExt) ext = urlExt;
+
+  // 2. Fallback to name if URL fails
+  if (!ext && name) {
+    const namePart = name.split("/").pop();
+    const nameExt = namePart.includes(".")
+      ? namePart.split(".").pop().toLowerCase()
+      : "";
+    if (nameExt) ext = nameExt;
   }
 
-  // Extract extension from URL
-  const urlParts = url.split("/").pop().split(".");
-  const ext = urlParts.length > 1 ? urlParts.pop().toLowerCase() : "";
+  console.log("📝 Final detected extension:", ext);
 
-  console.log("📝 Detected extension from URL:", ext); // Debug log
-
+  // === ICON MAP ===
   if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext)) {
-    console.log("🖼️ Returning image icon");
     return "/icons/camera.svg";
   }
 
   if (ext === "pdf") {
-    console.log("📄 Returning PDF icon");
     return "/icons/pdf.svg";
   }
 
-  console.log("❓ No matching extension, returning default");
-  return "/icons/pdf.svg";
+  if (["doc", "docx"].includes(ext)) {
+    return "/icons/doc.svg";
+  }
+
+  if (["xls", "xlsx"].includes(ext)) {
+    return "/icons/excel.svg";
+  }
+
+  if (["ppt", "pptx"].includes(ext)) {
+    return "/icons/ppt.svg";
+  }
+
+  return "/icons/file.svg"; // default
 };

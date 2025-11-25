@@ -167,7 +167,7 @@ export default function BookingDetails({ role = "guest" }) {
     return "Drop your Review";
   };
 
-  // Status styles
+  // Update the statusMap to check cancellationDispute status
   const statusMap = {
     ONGOING: { label: "Ongoing", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" },
     COMPLETED: {
@@ -176,12 +176,20 @@ export default function BookingDetails({ role = "guest" }) {
       text: "text-[#059669]",
     },
     CANCELLED: {
-      label: "Cancelled",
-      bg: "bg-[#FFE2E2]",
-      text: "text-[#E11D48]",
+      label:
+        booking?.cancellationDispute?.status === "RESOLVED"
+          ? "Settled"
+          : "Cancelled",
+      bg:
+        booking?.cancellationDispute?.status === "RESOLVED"
+          ? "bg-[#E9E9E9]"
+          : "bg-[#FFE2E2]",
+      text:
+        booking?.cancellationDispute?.status === "RESOLVED"
+          ? "text-[#666666]"
+          : "text-[#E11D48]",
     },
   };
-
   // Helper functions
   const getPrimaryImage = (bookingData) => {
     if (!bookingData?.apartment?.images) return "/images/default-apartment.jpg";
@@ -395,12 +403,11 @@ export default function BookingDetails({ role = "guest" }) {
           <img
             src={getProfilePicture(booking)}
             alt="Host"
-            className="absolute left-[5px] bottom-0 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover"
+            className="absolute left-[5px] -bottom-3 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover"
           />
         </div>
-
         {/* Info card */}
-        <div className="pt-[17px] pb-[15px] px-2">
+        <div className="pt-[37px] pb-[15px] px-2">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h2 className="text-[12px] font-medium text-[#333333]">
@@ -426,7 +433,7 @@ export default function BookingDetails({ role = "guest" }) {
             {/* Status + Price */}
             <div className="flex flex-col items-end">
               <span
-                className={`text-[10px] px-2 rounded-full font-medium mb-[32px] ${currentStatus.bg} ${currentStatus.text}`}
+                className={`text-[10px] px-3 rounded-full font-medium mb-[32px] text-center h-[16px] ${currentStatus.bg} ${currentStatus.text}`}
               >
                 {currentStatus.label}
               </span>
@@ -436,7 +443,6 @@ export default function BookingDetails({ role = "guest" }) {
             </div>
           </div>
         </div>
-
         {/* Booking Details */}
         <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
           <div className="space-y-4">
@@ -458,7 +464,6 @@ export default function BookingDetails({ role = "guest" }) {
             </div>
           </div>
         </div>
-
         {/* Payment Details */}
         {paymentBreakdown && (
           <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
@@ -482,7 +487,6 @@ export default function BookingDetails({ role = "guest" }) {
             </div>
           </div>
         )}
-
         {/* Host/Guest Details */}
         <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
           <h3 className="font-medium mb-2">
@@ -519,7 +523,6 @@ export default function BookingDetails({ role = "guest" }) {
             )}
           </div>
         </div>
-
         {/* Cancelled extra details */}
         {getBookingStatus(booking) === "CANCELLED" && (
           <>
@@ -539,7 +542,6 @@ export default function BookingDetails({ role = "guest" }) {
             </div>
           </>
         )}
-
         {/* Buttons Section */}
         {showCancelButton && (
           <div className="pt-[40px] pb-[42px]">
@@ -550,7 +552,6 @@ export default function BookingDetails({ role = "guest" }) {
             />
           </div>
         )}
-
         {showReviewButton && (
           <div className="pt-[40px] pb-[42px]">
             <Button
@@ -566,7 +567,6 @@ export default function BookingDetails({ role = "guest" }) {
             />
           </div>
         )}
-
         {showHoldDepositButton && (
           <div className="pt-[40px] pb-[42px]">
             <Button

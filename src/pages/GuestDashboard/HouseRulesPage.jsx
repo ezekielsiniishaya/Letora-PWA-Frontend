@@ -37,6 +37,11 @@ export default function HouseRulesPage() {
       icon: "/icons/party.svg",
     },
     {
+      label: "No Loud Music/Partying",
+      value: "NO_PARTYING",
+      icon: "/icons/no-music.svg",
+    },
+    {
       label: "No Pets Allowed",
       value: "NO_PETS_ALLOWED",
       icon: "/icons/no-pets.svg",

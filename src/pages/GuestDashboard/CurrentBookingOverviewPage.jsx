@@ -764,7 +764,7 @@ export default function CurrentBookingOverviewPage() {
           <img
             src={getHostProfilePicture()}
             alt={getHostName()}
-            className="absolute left-1 bottom-0 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
+            className="absolute left-1 -bottom-3 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
             onError={(e) => {
               e.target.src = "/images/profile-image.png";
             }}
@@ -772,7 +772,7 @@ export default function CurrentBookingOverviewPage() {
         </div>
 
         {/* Info card */}
-        <div className="pt-[10px] pb-[15px] px-2">
+        <div className="pt-[25px] pb-[15px] px-2">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <h2 className="text-[12px] flex items-center justify-between font-medium text-[#333333]">

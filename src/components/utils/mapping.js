@@ -70,6 +70,7 @@ export const houseRuleMap = {
     icon: "/icons/dispose.svg",
   },
   PARTYING_ALLOWED: { label: "Partying Allowed", icon: "/icons/party.svg" },
+  NO_PARTYING: { label: "No Loud Music/Partying", icon: "/icons/no-music.svg" },
   NO_PETS_ALLOWED: { label: "No Pets Allowed", icon: "/icons/no-pets.svg" },
   PETS_ALLOWED: { label: "Pets Allowed", icon: "/icons/pets.svg" },
   NO_CROWD: { label: "No Crowd", icon: "/icons/crowd.svg" },

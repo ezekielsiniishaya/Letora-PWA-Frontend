@@ -102,6 +102,12 @@ export default function ProfilePage() {
               icon="/icons/my-revenue.svg"
               text="My Revenue History"
               link="/revenue"
+            />{" "}
+            <OptionItem
+              icon="/icons/review.svg"
+              text="Reviews"
+              link="/host-reviews"
+              badgeCount={totalReviews}
             />
           </>
         )}
@@ -109,12 +115,6 @@ export default function ProfilePage() {
           icon="/icons/change-bank.svg"
           text="Change Bank Details"
           link="/change-bank-details"
-        />
-        <OptionItem
-          icon="/icons/review.svg"
-          text="Reviews"
-          link="/host-reviews"
-          badgeCount={totalReviews}
         />
       </div>
 

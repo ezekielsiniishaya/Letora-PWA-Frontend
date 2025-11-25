@@ -282,7 +282,7 @@ export const ApartmentOverview = ({
     <div className="text-[#39302A] mb-[24px] bg-white">
       {/* Header Actions */}
       {showActions && (
-        <div className="flex items-center mb-[20px] justify-between mx-[18px]">
+        <div className="flex items-center mb-[20px] justify-between mx-[19px]">
           <button
             onClick={() =>
               backToHostDashboard
@@ -321,7 +321,7 @@ export const ApartmentOverview = ({
           />
 
           <div
-            className="scroll-x-only bg-white flex items-center gap-[6.48px] px-[6.48px] py-[6.48px] scrollbar-hide w-[333px] border-b absolute h-[66.61px] bottom-5 left-1/2 -translate-x-1/2 rounded-[7.2px]"
+            className="scroll-x-only bg-white flex items-center gap-[6.48px] px-[6.48px] py-[6.48px] scrollbar-hide w-[373px] border-b absolute h-[66.61px] bottom-5 left-1/2 -translate-x-1/2 rounded-[7.2px]"
             onScroll={() => setShowThumbnailOverlay(false)}
           >
             {displayImages.map((src, i) => (
@@ -355,7 +355,7 @@ export const ApartmentOverview = ({
           </div>
 
           {/* Top icons */}
-          <div className="absolute top-3 left-3 flex items-center space-x-2">
+          <div className="absolute top-[19px] left-[19px] flex items-center space-x-2">
             <button
               onClick={() =>
                 backToHostDashboard
@@ -371,7 +371,7 @@ export const ApartmentOverview = ({
               />
             </button>
           </div>
-          <div className="absolute top-3 right-3 flex items-center space-x-2">
+          <div className="absolute top-[19px] right-[19px] flex items-center space-x-2">
             <button
               onClick={toggleFavorite}
               disabled={loadingStates[getApartmentId()]}

@@ -4,13 +4,15 @@ import ShowSuccess from "../../components/ShowSuccess";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import ApartmentDisplay from "../../components/apartment/ApartmentDisplay";
 import { useUser } from "../../hooks/useUser";
-import { getApartmentById } from "../../services/apartmentApi";
+import { getApartmentById, deleteApartment } from "../../services/apartmentApi"; // ✅ Import deleteApartment
 
 // Helper function to transform API data to match ApartmentDisplay expectations
 const transformApartmentData = (apiData) => {
   if (!apiData) return null;
 
   return {
+    // ✅ FIXED: Include the raw data structure that ApartmentDisplay expects
+    data: apiData,
     // Basic info
     basicInfo: {
       title: apiData.title,
@@ -19,7 +21,11 @@ const transformApartmentData = (apiData) => {
       town: apiData.town,
       price: apiData.price,
     },
-
+    // ✅ FIXED: Include favorites data for likes display
+    favorites: apiData.favorites || [],
+    _count: {
+      favorites: apiData._count?.favorites || 0,
+    },
     // Details
     details: apiData.details || {},
 
@@ -50,6 +56,16 @@ const transformApartmentData = (apiData) => {
       pricePerNight: apiData.price,
     },
 
+    // ✅ FIXED: Include direct properties for flat structure access
+    id: apiData.id,
+    title: apiData.title,
+    apartmentType: apiData.apartmentType,
+    state: apiData.state,
+    town: apiData.town,
+    price: apiData.price,
+    status: apiData.status,
+    isVerified: apiData.status === "VERIFIED",
+
     // Include the raw API data for debugging
     _raw: apiData,
   };
@@ -60,6 +76,8 @@ export default function ListingOverviewPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [apartment, setApartment] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false); // ✅ Added loading state for delete
+  const [error, setError] = useState(null); // ✅ Added error state
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,6 +118,7 @@ export default function ListingOverviewPage() {
         }
       } catch (error) {
         console.error("❌ Error fetching apartment:", error);
+        setError("Failed to load apartment details");
       } finally {
         setLoading(false);
       }
@@ -116,16 +135,61 @@ export default function ListingOverviewPage() {
       console.log("📜 House Rules:", apartment.houseRules);
       console.log("💰 Pricing:", apartment.pricing);
       console.log("📄 Documents:", apartment.legalDocuments);
+      console.log("❤️ Favorites:", apartment.favorites);
+      console.log("🔢 Favorites count:", apartment._count?.favorites);
     }
   }, [apartment]);
 
   const handleDeleteClick = () => {
     setShowConfirm(true);
+    setError(null); // Clear previous errors
   };
 
-  const handleConfirmDelete = () => {
+  // ✅ FIXED: Actually call the delete API
+  const handleConfirmDelete = async () => {
+    if (!id) {
+      console.error("❌ No apartment ID available for deletion");
+      setError("No apartment ID found");
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      setShowConfirm(false);
+
+      console.log("🗑️ Attempting to delete apartment:", id);
+
+      const response = await deleteApartment(id);
+
+      console.log("✅ Delete API response:", response);
+
+      if (response && response.success) {
+        console.log("✅ Apartment deleted successfully");
+        setShowSuccess(true);
+      } else {
+        throw new Error(response?.message || "Failed to delete apartment");
+      }
+    } catch (error) {
+      console.error("❌ Error deleting apartment:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to delete apartment. Please try again.";
+      setError(errorMessage);
+      alert(errorMessage);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
     setShowConfirm(false);
-    setShowSuccess(true);
+    setError(null);
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    navigate("/host-dashboard"); // Navigate to dashboard after successful deletion
   };
 
   if (loading) {
@@ -156,6 +220,13 @@ export default function ListingOverviewPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Error Display */}
+      {error && (
+        <div className="mx-4 mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
       <ApartmentDisplay
         apartment={apartment}
         user={user}
@@ -169,9 +240,10 @@ export default function ListingOverviewPage() {
       <div className="px-[18px] text-center">
         <button
           onClick={handleDeleteClick}
-          className="mx-auto w-full mt-[100px] bg-[#FFFFFF] text-[#686464] border border-[#E9E9E9] text-[16px] font-semibold h-[57px] rounded-[10px] mb-[54px]"
+          disabled={isDeleting} // ✅ Disable while deleting
+          className="mx-auto w-full mt-[100px] bg-[#FFFFFF] text-[#686464] border border-[#E9E9E9] text-[16px] font-semibold h-[57px] rounded-[10px] mb-[54px] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
         >
-          Delete Listing
+          {isDeleting ? "Deleting..." : "Delete Listing"}
         </button>
       </div>
 
@@ -182,8 +254,11 @@ export default function ListingOverviewPage() {
           confirmMode
           heading="Delete Listing?"
           message="Are you sure you want to delete this post? This action cannot be undone."
-          onClose={() => setShowConfirm(false)}
+          onClose={handleCancelDelete} // ✅ Use proper cancel handler
           onConfirm={handleConfirmDelete}
+          confirmText={isDeleting ? "Deleting..." : "Yes, Delete"} // ✅ Show loading state
+          cancelText="Cancel"
+          confirmDisabled={isDeleting} // ✅ Disable confirm button while deleting
         />
       )}
 
@@ -192,12 +267,9 @@ export default function ListingOverviewPage() {
         <ShowSuccess
           image="/icons/success.svg"
           heading="List Deleted!"
-          message=" "
+          message="Your listing has been successfully deleted."
           buttonText="Done"
-          onClose={() => {
-            setShowSuccess(false);
-            navigate("/shortlet-review");
-          }}
+          onClose={handleSuccessClose} // ✅ Use proper success handler
         />
       )}
     </div>

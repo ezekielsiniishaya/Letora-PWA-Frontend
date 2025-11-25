@@ -117,6 +117,7 @@ export default function HostBookingDetails() {
   };
 
   // Status styles
+  // Update the statusMap to check cancellationDispute status
   const statusMap = {
     ONGOING: { label: "Ongoing", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" },
     COMPLETED: {
@@ -125,12 +126,20 @@ export default function HostBookingDetails() {
       text: "text-[#059669]",
     },
     CANCELLED: {
-      label: "Cancelled",
-      bg: "bg-[#FFE2E2]",
-      text: "text-[#E11D48]",
+      label:
+        booking?.cancellationDispute?.status === "RESOLVED"
+          ? "Settled"
+          : "Cancelled",
+      bg:
+        booking?.cancellationDispute?.status === "RESOLVED"
+          ? "bg-[#E9E9E9]"
+          : "bg-[#FFE2E2]",
+      text:
+        booking?.cancellationDispute?.status === "RESOLVED"
+          ? "text-[#666666]"
+          : "text-[#E11D48]",
     },
   };
-
   // Helper functions
   const getPrimaryImage = (bookingData) => {
     if (!bookingData?.apartment?.images) return "/images/default-apartment.jpg";
@@ -297,12 +306,12 @@ export default function HostBookingDetails() {
               "/images/profile-image.png"
             }
             alt="Host"
-            className="absolute left-1 bottom-0 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
+            className="absolute left-1 -bottom-3 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
           />
         </div>
 
         {/* Info card */}
-        <div className="pt-[17px] pb-[15px] px-2">
+        <div className="pt-[37px] pb-[15px] px-2">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h2 className="text-[12px] font-medium text-[#333333]">
@@ -327,7 +336,7 @@ export default function HostBookingDetails() {
             {/* Status + Price */}
             <div className="flex flex-col items-end">
               <span
-                className={`text-[10px] px-2 rounded-full font-medium mb-[32px] ${currentStatus.bg} ${currentStatus.text}`}
+                className={`text-[10px] px-3 h-[16px] rounded-full font-medium mb-[32px] ${currentStatus.bg} ${currentStatus.text}`}
               >
                 {currentStatus.label}
               </span>
