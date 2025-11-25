@@ -20,22 +20,43 @@ const ApartmentListingProvider = ({ children }) => {
 
   const { isAuthenticated, getUserLocation, user } = useUser();
 
-  // Fetch hot apartments
-  const fetchHotApartments = useCallback(async () => {
-    setHotApartmentsLoading(true);
-    try {
-      // Pass the user ID to exclude host's own apartments
-      const excludeHostId = user?.id || null;
-      console.log("Fetching hot apartments, excluding host ID:", excludeHostId);
-      const response = await getHotApartments(10, excludeHostId);
-      setHotApartments(response.data);
-    } catch (err) {
-      console.error("Error fetching hot apartments:", err);
-      setHotApartments([]);
-    } finally {
-      setHotApartmentsLoading(false);
-    }
-  }, [user]); // Add user to dependencies
+  // Fetch hot apartments - UPDATED with location
+  const fetchHotApartments = useCallback(
+    async (state = null, town = null) => {
+      setHotApartmentsLoading(true);
+      try {
+        // Pass the user ID to exclude host's own apartments
+        const excludeHostId = user?.id || null;
+        console.log(
+          "Fetching hot apartments, excluding host ID:",
+          excludeHostId
+        );
+
+        // Get user location if not provided
+        let userState = state;
+        let userTown = town;
+
+        if (!userState && isAuthenticated && user) {
+          const userLocation = getUserLocation();
+          userState = userLocation?.state || user.stateOrigin;
+        }
+
+        const response = await getHotApartments(
+          10,
+          excludeHostId,
+          userState,
+          userTown
+        );
+        setHotApartments(response.data);
+      } catch (err) {
+        console.error("Error fetching hot apartments:", err);
+        setHotApartments([]);
+      } finally {
+        setHotApartmentsLoading(false);
+      }
+    },
+    [user, isAuthenticated, getUserLocation]
+  );
 
   // Fetch all approved apartments
   const fetchApartments = useCallback(async () => {
@@ -93,28 +114,41 @@ const ApartmentListingProvider = ({ children }) => {
     setNearbyApartments([]);
     setHasFetched(false);
   };
+
   // Get apartment by ID
   const getApartmentById = (id) => {
     return apartments.find((apt) => apt.id === id);
   };
 
-  // Refresh all data
-  const refreshApartments = useCallback(() => {
-    setHasFetched(false); // Reset to allow fresh fetch
-    fetchApartments();
-    fetchHotApartments();
-    fetchNearbyApartments();
-  }, [fetchApartments, fetchHotApartments, fetchNearbyApartments]);
+  // Refresh all data - UPDATED to include location
+  const refreshApartments = useCallback(
+    (state = null, town = null) => {
+      setHasFetched(false); // Reset to allow fresh fetch
+      fetchApartments();
+      fetchHotApartments(state, town);
+      fetchNearbyApartments(state, town);
+    },
+    [fetchApartments, fetchHotApartments, fetchNearbyApartments]
+  );
 
   // Fetch data on component mount - only when user is available
   useEffect(() => {
     const fetchAllData = async () => {
       if (hasFetched) return; // Prevent duplicate fetches
 
+      // Get user location for hot and nearby apartments
+      let userState = null;
+      let userTown = null;
+
+      if (isAuthenticated && user) {
+        const userLocation = getUserLocation();
+        userState = userLocation?.state || user.stateOrigin;
+      }
+
       await Promise.all([
         fetchApartments(),
-        fetchHotApartments(),
-        fetchNearbyApartments(),
+        fetchHotApartments(userState, userTown),
+        fetchNearbyApartments(userState, userTown),
       ]);
       setHasFetched(true);
     };
@@ -130,6 +164,7 @@ const ApartmentListingProvider = ({ children }) => {
     isAuthenticated,
     user,
     hasFetched,
+    getUserLocation,
   ]);
 
   const value = {

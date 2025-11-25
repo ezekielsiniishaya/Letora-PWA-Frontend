@@ -26,11 +26,19 @@ export const getNearbyApartments = async (
     method: "GET",
   });
 };
-
-export const getHotApartments = async (limit = 10, excludeHostId = null) => {
+// services/apartmentApi.js
+export const getHotApartments = async (
+  limit = 10,
+  excludeHostId = null,
+  state = null,
+  town = null
+) => {
   const params = new URLSearchParams();
-  params.append("limit", limit);
+  params.append("limit", limit.toString());
+
   if (excludeHostId) params.append("excludeHostId", excludeHostId);
+  if (state) params.append("state", state);
+  if (town) params.append("town", town);
 
   return apiRequest(`/api/apartments/hot?${params.toString()}`, {
     method: "GET",
