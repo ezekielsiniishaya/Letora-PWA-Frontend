@@ -19,14 +19,13 @@ export default function MyBooking({
   completedButtonText = "Rate your Stay",
   onClick,
   onShowAlert,
-  user, // This should be the current user object from useUser hook
+  user,
 }) {
   const [showCancelBooking, setShowCancelBooking] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [showCancelSuccess, setShowCancelSuccess] = useState(false);
   const [showRating, setShowRating] = useState(false);
   const [showHoldSuccess, setShowHoldSuccess] = useState(false);
-  const [showConfirmHold, setShowConfirmHold] = useState(false);
   const [actionCompleted, setActionCompleted] = useState(false);
   const [canHoldDeposit, setCanHoldDeposit] = useState(true);
   const [isCheckingHold, setIsCheckingHold] = useState(false);
@@ -38,23 +37,26 @@ export default function MyBooking({
     message: "",
   });
 
-  const bookingId = booking?.id;
+  // Error handling states
+  const [holdCheckAttempts, setHoldCheckAttempts] = useState(0);
+  const [maxHoldCheckAttempts] = useState(3);
+  const [isBackendDown, setIsBackendDown] = useState(false);
 
-  // FIXED: Get current user ID and apartment host ID correctly
-  const currentUserId = user?.id; // Current user's ID from useUser hook
-  const apartmentHostId = booking?.apartment?.hostId; // Apartment owner's ID from booking data
+  const bookingId = booking?.id;
+  const currentUserId = user?.id;
+  const apartmentHostId = booking?.apartment?.hostId;
 
   const navigate = useNavigate();
   const { refreshUser } = useUser();
 
-  // Debug logging to check the values
+  // Debug logging
   useEffect(() => {
     console.log("Current User ID:", currentUserId);
     console.log("Apartment Host ID:", apartmentHostId);
     console.log("Is Apartment Owner:", currentUserId === apartmentHostId);
   }, [currentUserId, apartmentHostId]);
 
-  // Update the statusMap to check cancellationDispute status
+  // Status mapping
   const statusMap = {
     ongoing: { label: "Ongoing", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" },
     completed: {
@@ -80,39 +82,41 @@ export default function MyBooking({
 
   const currentStatus = statusMap[status];
 
-  // Show alert function
-  const showAlert = (type, message, timeout = 5000) => {
-    if (onShowAlert) {
-      onShowAlert(type, message, timeout);
-    } else {
-      setAlert({ show: true, type, message });
+  // Alert functions
+  // Show alert function - wrap in useCallback
+  const showAlert = useCallback(
+    (type, message, timeout = 5000) => {
+      if (onShowAlert) {
+        onShowAlert(type, message, timeout);
+      } else {
+        setAlert({ show: true, type, message });
 
-      if (timeout > 0) {
-        setTimeout(() => {
-          setAlert((prev) => ({ ...prev, show: false }));
-        }, timeout);
+        if (timeout > 0) {
+          setTimeout(() => {
+            setAlert((prev) => ({ ...prev, show: false }));
+          }, timeout);
+        }
       }
-    }
-  };
+    },
+    [onShowAlert]
+  ); // Add onShowAlert as dependency
 
-  // Dismiss alert function
   const dismissAlert = () => {
     setAlert((prev) => ({ ...prev, show: false }));
   };
 
-  // Check if review exists when component mounts
+  // Check review status
   useEffect(() => {
     if (status === "completed" && completedButtonText === "Rate your Stay") {
       const hasReview = !!booking?.review || !!booking?.reviewId;
       setHasReviewed(hasReview);
-
       if (booking?.reviewId && !booking?.review) {
         setHasReviewed(true);
       }
     }
   }, [booking, status, completedButtonText]);
 
-  // UPDATED: Cancellation function with custom alerts
+  // Cancellation function
   const handleCancelBooking = async (reasons) => {
     try {
       setIsCancelling(true);
@@ -120,10 +124,9 @@ export default function MyBooking({
 
       if (response.success) {
         setShowCancelSuccess(true);
-        // Optionally refresh parent component data
         await refreshUser();
         if (onClick) {
-          onClick(); // Trigger parent refresh
+          onClick();
         }
       } else {
         showAlert("error", response.message || "Failed to cancel booking");
@@ -136,88 +139,229 @@ export default function MyBooking({
     }
   };
 
+  // Check hold status with proper error handling
   const checkHoldStatus = useCallback(async () => {
+    if (isBackendDown || holdCheckAttempts >= maxHoldCheckAttempts) {
+      setIsCheckingHold(false);
+      return;
+    }
+
     try {
       setIsCheckingHold(true);
       const response = await checkDepositHoldStatus(bookingId);
 
       if (response.success) {
         setCanHoldDeposit(response.data.canRequestHold);
+        setHoldCheckAttempts(0);
+        setIsBackendDown(false);
 
         if (response.data.hasExistingHold) {
           setActionCompleted(true);
         }
+      } else {
+        console.error("Hold status check failed:", response.message);
+        setCanHoldDeposit(false);
       }
     } catch (error) {
       console.error("Error checking hold status:", error);
-      setCanHoldDeposit(false);
-      if (onShowAlert) {
-        onShowAlert("error", "Failed to check deposit hold status");
-      } else {
-        setAlert({
-          show: true,
-          type: "error",
-          message: "Failed to check deposit hold status",
-        });
+      setHoldCheckAttempts((prev) => prev + 1);
+
+      if (holdCheckAttempts + 1 >= maxHoldCheckAttempts) {
+        setIsBackendDown(true);
+        showAlert(
+          "error",
+          "Unable to check deposit status. Please try again later.",
+          5000
+        );
       }
+      setCanHoldDeposit(false);
     } finally {
       setIsCheckingHold(false);
     }
-  }, [bookingId, onShowAlert]);
+  }, [
+    bookingId,
+    holdCheckAttempts,
+    maxHoldCheckAttempts,
+    isBackendDown,
+    showAlert,
+  ]);
 
-  // Check deposit hold status when component mounts
+  // Check deposit hold status on mount
   useEffect(() => {
     if (
       status === "completed" &&
-      completedButtonText === "Hold Security Deposit"
+      completedButtonText === "Hold Security Deposit" &&
+      !isBackendDown &&
+      holdCheckAttempts < maxHoldCheckAttempts
     ) {
       checkHoldStatus();
     }
-  }, [bookingId, status, completedButtonText, checkHoldStatus]);
+  }, [
+    bookingId,
+    status,
+    completedButtonText,
+    checkHoldStatus,
+    isBackendDown,
+    holdCheckAttempts,
+    maxHoldCheckAttempts,
+  ]);
 
-  // UPDATED: handleHoldDeposit with custom alerts
+  // Handle deposit hold with error handling
   const handleHoldDeposit = async () => {
+    if (
+      hasReviewed ||
+      actionCompleted ||
+      !canHoldDeposit ||
+      isCheckingHold ||
+      isBackendDown
+    ) {
+      console.log("Button disabled due to:", {
+        hasReviewed,
+        actionCompleted,
+        canHoldDeposit,
+        isCheckingHold,
+        isBackendDown,
+      });
+      return;
+    }
+
     try {
-      // Show loading state immediately
+      console.log("🔄 Starting deposit hold process for booking:", bookingId);
       setIsCheckingHold(true);
 
       const response = await createDepositHold(bookingId);
 
       if (response.success) {
+        console.log("✅ Deposit hold successful");
         setShowHoldSuccess(true);
-        setCanHoldDeposit(false); // Disable button after successful hold
+        setCanHoldDeposit(false);
         setActionCompleted(true);
+        setIsBackendDown(false);
+
+        await refreshUser();
+        if (onClick) onClick();
       } else {
+        console.log("❌ Deposit hold failed:", response.message);
         showAlert("error", response.message || "Failed to hold deposit");
       }
     } catch (error) {
-      console.error("Error holding deposit:", error);
-      showAlert("error", error.message || "Failed to hold deposit");
+      console.error("💥 Error holding deposit:", error);
+
+      if (
+        error.message?.includes("Network Error") ||
+        error.message?.includes("Failed to fetch") ||
+        error.code === "NETWORK_ERROR"
+      ) {
+        setIsBackendDown(true);
+        showAlert(
+          "error",
+          "Network error. Please check your connection and try again.",
+          5000
+        );
+      } else {
+        showAlert("error", error.message || "Failed to hold deposit");
+      }
     } finally {
       setIsCheckingHold(false);
     }
   };
 
-  // Handle completed button click - UPDATED
+  // Retry mechanism
+  const handleRetryHoldCheck = () => {
+    setHoldCheckAttempts(0);
+    setIsBackendDown(false);
+    checkHoldStatus();
+  };
+
+  // Button text helper
+  const getCompletedButtonText = () => {
+    if (completedButtonText === "Rate your Stay") {
+      return "Rate your Stay";
+    }
+
+    if (isBackendDown) return "Retry Connection";
+    if (isCheckingHold) return "Processing...";
+    if (actionCompleted) return "Deposit Held";
+    if (!canHoldDeposit) return "Hold Expired";
+    return completedButtonText;
+  };
+
+  // Handle completed button click
   const handleCompletedButtonClick = (e) => {
     e.stopPropagation();
 
     if (completedButtonText === "Rate your Stay") {
       setShowRating(true);
     } else if (completedButtonText === "Hold Security Deposit") {
-      if (hasReviewed || actionCompleted || !canHoldDeposit) return;
+      if (isBackendDown) {
+        handleRetryHoldCheck();
+        return;
+      }
 
-      // Show confirmation popup immediately instead of checking status
-      setShowConfirmHold(true);
+      if (hasReviewed || actionCompleted || !canHoldDeposit || isCheckingHold) {
+        console.log("Button disabled due to:", {
+          hasReviewed,
+          actionCompleted,
+          canHoldDeposit,
+          isCheckingHold,
+          isBackendDown,
+        });
+        return;
+      }
+
+      handleHoldDeposit();
     }
   };
 
-  const handleConfirmHold = () => {
-    setShowConfirmHold(false);
-    handleHoldDeposit();
+  // Get cancel button text
+  const getCancelButtonText = () => {
+    if (isCancelling) return "Cancelling...";
+    return "Cancel Booking";
   };
 
-  // Helper functions to handle backend data structure
+  // Navigation
+  const handleNavigation = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      navigate(`/bookings/${bookingId}`, { state: { booking, status } });
+    }
+  };
+
+  const handleSuccessClose = () => {
+    setShowCancelSuccess(false);
+    const userRole = user?.role?.toLowerCase();
+    if (userRole === "verified host" || userRole === "host") {
+      navigate("/host-dashboard");
+    } else {
+      navigate("/bookings");
+    }
+  };
+
+  const handleCardClick = () => {
+    if (status !== "ongoing") {
+      handleNavigation();
+    }
+  };
+
+  const handleViewBookingClick = (e) => {
+    e.stopPropagation();
+    handleNavigation();
+  };
+
+  const handleHoldSuccessClose = () => {
+    setShowHoldSuccess(false);
+    setActionCompleted(true);
+  };
+
+  const handleRatingClose = () => {
+    setShowRating(false);
+    setHasReviewed(true);
+    setActionCompleted(true);
+    if (onClick) onClick();
+  };
+
+  // Helper functions
   const getPrimaryImage = (bookingData) => {
     if (!bookingData?.apartment?.images) return "/images/default-apartment.jpg";
     const primaryImage = bookingData.apartment.images.find(
@@ -252,81 +396,9 @@ export default function MyBooking({
     return `${day}-${month}-${year}`;
   };
 
-  // Get button text based on review status
-  const getCompletedButtonText = () => {
-    if (completedButtonText === "Rate your Stay") {
-      if (hasReviewed) return "Rate your Stay";
-      return "Rate your Stay";
-    }
-
-    // For deposit hold button
-    if (isCheckingHold) return "Checking...";
-    if (actionCompleted) return "Deposit Held";
-    if (!canHoldDeposit) return "Hold Expired";
-    return completedButtonText;
-  };
-
-  // Get cancel button text with loading state
-  const getCancelButtonText = () => {
-    if (isCancelling) return "Cancelling...";
-    return "Cancel Booking";
-  };
-
-  // UPDATED: Navigation handler with role-based redirection
-  const handleNavigation = () => {
-    if (onClick) {
-      onClick(); // Use the passed onClick function
-    } else {
-      // Fallback to default navigation
-      navigate(`/bookings/${bookingId}`, { state: { booking, status } });
-    }
-  };
-
-  // UPDATED: Handle success popup close with role-based navigation
-  const handleSuccessClose = () => {
-    setShowCancelSuccess(false);
-
-    // Determine user role and navigate accordingly
-    const userRole = user?.role?.toLowerCase();
-
-    if (userRole === "verified host" || userRole === "host") {
-      navigate("/host-dashboard");
-    } else {
-      // Default to bookings page for guests and other roles
-      navigate("/bookings");
-    }
-  };
-
-  // Handle card click
-  const handleCardClick = () => {
-    if (status !== "ongoing") {
-      handleNavigation();
-    }
-  };
-
-  // Handle view booking button click
-  const handleViewBookingClick = (e) => {
-    e.stopPropagation();
-    handleNavigation();
-  };
-
-  // Handle hold success close
-  const handleHoldSuccessClose = () => {
-    setShowHoldSuccess(false);
-    setActionCompleted(true);
-  };
-
-  // Handle rating popup close
-  const handleRatingClose = () => {
-    setShowRating(false);
-    setHasReviewed(true); // Set review as submitted
-    setActionCompleted(true);
-    if (onClick) onClick(); // force parent reload of booking data
-  };
-
   return (
     <div className="bg-white rounded-[5px] w-full h-[158px] pt-[10px] px-[10px] relative">
-      {/* Alert Container - Only show if using local alerts */}
+      {/* Alert Container */}
       {alert.show && !onShowAlert && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
           <Alert
@@ -353,7 +425,6 @@ export default function MyBooking({
 
         {/* Apartment Info */}
         <div className="mt-1 ml-1 text-[#333333] flex flex-col">
-          {/* Title + Status */}
           <div className="flex items-center gap-2">
             <h4 className="font-medium text-[12px] truncate w-[160px]">
               {getTitle(booking)}
@@ -367,7 +438,6 @@ export default function MyBooking({
             )}
           </div>
 
-          {/* Location */}
           <div className="flex items-center gap-1 mt-[2px] mb-[5px]">
             <img
               src="/icons/location.svg"
@@ -377,7 +447,6 @@ export default function MyBooking({
             <p className="text-[12px]">{getLocation(booking)}</p>
           </div>
 
-          {/* Check-in / Check-out */}
           <div className="flex gap-[40px] mt-[0px] text-[12px] text-[#505050]">
             <div className="flex flex-col items-start">
               <span className="font-medium">Check-in</span>
@@ -430,12 +499,17 @@ export default function MyBooking({
                 ? hasReviewed ||
                   actionCompleted ||
                   !canHoldDeposit ||
-                  isCheckingHold
-                : hasReviewed // Only disable Rate your Stay if already reviewed
+                  isCheckingHold ||
+                  isBackendDown
+                : hasReviewed
             }
             className={`w-[177px] h-[35px] rounded-[5px] text-[12px] font-medium ${
               (completedButtonText === "Hold Security Deposit" &&
-                (hasReviewed || actionCompleted || !canHoldDeposit)) ||
+                (hasReviewed ||
+                  actionCompleted ||
+                  !canHoldDeposit ||
+                  isCheckingHold ||
+                  isBackendDown)) ||
               (completedButtonText === "Rate your Stay" && hasReviewed)
                 ? "bg-[#FBD0FB] text-white cursor-not-allowed"
                 : "bg-[#A20BA2] text-white"
@@ -459,7 +533,7 @@ export default function MyBooking({
         )}
       </div>
 
-      {/* Cancel & Rating Popups */}
+      {/* Popups */}
       {showConfirmCancel && (
         <ConfirmCancelPopup
           onClose={() => setShowConfirmCancel(false)}
@@ -499,22 +573,6 @@ export default function MyBooking({
           bookingId={booking?.id}
           onClose={handleRatingClose}
           onShowAlert={showAlert}
-        />
-      )}
-
-      {/* Hold Deposit Confirmation Popup */}
-      {showConfirmHold && (
-        <ShowSuccess
-          image="/icons/lock.png"
-          heading="Hold Security Deposit?"
-          message="Are you sure you want to hold the security deposit? This action will cancel the booking and start a dispute process."
-          buttonText="Confirm Hold"
-          secondaryButtonText="Cancel"
-          onClose={() => setShowConfirmHold(false)}
-          onSecondaryAction={() => setShowConfirmHold(false)}
-          onPrimaryAction={handleConfirmHold}
-          height="auto"
-          width="w-[70px]"
         />
       )}
 

@@ -176,11 +176,17 @@ export default function NotificationsPage() {
         );
         break;
       case "See Booking Details":
-        navigate(
-          user?.role === "HOST" && user?.hostVerification?.status === "VERIFIED"
-            ? "/host-dashboard"
-            : "/bookings"
-        );
+        // UPDATED: Navigate to specific booking details page
+        if (activePopup.bookingId) {
+          navigate(`/bookings/${activePopup.bookingId}`);
+        } else if (
+          activePopup.relatedId &&
+          activePopup.relatedType === "BOOKING"
+        ) {
+          navigate(`/bookings/${activePopup.relatedId}`);
+        } else {
+          navigate("/bookings");
+        }
         break;
       case "See Revenue History":
         navigate("/revenue");
@@ -213,15 +219,18 @@ export default function NotificationsPage() {
         navigate("/notifications");
         break;
       case "View Details":
-        // NEW: Use apartmentId for deposit hold and other apartment-specific notifications
-        if (activePopup.apartmentId) {
-          // Navigate to the specific apartment's booking details page
+        // UPDATED: Enhanced navigation for deposit hold and booking details
+        if (activePopup.bookingId) {
+          // Navigate to specific booking details
+          navigate(`/bookings/${activePopup.bookingId}`);
+        } else if (activePopup.apartmentId && activePopup.booking) {
+          // Navigate to apartment-specific bookings
           navigate(`/apartments/${activePopup.apartmentId}/bookings`);
         } else if (
           activePopup.relatedType === "BOOKING" &&
           activePopup.relatedId
         ) {
-          // Fallback: Use booking ID if apartmentId is not available
+          // Use related booking ID
           navigate(`/bookings/${activePopup.relatedId}`);
         } else {
           navigate("/bookings");

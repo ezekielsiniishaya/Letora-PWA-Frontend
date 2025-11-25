@@ -7,6 +7,21 @@ const guestNotificationConfigs = {
       "Your payment for the apartment has been received. We've sent your booking details to the host.",
     booking: true,
     showButton: false, // Hide button for payment confirmed
+  }), // In your notificationConfig file
+  DEPOSIT_HOLD_REQUESTED: (notification) => ({
+    image: "/icons/lock.png",
+    heading: "Deposit Hold Requested",
+    message:
+      notification.message ||
+      "You have requested to hold an amount from the security deposit. This amount will be temporarily reserved.",
+    buttonText: "View Details",
+    revenue: true,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
+    // Add these to enable booking details navigation
+    bookingId: notification.bookingId, // Make sure this is passed from the notification
+    relatedId: notification.relatedId, // Fallback ID
+    relatedType: notification.relatedType, // Should be "BOOKING"
   }),
   BOOKING_CONFIRMED: (notification) => ({
     image: "/icons/firework.svg",
@@ -66,9 +81,9 @@ const guestNotificationConfigs = {
     message:
       notification.message ||
       "Share your thoughts on your recent stay so the host can improve and guests can make informed choices.",
-     booking: true,
-     imgHeight: "h-[60px]",
-     width: "w-[60px]"
+    booking: true,
+    imgHeight: "h-[60px]",
+    width: "w-[60px]",
   }),
   AVAILABILITY_REQUEST_SENT: (notification) => ({
     image: "/icons/calendar.svg",

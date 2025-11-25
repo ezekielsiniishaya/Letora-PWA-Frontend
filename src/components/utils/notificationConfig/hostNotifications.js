@@ -10,7 +10,7 @@ const hostNotificationConfigs = {
     imgHeight: "h-[60px]",
     width: "w-[60px]",
   }),
-    CHECK_OUT: (notification) => ({
+  CHECK_OUT: (notification) => ({
     image: "/icons/stopwatch.svg",
     heading: "Check-out Reminder",
     message:
@@ -159,7 +159,8 @@ const hostNotificationConfigs = {
       "A guest has rated your apartment. Check out their feedback and see how it affects your average rating.",
     buttonText: "See Dashboard",
   }),
-  DEPOSIT_HOLD_REQUESTED: (notification) => ({
+  // In your notificationConfig file
+  DEPOSIT_HOLD_APPROVED: (notification) => ({
     image: "/icons/lock.png",
     heading: "Deposit Hold Requested",
     message:
@@ -169,6 +170,10 @@ const hostNotificationConfigs = {
     revenue: true,
     imgHeight: "h-[60px]",
     width: "w-[60px]",
+    // Add these to enable booking details navigation
+    bookingId: notification.bookingId, // Make sure this is passed from the notification
+    relatedId: notification.relatedId, // Fallback ID
+    relatedType: notification.relatedType, // Should be "BOOKING"
   }),
   BOOKING_COMPLETED: (notification) => ({
     image: "/icons/success.svg",
