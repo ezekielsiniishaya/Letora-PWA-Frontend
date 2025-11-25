@@ -1,20 +1,8 @@
 // services/userApi.js
 import { apiRequest } from "./apiRequest";
 import BASE_URL from "../config/config";
-// Get user profile
-export const getUserProfile = async () => {
-  return apiRequest("/api/users/profile", {
-    method: "GET",
-  });
-};
 
-// Update user profile
-export const updateUserProfile = async (userData) => {
-  return apiRequest("/api/users/profile", {
-    method: "PUT",
-    body: userData,
-  });
-};
+// ========== NOTIFICATION APIS ==========
 
 // ✅ Get all notifications
 export const getNotifications = async () => {
@@ -39,8 +27,39 @@ export const markAllNotificationsAsRead = async () => {
 
 // ✅ Delete a single notification
 export const deleteNotification = async (notificationId) => {
-  return apiRequest(`/api/users/notifications/${notificationId}`, {
+  return apiRequest(`/api/users/notification/${notificationId}`, {
     method: "DELETE",
+  });
+};
+
+// ✅ Delete all notifications for user
+export const deleteAllNotifications = async () => {
+  return apiRequest("/api/users/notification/delete-all", {
+    method: "DELETE",
+  });
+};
+
+// ✅ Delete only read notifications
+export const deleteReadNotifications = async () => {
+  return apiRequest("/api/users/notification/delete-read", {
+    method: "DELETE",
+  });
+};
+
+// ========== PROFILE APIS ==========
+
+// Get user profile
+export const getUserProfile = async () => {
+  return apiRequest("/api/users/profile", {
+    method: "GET",
+  });
+};
+
+// Update user profile
+export const updateUserProfile = async (userData) => {
+  return apiRequest("/api/users/profile", {
+    method: "PUT",
+    body: userData,
   });
 };
 
@@ -51,6 +70,7 @@ export const requestAvailability = async (apartmentId) => {
     body: { apartmentId },
   });
 };
+
 // Respond to availability request
 export const respondToAvailability = async (
   availabilityRequestId,
@@ -64,6 +84,7 @@ export const respondToAvailability = async (
     },
   });
 };
+
 // Create rating
 export const createRating = async (apartmentId, rating, comment, bookingId) => {
   return apiRequest("/api/users/rating", {
@@ -71,6 +92,7 @@ export const createRating = async (apartmentId, rating, comment, bookingId) => {
     body: { apartmentId, rating, comment, bookingId },
   });
 };
+
 // ========== BOOKING APIS ==========
 export const createBooking = async (bookingData) => {
   return apiRequest("/api/bookings", {
@@ -90,7 +112,6 @@ export const getUserBookings = async () => {
     method: "GET",
   });
 };
-
 
 export const updateBookingPaymentStatus = async (bookingId, paymentData) => {
   return apiRequest(`/api/bookings/${bookingId}/payment`, {
@@ -125,6 +146,7 @@ export const createPayment = async (bookingId) => {
     throw error;
   }
 };
+
 // FIXED: confirmPayment should accept bookingId and handle reference lookup
 export const confirmPayment = async (bookingId) => {
   try {
@@ -155,6 +177,7 @@ export const getPaymentStatus = async (bookingId) => {
     method: "GET",
   });
 };
+
 // Download receipt
 export const downloadReceipt = async (bookingId) => {
   try {
@@ -195,6 +218,7 @@ export const downloadReceipt = async (bookingId) => {
     };
   }
 };
+
 // ========== DEPOSIT HOLD APIS ==========
 
 /**
@@ -238,17 +262,20 @@ export const processWithdrawal = async (amount) => {
     body: { amount },
   });
 };
+
 export const createDepositHold = async (bookingId) => {
   return apiRequest(`/api/bookings/${bookingId}/hold-deposit`, {
     method: "PUT",
   });
 };
+
 // In userApi.js - add this function
 export const checkDepositHoldStatus = async (bookingId) => {
   return apiRequest(`/api/bookings/${bookingId}/deposit-hold/status`, {
     method: "GET",
   });
 };
+
 // ========== CANCELLATION APIS ==========
 
 /**

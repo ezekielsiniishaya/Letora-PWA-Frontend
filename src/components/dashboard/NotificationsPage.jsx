@@ -6,7 +6,8 @@ import { getNotificationConfig } from "../utils/notificationConfig/index";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
-  const { user, getUserNotifications, markAsRead } = useUser();
+  const { user, getUserNotifications, markAsRead, deleteReadNotifications } =
+    useUser();
 
   const [notifications, setNotifications] = useState({
     recent: [],
@@ -15,6 +16,7 @@ export default function NotificationsPage() {
   const [activePopup, setActivePopup] = useState(null);
   const [loading, setLoading] = useState(true);
   const [markingRead, setMarkingRead] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Get actual notifications from context and organize them
   useEffect(() => {
@@ -43,6 +45,91 @@ export default function NotificationsPage() {
     });
     setLoading(false);
   }, [getUserNotifications]);
+
+  // Check if there are any read notifications
+  const hasReadNotifications = () => {
+    const allNotifications = [
+      ...notifications.recent,
+      ...notifications.lastWeek,
+    ];
+    return allNotifications.some((notification) => notification.isRead);
+  };
+
+  // Handle delete all read notifications
+  const handleDeleteReadNotifications = async () => {
+    if (!hasReadNotifications()) {
+      setActivePopup({
+        image: "/icons/info.svg",
+        heading: "No Read Notifications",
+        message: "There are no read notifications to delete.",
+        buttonText: "Okay",
+      });
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      const result = await deleteReadNotifications();
+
+      if (result.success) {
+        // Update local state by removing all read notifications
+        const filterUnreadNotifications = (notificationList) =>
+          notificationList.filter((notification) => !notification.isRead);
+
+        setNotifications({
+          recent: filterUnreadNotifications(notifications.recent),
+          lastWeek: filterUnreadNotifications(notifications.lastWeek),
+        });
+
+        setActivePopup({
+          image: "/icons/success.svg",
+          heading: "Success!",
+          message: `Successfully deleted ${result.deletedCount} read notification(s)`,
+          buttonText: "Okay",
+        });
+      } else {
+        throw new Error(result.message || "Failed to delete notifications");
+      }
+    } catch (error) {
+      console.error("Error deleting read notifications:", error);
+      setActivePopup({
+        image: "/icons/error.svg",
+        heading: "Error",
+        message:
+          error.message ||
+          "Failed to delete read notifications. Please try again.",
+        buttonText: "Okay",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Show confirmation popup for deleting read notifications
+  const showDeleteConfirmation = () => {
+    if (!hasReadNotifications()) {
+      setActivePopup({
+        image: "/icons/info.svg",
+        heading: "No Read Notifications",
+        message: "There are no read notifications to delete.",
+        buttonText: "Okay",
+      });
+      return;
+    }
+
+    const readCount = [
+      ...notifications.recent,
+      ...notifications.lastWeek,
+    ].filter((n) => n.isRead).length;
+
+    setActivePopup({
+      image: "/icons/warning.svg",
+      heading: "Delete Read Notifications?",
+      message: `Are you sure you want to delete ${readCount} read notification(s)? This action cannot be undone.`,
+      buttonText: "Delete",
+      isDeleteConfirmation: true,
+    });
+  };
 
   // Format time for display
   const formatTime = (dateString) => {
@@ -153,12 +240,29 @@ export default function NotificationsPage() {
   };
   const handlePopupAction = () => {
     if (!activePopup) return;
+
+    // Handle delete confirmation
+    if (activePopup.isDeleteConfirmation) {
+      handleDeleteReadNotifications();
+      return;
+    }
+
+    // Handle "Okay" button after successful delete - just close popup
+    if (
+      activePopup.buttonText === "Okay" &&
+      activePopup.heading === "Success!"
+    ) {
+      setActivePopup(null);
+      return;
+    }
+
     // Special handling for availability confirmation popup
     if (activePopup.booking && activePopup.apartmentId) {
       navigate(`/shortlet-overview/${activePopup.apartmentId}`);
       setActivePopup(null);
       return;
     }
+
     // Handle different navigation based on button text and notification type
     switch (activePopup.buttonText) {
       case "See Dashboard":
@@ -237,13 +341,12 @@ export default function NotificationsPage() {
         }
         break;
       default:
-        // Default navigation based on user role
-        navigate(user?.role === "HOST" ? "/host-dashboard" : "/bookings");
+        // For "Okay" buttons and any other cases, just close the popup
+        setActivePopup(null);
     }
 
     setActivePopup(null);
   };
-
   const handlePopupClose = () => {
     setActivePopup(null);
   };
@@ -312,28 +415,22 @@ export default function NotificationsPage() {
           <div className="absolute right-5 flex gap-3">
             <img
               src="/icons/bin.svg"
-              alt="Delete all"
+              alt="Delete read notifications"
               className={`w-5 h-5 ${
-                notifications.recent.length === 0 &&
-                notifications.lastWeek.length === 0
+                !hasReadNotifications()
                   ? "opacity-40 cursor-not-allowed"
-                  : "cursor-pointer"
+                  : deleting
+                  ? "opacity-40 cursor-not-allowed"
+                  : "cursor-pointer hover:opacity-70"
               }`}
               title={
-                notifications.recent.length === 0 &&
-                notifications.lastWeek.length === 0
-                  ? "No notifications to delete"
-                  : "Delete all notifications"
+                !hasReadNotifications()
+                  ? "No read notifications to delete"
+                  : deleting
+                  ? "Deleting..."
+                  : "Delete read notifications"
               }
-              onClick={() => {
-                if (
-                  notifications.recent.length > 0 ||
-                  notifications.lastWeek.length > 0
-                ) {
-                  // Add your delete logic here
-                  console.log("Delete all notifications");
-                }
-              }}
+              onClick={showDeleteConfirmation}
             />
           </div>
         </div>
@@ -391,6 +488,8 @@ export default function NotificationsPage() {
           height={activePopup.buttonText ? undefined : "233px"}
           imgHeight={activePopup.imgHeight}
           width={activePopup.width}
+          // Add danger style for delete confirmation
+          buttonStyle={activePopup.isDeleteConfirmation ? "danger" : "primary"}
         />
       )}
     </div>

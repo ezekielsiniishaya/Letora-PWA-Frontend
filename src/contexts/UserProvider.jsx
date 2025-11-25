@@ -4,6 +4,7 @@ import { UserContext } from "./UserContext";
 import { getUserProfile } from "../services/userApi";
 import { toggleFavoriteAPI } from "../services/apartmentApi";
 import { markNotificationAsRead } from "../services/userApi";
+import { deleteReadNotifications as deleteReadNotificationsApi } from "../services/userApi";
 
 const AUTH_TOKEN_KEY = "token";
 const USER_LOCATION_KEY = "userLocation";
@@ -515,7 +516,16 @@ const UserProvider = ({ children }) => {
   const getUserBookings = useCallback(() => {
     return user?.bookings || [];
   }, [user]);
-
+  // Then add this function inside your component
+  const deleteReadNotifications = async () => {
+    try {
+      const response = await deleteReadNotificationsApi();
+      return response;
+    } catch (error) {
+      console.error("Error deleting read notifications:", error);
+      throw error;
+    }
+  };
   const getUserFavorites = useCallback(() => {
     return user?.favorites || [];
   }, [user]);
@@ -605,7 +615,7 @@ const UserProvider = ({ children }) => {
     markAllAsRead,
     addNotification,
     removeNotification,
-
+    deleteReadNotifications,
     // Error handling
     clearError,
 
