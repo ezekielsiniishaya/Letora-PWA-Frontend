@@ -3,6 +3,8 @@ import ApartmentCreationProvider from "./contexts/ApartmentCreationProvider";
 import HostProfileProvider from "./contexts/HostProfileProvider";
 import ApartmentListingProvider from "./contexts/ApartmentListingProvider";
 import UserProvider from "./contexts/UserProvider";
+import { useEffect } from "react";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 import SplashWithOnboarding from "./pages/OnboardingPage/SplashWithOnboarding";
 import ChooseType from "./pages/OnboardingPage/ChooseType";
@@ -71,6 +73,16 @@ import BookingStatusPage from "./pages/GuestDashboard/BookingStatus";
 import PaymentPage from "./pages/GuestDashboard/PaymentPage";
 import ApartmentAvailability from "./components/apartment/AvailabilityResponsePage";
 function App() {
+  useEffect(() => {
+    const configureStatusBar = async () => {
+      await StatusBar.setOverlaysWebView({ overlay: false });
+      await StatusBar.setBackgroundColor({ color: "#A20BA2" });
+      await StatusBar.setStyle({ style: Style.Dark });
+    };
+
+    configureStatusBar();
+  }, []);
+
   return (
     <Router>
       <HostProfileProvider>

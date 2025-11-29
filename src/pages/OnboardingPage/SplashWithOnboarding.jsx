@@ -1,34 +1,35 @@
-// SplashWithOnboarding.jsx - Modified version
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
+import { StatusBar, Style } from "@capacitor/status-bar";
 import OnboardingLayout from "../../components/layout/OnboardingLayout";
 
 export default function SplashWithOnboarding() {
   const navigate = useNavigate();
-
-  // State management for transition phases
   const [currentPhase, setCurrentPhase] = useState("splash");
   const [splashOpacity, setSplashOpacity] = useState(100);
   const [onboardingOpacity, setOnboardingOpacity] = useState(0);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
-  // Onboarding slides data
-  const onboardingSlides = [
-    {
-      bg: "/images/background/onboard-bg-1.jpg",
-      title: "Welcome to Letora",
-      description:
-        "Hosting made easy. Take full control of your shortlet business directly from your app",
-    },
-    {
-      bg: "/images/background/onboard-bg-2.jpg",
-      title: "Turn your Space into Steady Income",
-      description:
-        "List your apartment on Letora and start earning from verified short-stay guests",
-    },
-  ];
+  // Initialize Status Bar on component mount
+  useEffect(() => {
+    const initializeStatusBar = async () => {
+      // Check if Capacitor is available (running in native app)
+      if (window.capacitor) {
+        try {
+          // This makes content go under the status bar
+          await StatusBar.setOverlaysWebView({ overlay: true });
+          // Optional: Set status bar style
+          await StatusBar.setStyle({ style: Style.Dark });
+        } catch {
+          console.log("StatusBar not available");
+        }
+      }
+    };
+
+    initializeStatusBar();
+  }, []);
 
   // Handle the transition sequence
   useEffect(() => {
@@ -52,11 +53,26 @@ export default function SplashWithOnboarding() {
     navigate("/choose-type");
   };
 
+  const onboardingSlides = [
+    {
+      bg: "/images/background/onboard-bg-1.jpg",
+      title: "Welcome to Letora",
+      description:
+        "Hosting made easy. Take full control of your shortlet business directly from your app",
+    },
+    {
+      bg: "/images/background/onboard-bg-2.jpg",
+      title: "Turn your Space into Steady Income",
+      description:
+        "List your apartment on Letora and start earning from verified short-stay guests",
+    },
+  ];
+
   return (
-    <div className="h-screen w-full relative overflow-hidden bg-[#A20BA2]">
-      {/* SPLASH SCREEN LAYER - No overlay */}
+    <div className="full-screen-container">
+      {/* SPLASH SCREEN LAYER */}
       <div
-        className="absolute inset-0 flex flex-col items-center justify-center bg-[#A20BA2] text-white z-20"
+        className="splash-screen"
         style={{
           opacity: splashOpacity / 100,
           transition: "opacity 1200ms cubic-bezier(0.4, 0.0, 0.2, 1)",
@@ -84,7 +100,7 @@ export default function SplashWithOnboarding() {
 
       {/* ONBOARDING CAROUSEL LAYER */}
       <div
-        className="absolute inset-0 z-10"
+        className="onboarding-container"
         style={{
           opacity: onboardingOpacity / 100,
           transition: "opacity 1200ms cubic-bezier(0.4, 0.0, 0.2, 1)",
@@ -96,7 +112,6 @@ export default function SplashWithOnboarding() {
           slidesPerView={1}
           onSlideChange={(swiper) => {
             setActiveSlideIndex(swiper.activeIndex);
-            // Control navigation based on current position
             swiper.allowSlidePrev = swiper.activeIndex !== 0;
             swiper.allowSlideNext =
               swiper.activeIndex !== swiper.slides.length - 1;
@@ -107,7 +122,6 @@ export default function SplashWithOnboarding() {
           resistance={false}
           resistanceRatio={0}
           className="h-full"
-          style={{ overflow: "hidden" }} // Add this
         >
           {onboardingSlides.map((slide, index) => (
             <SwiperSlide key={index} className="h-full">

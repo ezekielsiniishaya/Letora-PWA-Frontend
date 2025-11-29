@@ -1,0 +1,12 @@
+{
+  "appId": "com.letora.app",
+  "appName": "Letora",
+  "webDir": "dist",
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#A20BA2"
+    }
+  }
+}

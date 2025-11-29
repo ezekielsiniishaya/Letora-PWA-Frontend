@@ -1,7 +1,7 @@
 const guestNotificationConfigs = {
   PAYMENT_CONFIRMED: (notification) => ({
     image: "/icons/money-2.svg",
-    heading: "Payment Received",
+    heading: "Payment Received!!!",
     message:
       notification.message ||
       "Your payment for the apartment has been received. We've sent your booking details to the host.",

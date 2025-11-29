@@ -1,18 +1,23 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   getBookingById,
   createDepositHold,
   checkDepositHoldStatus,
+  cancelBooking,
 } from "../../services/userApi";
+import CancelBookingPopup from "../dashboard/CancelBookingPopup";
 import ShowSuccess from "../ShowSuccess";
 import Button from "../Button";
+import { useUser } from "../../hooks/useUser.js";
 
 export default function HostBookingDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const location = useLocation();
+  const { user: currentUser, refreshUser } = useUser();
 
+  const [showCancelBooking, setShowCancelBooking] = useState(false);
+  const [showCancelSuccess, setShowCancelSuccess] = useState(false);
   const [depositHeld, setDepositHeld] = useState(false);
   const [canHoldDeposit, setCanHoldDeposit] = useState(true);
   const [isCheckingHold, setIsCheckingHold] = useState(false);
@@ -21,13 +26,9 @@ export default function HostBookingDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Get current user ID from location state
-  const currentUserId = location.state?.currentUserId;
-  // Check if current user owns the apartment
-  const isOwner =
-    currentUserId && booking?.apartment?.host?.id === currentUserId;
+  // Determine if current user is host or guest
+  const [actualRole, setActualRole] = useState("host");
 
-  // Fetch booking directly from backend
   useEffect(() => {
     const fetchBooking = async () => {
       try {
@@ -38,6 +39,11 @@ export default function HostBookingDetails() {
 
         if (response.success) {
           setBooking(response.data);
+
+          // Determine role: check if current user is the apartment host
+          const isHostBooking =
+            response.data.apartment?.hostId === currentUser?.id;
+          setActualRole(isHostBooking ? "host" : "guest");
         } else {
           setError(response.message || "Failed to fetch booking");
         }
@@ -57,37 +63,63 @@ export default function HostBookingDetails() {
       setError("No booking ID provided");
       setLoading(false);
     }
-  }, [id]);
+  }, [id, currentUser?.id]);
 
-  // Check deposit hold status when booking is loaded
-  useEffect(() => {
-    const checkHoldStatus = async () => {
-      if (!booking || !isOwner) return;
+  const handleCancelBooking = async (bookingId, reasons) => {
+    try {
+      const response = await cancelBooking(bookingId, reasons.join(", "));
 
-      try {
-        setIsCheckingHold(true);
-        const response = await checkDepositHoldStatus(booking.id);
+      if (response.success) {
+        setShowCancelSuccess(true);
+        await refreshUser();
 
-        if (response.success) {
-          setCanHoldDeposit(response.data.canRequestHold);
-          if (response.data.hasExistingHold) {
-            setDepositHeld(true);
-          }
-        } else {
-          setCanHoldDeposit(false);
+        // Refresh booking data to show cancelled status
+        const updatedBooking = await getBookingById(bookingId);
+        if (updatedBooking.success) {
+          setBooking(updatedBooking.data);
         }
-      } catch (error) {
-        console.error("Error checking hold status:", error);
-        setCanHoldDeposit(false);
-      } finally {
-        setIsCheckingHold(false);
+      } else {
+        alert(response.message || "Failed to cancel booking");
       }
-    };
+    } catch (error) {
+      console.error("Cancellation error:", error);
+      alert(error.message || "Failed to cancel booking");
+    }
+  };
 
-    if (booking && getBookingStatus(booking) === "COMPLETED" && isOwner) {
+  // Check deposit hold status when booking is loaded and user is host
+  const checkHoldStatus = useCallback(async () => {
+    if (!booking || actualRole !== "host") return;
+
+    try {
+      setIsCheckingHold(true);
+      const response = await checkDepositHoldStatus(booking.id);
+
+      if (response.success) {
+        setCanHoldDeposit(response.data.canRequestHold);
+        if (response.data.hasExistingHold) {
+          setDepositHeld(true);
+        }
+      } else {
+        setCanHoldDeposit(false);
+      }
+    } catch (error) {
+      console.error("Error checking hold status:", error);
+      setCanHoldDeposit(false);
+    } finally {
+      setIsCheckingHold(false);
+    }
+  }, [booking, actualRole]);
+
+  useEffect(() => {
+    if (
+      booking &&
+      actualRole === "host" &&
+      getBookingStatus(booking) === "COMPLETED"
+    ) {
       checkHoldStatus();
     }
-  }, [booking, isOwner]);
+  }, [booking, actualRole, checkHoldStatus]);
 
   const handleHoldDeposit = async () => {
     if (depositHeld || !canHoldDeposit) return;
@@ -110,14 +142,13 @@ export default function HostBookingDetails() {
 
   // Get button text for hold deposit
   const getHoldDepositButtonText = () => {
-    if (isCheckingHold) return "Please wait...";
-    if (depositHeld) return "Hold Security Deposit";
+    if (isCheckingHold) return "Checking...";
+    if (depositHeld) return "Deposit Held";
     if (!canHoldDeposit) return "Hold Expired";
     return "Hold Security Deposit";
   };
 
   // Status styles
-  // Update the statusMap to check cancellationDispute status
   const statusMap = {
     ONGOING: { label: "Ongoing", bg: "bg-[#FFEFD7]", text: "text-[#FB9506]" },
     COMPLETED: {
@@ -140,6 +171,7 @@ export default function HostBookingDetails() {
           : "text-[#E11D48]",
     },
   };
+
   // Helper functions
   const getPrimaryImage = (bookingData) => {
     if (!bookingData?.apartment?.images) return "/images/default-apartment.jpg";
@@ -187,6 +219,7 @@ export default function HostBookingDetails() {
     const twelveHour = hours % 12 || 12;
     return `${day}-${month}-${year} | ${twelveHour}:${minutes} ${ampm}`;
   };
+
   const formatCurrency = (amount) => {
     if (!amount) return "₦0";
     return new Intl.NumberFormat("en-NG", {
@@ -195,50 +228,78 @@ export default function HostBookingDetails() {
     }).format(amount);
   };
 
-  const calculateDuration = (startDate, endDate) => {
-    if (!startDate || !endDate) return "Not specified";
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+  const getDuration = (bookingData) => {
+    if (bookingData?.duration) {
+      return `${bookingData.duration} night${
+        bookingData.duration !== 1 ? "s" : ""
+      }`;
+    }
+    if (!bookingData?.startDate || !bookingData?.endDate)
+      return "Not specified";
+    const start = new Date(bookingData.startDate);
+    const end = new Date(bookingData.endDate);
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return `${diffDays} night${diffDays !== 1 ? "s" : ""}`;
   };
 
-  // Calculate payment breakdown
-  const calculatePaymentBreakdown = (totalPrice) => {
-    if (!totalPrice) {
+  // Correct payment breakdown using actual API fields
+  const getPaymentBreakdown = (bookingData) => {
+    if (!bookingData) {
       return {
+        baseAmount: 0,
         bookingFee: 0,
-        securityDeposit: 0,
         convenienceFee: 0,
-        subtotal: 0,
+        securityDeposit: 0,
+        hostAmount: 0,
         total: 0,
       };
     }
 
-    const bookingFee = totalPrice * 0.1;
-    const securityDeposit = totalPrice * 0.2;
-    const convenienceFee = totalPrice * 0.05;
-    const subtotal = totalPrice - bookingFee - securityDeposit - convenienceFee;
-
     return {
-      bookingFee,
-      securityDeposit,
-      convenienceFee,
-      subtotal,
-      total: totalPrice,
+      baseAmount: parseFloat(bookingData.baseAmount) || 0,
+      bookingFee: parseFloat(bookingData.bookingFee) || 0,
+      convenienceFee: parseFloat(bookingData.convenienceFee) || 0,
+      securityDeposit: parseFloat(bookingData.securityDeposit) || 0,
+      hostAmount: parseFloat(bookingData.hostAmount) || 0,
+      total: parseFloat(bookingData.totalPrice) || 0,
     };
+  };
+
+  const getDisplayName = (bookingData) => {
+    if (actualRole === "host") {
+      return (
+        `${bookingData?.guest?.firstName || ""} ${
+          bookingData?.guest?.lastName || ""
+        }`.trim() || "Guest"
+      );
+    } else {
+      return (
+        `${bookingData?.apartment?.host?.firstName || ""} ${
+          bookingData?.apartment?.host?.lastName || ""
+        }`.trim() || "Host"
+      );
+    }
+  };
+
+  const getProfilePicture = (bookingData) => {
+    if (actualRole === "host") {
+      return bookingData?.guest?.profilePic || "/images/profile-image.png";
+    } else {
+      return (
+        bookingData?.apartment?.host?.profilePic || "/images/profile-image.png"
+      );
+    }
   };
 
   const getBookingStatus = (bookingData) => {
     if (!bookingData?.status) return "ONGOING";
     return bookingData.status;
   };
+
   const currentStatus =
     statusMap[getBookingStatus(booking)] || statusMap.ONGOING;
-  const paymentBreakdown = booking
-    ? calculatePaymentBreakdown(booking.totalPrice)
-    : null;
+  const paymentBreakdown = booking ? getPaymentBreakdown(booking) : null;
 
   if (loading) {
     return (
@@ -264,11 +325,9 @@ export default function HostBookingDetails() {
     );
   }
 
-  // Only show Hold Security Deposit button if:
-  // 1. Booking status is COMPLETED
-  // 2. Current user owns the apartment
+  // Button visibility logic for HOST perspective
   const showHoldDepositButton =
-    getBookingStatus(booking) === "COMPLETED" && isOwner;
+    getBookingStatus(booking) === "COMPLETED" && actualRole === "host";
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] flex flex-col items-center">
@@ -301,12 +360,9 @@ export default function HostBookingDetails() {
           </div>
 
           <img
-            src={
-              booking?.apartment?.host?.profilePic ||
-              "/images/profile-image.png"
-            }
-            alt="Host"
-            className="absolute left-1 -bottom-3 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
+            src={getProfilePicture(booking)}
+            alt="Guest"
+            className="absolute left-[5px] -bottom-3 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover"
           />
         </div>
 
@@ -315,8 +371,7 @@ export default function HostBookingDetails() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h2 className="text-[12px] font-medium text-[#333333]">
-                {booking?.apartment?.host?.firstName}{" "}
-                {booking?.apartment?.host?.lastName}
+                {getDisplayName(booking)}
               </h2>
 
               <div className="flex items-center text-sm text-black font-medium mt-[6px]">
@@ -325,7 +380,9 @@ export default function HostBookingDetails() {
                   alt="Verified"
                   className="w-4 h-4 mr-1"
                 />
-                <span>{getTitle(booking)}</span>
+                <div className="truncate" style={{ maxWidth: "190px" }}>
+                  <span>{getTitle(booking)}</span>
+                </div>
               </div>
 
               <p className="text-[12px] text-[#333333] mt-1">
@@ -333,15 +390,15 @@ export default function HostBookingDetails() {
               </p>
             </div>
 
-            {/* Status + Price */}
+            {/* Status + Price Per Night */}
             <div className="flex flex-col items-end">
               <span
-                className={`text-[10px] px-3 h-[16px] rounded-full font-medium mb-[32px] ${currentStatus.bg} ${currentStatus.text}`}
+                className={`text-[10px] px-3 rounded-full font-medium mb-[32px] text-center h-[16px] ${currentStatus.bg} ${currentStatus.text}`}
               >
                 {currentStatus.label}
               </span>
-              <p className="text-[14px] font-semibold">
-                {formatCurrency(booking.totalPrice || 0)}
+              <p className="text-[14px] font-semibold text-right">
+                {formatCurrency(booking.apartment?.price || 0)}/Night
               </p>
             </div>
           </div>
@@ -364,64 +421,59 @@ export default function HostBookingDetails() {
             </div>
             <div className="flex justify-between">
               <span>Duration</span>
-              <span>
-                {calculateDuration(booking.startDate, booking.endDate)}
-              </span>
+              <span>{getDuration(booking)}</span>
             </div>
           </div>
         </div>
 
-        {/* Payment Details */}
+        {/* Payment Details - Corrected with actual API fields */}
         {paymentBreakdown && (
           <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span>Booking fee paid</span>
+                <span>Base Amount</span>
+                <span>{formatCurrency(paymentBreakdown.baseAmount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Booking Fee</span>
                 <span>{formatCurrency(paymentBreakdown.bookingFee)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Convenience Fee</span>
+                <span>{formatCurrency(paymentBreakdown.convenienceFee)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Security Deposit</span>
                 <span>{formatCurrency(paymentBreakdown.securityDeposit)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Convenience Fee</span>
-                <span>{formatCurrency(paymentBreakdown.convenienceFee)}</span>
-              </div>
-              <div className="flex justify-between font-medium">
                 <span>Total Amount Paid</span>
                 <span>{formatCurrency(paymentBreakdown.total)}</span>
               </div>
             </div>
           </div>
         )}
+
+        {/* Guest Details - For Host View */}
         <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
-          <h3 className="font-medium mb-2">Your Guest Details</h3>
+          <h3 className="font-medium mb-2">Guest Details</h3>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span>Guest Name</span>
+              <span>Name</span>
               <span>
                 {booking?.guest?.firstName} {booking?.guest?.lastName}
               </span>
             </div>
-
-            {/* First Phone Number */}
             <div className="flex justify-between">
               <span>Phone Number</span>
               <span>{booking?.guest?.phone || "Not provided"}</span>
             </div>
-
-            {/* Second Phone Number - Only show if provided */}
             {booking?.guest?.phone2 && (
               <div className="flex justify-between">
                 <span>Phone Number</span>
                 <span>{booking?.guest?.phone2}</span>
               </div>
             )}
-
-            <div className="flex justify-between">
-              <span>Email</span>
-              <span>{booking?.guest?.email || "Not provided"}</span>
-            </div>
           </div>
         </div>
 
@@ -432,8 +484,14 @@ export default function HostBookingDetails() {
               <h3 className="font-medium mb-2">Cancellation Details</h3>
               <div className="flex justify-between">
                 <span>Cancellation Date</span>
-                <span>{formatDate(booking.updatedAt)}</span>
+                <span>{formatDate(booking.cancelledAt)}</span>
               </div>
+              {booking.cancelledBy && (
+                <div className="flex justify-between">
+                  <span>Cancelled By</span>
+                  <span>{booking.cancelledBy}</span>
+                </div>
+              )}
             </div>
 
             <div className="bg-white rounded-[5px] py-[10px] px-[6px] text-[13px] text-[#505050]">
@@ -445,7 +503,7 @@ export default function HostBookingDetails() {
           </>
         )}
 
-        {/* Hold Security Deposit Button - Only show if user owns the apartment and booking is completed */}
+        {/* Hold Security Deposit Button - Only for Host */}
         {showHoldDepositButton && (
           <div className="pt-[40px] pb-[42px]">
             <Button
@@ -461,18 +519,34 @@ export default function HostBookingDetails() {
             />
           </div>
         )}
-
-        {/* Ownership Warning */}
-        {getBookingStatus(booking) === "COMPLETED" && !isOwner && (
-          <div className="pt-[40px] pb-[42px] text-center">
-            <p className="text-[#666666] text-sm">
-              You can only manage security deposits for your own properties
-            </p>
-          </div>
-        )}
       </div>
 
-      {/* Hold Success Popup */}
+      {/* Popup Modals */}
+      {showCancelBooking && (
+        <CancelBookingPopup
+          onClose={() => setShowCancelBooking(false)}
+          onSubmit={(reasons) => {
+            handleCancelBooking(booking.id, reasons);
+          }}
+          currentUserId={currentUser?.id}
+          apartmentHostId={booking?.apartment?.hostId}
+        />
+      )}
+
+      {showCancelSuccess && (
+        <ShowSuccess
+          image="/icons/Illustration.svg"
+          heading="Booking Successfully Cancelled!"
+          message="Your booking has been cancelled. If you're eligible for a refund, it will be processed within 7–10 business days."
+          buttonText="Done"
+          onClose={() => {
+            setShowCancelSuccess(false);
+            navigate(-1);
+          }}
+          height="auto"
+        />
+      )}
+
       {showHoldSuccess && (
         <ShowSuccess
           image="/icons/lock2.svg"
