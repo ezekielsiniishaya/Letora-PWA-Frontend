@@ -1,11 +1,42 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useUser } from "../../hooks/useUser";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext.jsx";
 
 export default function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loading, isHostVerified } = useUser(); // ✅ Use the new helper
+  const { setBackgroundColor } = useBackgroundColor();
+  useEffect(() => {
+    if (!(window.Capacitor || window.capacitor)) return;
+
+    const path = location.pathname;
+
+    const isGuestHome = path.startsWith("/guest-homepage");
+    const isHostHome = path.startsWith("/host-homepage");
+
+    if (isGuestHome) {
+      // Guest homepage: dark near-black + white icons
+      const color = "#111111";
+      setBackgroundColor(color);
+      StatusBar.setBackgroundColor({ color });
+      StatusBar.setStyle({ style: Style.Dark }); // white icons
+    } else if (isHostHome) {
+      // Host homepage: dark purple + white icons
+      const color = "#7A007A"; // or "#4D004D" etc.
+      setBackgroundColor(color);
+      StatusBar.setBackgroundColor({ color });
+      StatusBar.setStyle({ style: Style.Dark }); // white icons
+    } else {
+      // All other pages: light bar + dark icons
+      const color = "#F9F9F9";
+      setBackgroundColor(color);
+      StatusBar.setBackgroundColor({ color });
+      StatusBar.setStyle({ style: Style.Light }); // dark icons
+    }
+  }, [location.pathname, setBackgroundColor]);
 
   // 🧭 Auto-redirect to correct home after user data loads
   useEffect(() => {

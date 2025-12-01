@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { BackgroundColorContext } from "./BackgroundColorContext";
 
 export function BackgroundColorProvider({ children }) {
-  const [backgroundColor, setBackgroundColor] = useState("#A20BA2");
+  const [backgroundColor, setBackgroundColor] = useState(null); // no default
 
   return (
     <BackgroundColorContext.Provider

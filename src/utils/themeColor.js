@@ -3,7 +3,7 @@
 // Converts rgb(a) color to hex
 export function rgb2hex(rgb) {
   const result = rgb.match(/\d+/g);
-  if (!result) return "#a20ba2";
+  if (!result) return "#F9F9F9"; // default to white instead of purple
   return (
     "#" +
     result
