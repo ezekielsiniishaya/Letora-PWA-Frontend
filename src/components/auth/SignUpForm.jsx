@@ -6,10 +6,23 @@ import GenderDropdown from "./GenderDropDown";
 import StateDropdown from "./StateDropDown";
 import Alert from "../utils/Alerts";
 import { registerAPI } from "../../services/authApi";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext.jsx";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 export default function SignUpForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  const { setBackgroundColor } = useBackgroundColor();
+
+  useEffect(() => {
+    setBackgroundColor("#F9F9F9"); // page background
+
+    if (window.Capacitor || window.capacitor) {
+      StatusBar.setBackgroundColor({ color: "#F9F9F9" });
+      StatusBar.setStyle({ style: Style.Light }); // dark icons on light bar
+    }
+  }, [setBackgroundColor]);
   const urlRole = searchParams.get("role") || "guest";
 
   const [formData, setFormData] = useState({

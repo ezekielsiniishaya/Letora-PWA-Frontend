@@ -1,11 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext.jsx";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 export default function ChooseType() {
   const [selectedRole, setSelectedRole] = useState("");
   const [error, setError] = useState(false);
   const navigate = useNavigate();
+  const { setBackgroundColor } = useBackgroundColor();
+
+  useEffect(() => {
+    setBackgroundColor("#F9F9F9");
+
+    if (window.Capacitor || window.capacitor) {
+      StatusBar.setBackgroundColor({ color: "#F9F9F9" });
+      StatusBar.setStyle({ style: Style.Light }); // dark icons on light bar
+    }
+  }, [setBackgroundColor]);
 
   const handleProceed = () => {
     if (!selectedRole) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "../../components/Button";
 import Header from "../../components/Header";
 import PasswordInput from "../../components/auth/PasswordInput";
@@ -8,6 +8,8 @@ import { useUser } from "../../hooks/useUser";
 import { useHostProfile } from "../../contexts/HostProfileContext";
 import { useApartmentListing } from "../../hooks/useApartmentListing";
 import Alert from "../../components/utils/Alerts";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext.jsx";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -21,6 +23,16 @@ export default function SignIn() {
   const { login, logout } = useUser();
   const { clearHostProfileData } = useHostProfile();
   const { clearApartments } = useApartmentListing();
+  const { setBackgroundColor } = useBackgroundColor();
+
+  useEffect(() => {
+    setBackgroundColor("#F9F9F9");
+
+    if (window.Capacitor || window.capacitor) {
+      StatusBar.setBackgroundColor({ color: "#F9F9F9" });
+      StatusBar.setStyle({ style: Style.Light }); // dark icons on light bar
+    }
+  }, [setBackgroundColor]);
 
   const clearAllUserData = () => {
     localStorage.clear();
@@ -212,19 +224,22 @@ export default function SignIn() {
           {/* Remember / Forgot */}
           <div className="flex items-center justify-between text-[14px] pb-[32px] font-medium">
             <label className="flex items-center space-x-[8px]">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                disabled={loading}
-                className="peer appearance-none [-webkit-appearance:none] border border-[#CCC] w-[18px] h-[18px] rounded-[5px]
-             checked:bg-[#A20BA2] checked:border-[#A20BA2] disabled:opacity-50"
-              />
-              <span className="absolute left-4 text-white text-xs hidden peer-checked:block">
-                ✓
+              <span className="relative inline-flex items-center justify-center w-[18px] h-[18px]">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={loading}
+                  className="peer appearance-none [-webkit-appearance:none] border border-[#CCC] w-full h-full rounded-[5px]
+      checked:bg-[#A20BA2] checked:border-[#A20BA2] disabled:opacity-50"
+                />
+                <span className="pointer-events-none absolute inset-0 items-center justify-center text-white text-xs hidden peer-checked:flex">
+                  ✓
+                </span>
               </span>
               <span className="text-[#999999]">Remember me</span>
             </label>
+
             <Link
               to="/forgot-password"
               className="text-[#4D4D4D] hover:underline"
