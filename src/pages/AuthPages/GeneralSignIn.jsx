@@ -60,7 +60,6 @@ export default function SignIn() {
   }, [setBackgroundColor]);
 
   const clearAllUserData = async () => {
-    localStorage.clear();
     await Preferences.remove({ key: REMEMBER_ME_KEY });
     await Preferences.remove({ key: REMEMBERED_EMAIL_KEY });
     await Preferences.remove({ key: REQUIRES_ID_VERIFICATION_KEY });

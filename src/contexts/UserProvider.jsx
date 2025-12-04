@@ -62,6 +62,17 @@ const UserProvider = ({ children }) => {
             console.log("Profile API response:", response);
 
             const userData = response.data || response;
+            const fcmToken = localStorage.getItem("fcm_token");
+            console.log("FCM token from localStorage on login:", fcmToken);
+
+            if (fcmToken) {
+              try {
+                await updateFcmToken(fcmToken);
+                console.log("FCM token re-synced for new user");
+              } catch (e) {
+                console.error("Failed to resync FCM token on login", e);
+              }
+            }
 
             console.log("✅ User initialized successfully:", userData);
             setUser(userData);
@@ -121,8 +132,53 @@ const UserProvider = ({ children }) => {
     localStorage.removeItem(USER_LOCATION_KEY);
     console.log("📍 User location cleared");
   }, []);
+  const syncStoredFcmToken = useCallback(async (maxRetries = 3) => {
+    try {
+      const fcmToken = localStorage.getItem("fcm_token");
+      if (!fcmToken) {
+        console.log("No FCM token found in localStorage");
+        return { success: false, message: "No FCM token found" };
+      }
 
-  // In your login function, fix the verification storage:
+      // Optional: Check if we already synced this token
+      const lastSyncedToken = localStorage.getItem("last_synced_fcm_token");
+      if (lastSyncedToken === fcmToken) {
+        console.log("FCM token already synced, skipping");
+        return { success: true, message: "Already synced" };
+      }
+
+      console.log("Syncing stored FCM token to backend...");
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`Attempt ${attempt} to sync FCM token...`);
+          const response = await updateFcmToken(fcmToken);
+
+          if (response.success) {
+            console.log("✅ FCM token successfully synced to backend");
+            // Mark as synced
+            localStorage.setItem("last_synced_fcm_token", fcmToken);
+            return { success: true, message: "FCM token synced" };
+          }
+
+          console.warn(`Attempt ${attempt} failed:`, response.message);
+        } catch (error) {
+          console.warn(`Attempt ${attempt} error:`, error.message);
+        }
+
+        // Wait before retrying (exponential backoff)
+        if (attempt < maxRetries) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        }
+      }
+
+      console.error("All attempts to sync FCM token failed");
+      return { success: false, message: "Failed after all retries" };
+    } catch (error) {
+      console.error("Error syncing FCM token:", error);
+      return { success: false, message: error.message };
+    }
+  }, []);
   const login = async (userData, token) => {
     try {
       setLoading(true);
@@ -130,16 +186,6 @@ const UserProvider = ({ children }) => {
 
       await setToken(token);
       console.log("✅ Token stored as 'token':", token ? "Yes" : "No");
-
-      const fcmToken = localStorage.getItem("fcm_token");
-      if (fcmToken) {
-        try {
-          await updateFcmToken(fcmToken);
-          console.log("FCM token re-synced for new user");
-        } catch (e) {
-          console.error("Failed to resync FCM token on login", e);
-        }
-      }
 
       try {
         console.log("🔄 Fetching user profile after login...");
@@ -149,7 +195,7 @@ const UserProvider = ({ children }) => {
         console.log("✅ Complete user data after login:", completeUserData);
         setUser(completeUserData);
 
-        // Store host verification status based on the fetched user data
+        // Store host verification status
         const isHostVerified =
           completeUserData?.hostProfile?.isVerified ||
           completeUserData?.hostVerification?.status === "VERIFIED";
@@ -158,7 +204,7 @@ const UserProvider = ({ children }) => {
           value: isHostVerified ? "verified" : "pending",
         });
 
-        // Also store user type/role if needed
+        // Store user type/role if needed
         const userType = completeUserData?.role || completeUserData?.userType;
         if (userType) {
           await Preferences.set({
@@ -166,6 +212,15 @@ const UserProvider = ({ children }) => {
             value: userType.toLowerCase(),
           });
         }
+
+        // ✅ SYNC FCM TOKEN AFTER SUCCESSFUL LOGIN
+        setTimeout(async () => {
+          try {
+            await syncStoredFcmToken();
+          } catch (syncError) {
+            console.error("Failed to sync FCM token after login:", syncError);
+          }
+        }, 500); // Small delay to ensure user is fully set
 
         setError(null);
       } catch (profileErr) {
@@ -186,6 +241,15 @@ const UserProvider = ({ children }) => {
           value: isHostVerified ? "verified" : "pending",
         });
 
+        // ✅ SYNC FCM TOKEN EVEN WITH FALLBACK DATA
+        setTimeout(async () => {
+          try {
+            await syncStoredFcmToken();
+          } catch (syncError) {
+            console.error("Failed to sync FCM token after login:", syncError);
+          }
+        }, 500);
+
         setError("Logged in but could not load complete profile");
       }
     } catch (err) {
@@ -204,6 +268,9 @@ const UserProvider = ({ children }) => {
     const userId = user?.id || "anonymous";
     const storageKey = `apartmentSearchHistory_${userId}`;
     localStorage.removeItem(storageKey);
+
+    // ✅ CLEAR THE LAST SYNCED TOKEN ON LOGOUT
+    localStorage.removeItem("last_synced_fcm_token");
 
     // remove token from Preferences instead of localStorage
     await setToken(null);
@@ -256,6 +323,16 @@ const UserProvider = ({ children }) => {
 
       console.log("✅ User data refreshed with location:", updatedUserData);
       setUser(updatedUserData);
+
+      // ✅ SYNC FCM TOKEN ON USER REFRESH TOO
+      setTimeout(async () => {
+        try {
+          await syncStoredFcmToken();
+        } catch (syncError) {
+          console.error("Failed to sync FCM token on refresh:", syncError);
+        }
+      }, 500);
+
       setError(null);
       return updatedUserData;
     } catch (err) {
@@ -270,8 +347,7 @@ const UserProvider = ({ children }) => {
       }
       throw err;
     }
-  }, [getToken, logout, currentLocation]);
-
+  }, [getToken, currentLocation, syncStoredFcmToken, logout]);
   const updateUser = useCallback((updatedData) => {
     setUser((prev) => {
       if (!prev) return updatedData;

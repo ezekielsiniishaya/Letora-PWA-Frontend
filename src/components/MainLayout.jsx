@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useBackgroundColor } from "../contexts/BackgroundColorContext.jsx";
-import { updateFcmToken } from "../services/userApi.js";
+// --- add at top ---
+import { Preferences } from "@capacitor/preferences";
 
 function MainLayout({ children }) {
   const { backgroundColor } = useBackgroundColor();
@@ -85,18 +86,7 @@ function MainLayout({ children }) {
       // Listen for registration
       PushNotifications.addListener("registration", async (token) => {
         console.log("Push registration success. Token:", token.value);
-        console.log("COPY THIS TOKEN FOR TESTING:", token.value);
-
-        // Save token to localStorage for testing
         localStorage.setItem("fcm_token", token.value);
-
-        // ✅ Send token to your backend
-        try {
-          await updateFcmToken(token.value);
-          console.log("FCM token synced to backend");
-        } catch (error) {
-          console.error("Failed to sync FCM token to backend:", error);
-        }
       });
 
       // Listen for registration errors
