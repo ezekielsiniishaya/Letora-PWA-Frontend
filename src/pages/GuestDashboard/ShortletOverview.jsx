@@ -581,7 +581,7 @@ export default function ShortletOverviewPage() {
   }
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen pb-[10px]">
       {/* Alert Display */}
       {alert.show && (
         <div className="fixed top-4 ml-2 w-full left-1/2 transform -translate-x-1/2 z-50">
@@ -656,7 +656,7 @@ export default function ShortletOverviewPage() {
         {/* Book Now Button - Updated to handle guest verification */}
         <Button
           text={`Book @ ₦${apartment.pricing?.pricePerNight?.toLocaleString()}/Night`}
-          className={`mb-20 ${
+          className={`mb-[70px] ${
             !isHostAndOwner && !showRequestButton
               ? "mt-20"
               : isHostAndOwner

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "../../hooks/useUser";
 import ShowSuccess from "../../components/ShowSuccess";
 import { getNotificationConfig } from "../utils/notificationConfig/index";
+import { sendTestPush } from "../../services/userApi";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [markingRead, setMarkingRead] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
 
   // Get actual notifications from context and organize them
   useEffect(() => {
@@ -45,6 +47,36 @@ export default function NotificationsPage() {
     });
     setLoading(false);
   }, [getUserNotifications]);
+
+  const handleSendTestPush = async () => {
+    try {
+      setSendingTest(true);
+      const res = await sendTestPush();
+      console.log("Test push response:", res);
+      setActivePopup({
+        image: "/icons/success.svg",
+        heading: "Test Push Sent",
+        message: "A test push notification was sent to your device.",
+        buttonText: "Okay",
+      });
+    } catch (error) {
+      console.error("Error sending test push (raw):", error);
+      console.log("Error response:", error.response?.data);
+
+      setActivePopup({
+        image: "/icons/error.svg",
+        heading: "Error",
+        message:
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to send test push. Please try again.",
+        buttonText: "Okay",
+      });
+    } finally {
+      setSendingTest(false);
+    }
+  };
 
   // Check if there are any read notifications
   const hasReadNotifications = () => {
@@ -432,6 +464,14 @@ export default function NotificationsPage() {
               }
               onClick={showDeleteConfirmation}
             />
+            {/* TEMP: Test push button */}
+            <button
+              className="text-[10px] px-2 py-1 rounded bg-[#A20BA2] text-white disabled:opacity-40"
+              disabled={sendingTest}
+              onClick={handleSendTestPush}
+            >
+              {sendingTest ? "Sending..." : "Test Push"}
+            </button>
           </div>
         </div>
       </div>

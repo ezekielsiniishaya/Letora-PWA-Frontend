@@ -1,5 +1,5 @@
 // Updated Dashboard component (simplified version)
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import ApartmentSlider from "../../components/dashboard/ApartmentSlider";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
 import ShowSuccess from "../../components/ShowSuccess";
@@ -37,6 +37,8 @@ export default function Dashboard() {
 
   const unreadCount = getUnreadNotificationsCount();
   const userBookings = getUserBookings();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const hasReloadedRef = useRef(false); // Track if we've already reloaded
 
   const currentBooking = userBookings.find(
     (booking) => booking.status?.toLowerCase() !== "pending" || null
@@ -44,11 +46,42 @@ export default function Dashboard() {
   // In Dashboard component
 
   const handleLocationChange = (newLocation) => {
-    console.log("📍 Location changed to:", newLocation);
+    console.log(
+      "📍 Location changed to:",
+      newLocation,
+      "Initial load:",
+      isInitialLoad
+    );
 
-    // Just reload - the page will refetch all data automatically
-    window.location.reload();
+    if (isInitialLoad) {
+      // Don't reload on initial load - just store the location
+      console.log("✅ Initial location set, skipping reload");
+      setIsInitialLoad(false);
+
+      // You might want to store this location for future use
+      if (refetchApartments) {
+        refetchApartments(); // Refetch without reloading
+      }
+      return;
+    }
+
+    // Only reload for actual user selections after initial load
+    if (!hasReloadedRef.current) {
+      console.log("🔄 User changed location, reloading page...");
+      hasReloadedRef.current = true;
+      window.location.reload();
+    }
   };
+
+  // Reset the reload flag when component mounts
+  useEffect(() => {
+    hasReloadedRef.current = false;
+    setIsInitialLoad(true);
+
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
   // --- Loading state ---
   if (userLoading || hotApartmentsLoading || nearbyApartmentsLoading) {
     return (

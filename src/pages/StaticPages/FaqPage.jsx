@@ -1,16 +1,25 @@
 import Header from "/src/components/Header";
 import Footer from "/src/components/Footer";
 import { useEffect, useState } from "react";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext.jsx";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 export default function FaqPage() {
   const [ready, setReady] = useState(false);
+  const { setBackgroundColor } = useBackgroundColor();
+
   useEffect(() => {
     window.scrollTo(0, 0);
     setReady(true);
-  }, []);
 
-  if (!ready) return null; // prevent render until scroll is set
+    // Set purple background + white icons for status bar
+    if (window.Capacitor || window.capacitor) {
+      StatusBar.setBackgroundColor({ color: "#A20BA2" });
+      StatusBar.setStyle({ style: Style.Dark }); // white icons
+    }
+  }, [setBackgroundColor]);
 
+  if (!ready) return null;
   const forGuest = [
     {
       question: "How do I book a shortlet on the platform?",

@@ -10,6 +10,12 @@ import { useApartmentListing } from "../../hooks/useApartmentListing";
 import Alert from "../../components/utils/Alerts";
 import { useBackgroundColor } from "../../contexts/BackgroundColorContext.jsx";
 import { StatusBar, Style } from "@capacitor/status-bar";
+import { Preferences } from "@capacitor/preferences";
+
+const REMEMBER_ME_KEY = "rememberMe";
+const REMEMBERED_EMAIL_KEY = "rememberedEmail";
+const REQUIRES_ID_VERIFICATION_KEY = "requiresIdentityVerification";
+const DOCUMENT_STATUS_KEY = "documentStatus";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -30,19 +36,42 @@ export default function SignIn() {
 
     if (window.Capacitor || window.capacitor) {
       StatusBar.setBackgroundColor({ color: "#F9F9F9" });
-      StatusBar.setStyle({ style: Style.Light }); // dark icons on light bar
+      StatusBar.setStyle({ style: Style.Light });
     }
+
+    // Restore rememberMe + email from Preferences
+    const initRememberMe = async () => {
+      const { value: rememberValue } = await Preferences.get({
+        key: REMEMBER_ME_KEY,
+      });
+
+      const remembered = rememberValue === "true";
+      setRememberMe(remembered);
+
+      if (remembered) {
+        const { value: savedEmail } = await Preferences.get({
+          key: REMEMBERED_EMAIL_KEY,
+        });
+        if (savedEmail) setEmail(savedEmail);
+      }
+    };
+
+    initRememberMe();
   }, [setBackgroundColor]);
 
-  const clearAllUserData = () => {
+  const clearAllUserData = async () => {
     localStorage.clear();
+    await Preferences.remove({ key: REMEMBER_ME_KEY });
+    await Preferences.remove({ key: REMEMBERED_EMAIL_KEY });
+    await Preferences.remove({ key: REQUIRES_ID_VERIFICATION_KEY });
+    await Preferences.remove({ key: DOCUMENT_STATUS_KEY });
+
     logout();
     clearHostProfileData();
     clearApartments();
   };
 
   const validateEmail = (value) => {
-    // ✅ Simple email format regex
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailPattern.test(value);
   };
@@ -51,11 +80,10 @@ export default function SignIn() {
     e.preventDefault();
     setError("");
     setFieldErrors({});
-    clearAllUserData();
+    await clearAllUserData();
 
     const newFieldErrors = {};
 
-    // ✅ Field validations
     if (!email.trim()) {
       newFieldErrors.email = "This field is required.";
     } else if (!validateEmail(email)) {
@@ -75,18 +103,26 @@ export default function SignIn() {
     try {
       const result = await loginAPI(email, password);
 
-      login(result.user, result.accessToken);
-      localStorage.setItem("token", result.accessToken);
+      // This will store token in Preferences via UserProvider
+      await login(result.user, result.accessToken);
 
-      if (rememberMe) localStorage.setItem("rememberMe", "true");
-      else localStorage.removeItem("rememberMe");
+      if (rememberMe) {
+        await Preferences.set({ key: REMEMBER_ME_KEY, value: "true" });
+        await Preferences.set({ key: REMEMBERED_EMAIL_KEY, value: email });
+      } else {
+        await Preferences.remove({ key: REMEMBER_ME_KEY });
+        await Preferences.remove({ key: REMEMBERED_EMAIL_KEY });
+      }
 
       if (result.requiresIdentityVerification) {
-        localStorage.setItem("requiresIdentityVerification", "true");
-        localStorage.setItem(
-          "documentStatus",
-          JSON.stringify(result.documentStatus)
-        );
+        await Preferences.set({
+          key: REQUIRES_ID_VERIFICATION_KEY,
+          value: "true",
+        });
+        await Preferences.set({
+          key: DOCUMENT_STATUS_KEY,
+          value: JSON.stringify(result.documentStatus),
+        });
       }
 
       navigate(result.redirectPath);
@@ -96,10 +132,9 @@ export default function SignIn() {
         message: err?.message,
         response: err?.response?.data,
         status: err?.response?.status,
-        name: err?.name, // Add this to check error type
+        name: err?.name,
       });
 
-      // Enhanced error handling for network errors
       const errorMessage =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
@@ -108,15 +143,14 @@ export default function SignIn() {
         "";
       const lowerCaseMsg = errorMessage.toLowerCase();
 
-      // Network error detection - check for specific patterns
       if (
         lowerCaseMsg.includes("network") ||
         lowerCaseMsg.includes("offline") ||
         lowerCaseMsg.includes("fetch") ||
         lowerCaseMsg.includes("failed to fetch") ||
-        err?.name === "TypeError" || // Common for network errors
+        err?.name === "TypeError" ||
         err?.name === "NetworkError" ||
-        !navigator.onLine // Check if browser is actually offline
+        !navigator.onLine
       ) {
         setError("network");
       } else if (
@@ -126,14 +160,12 @@ export default function SignIn() {
         lowerCaseMsg.includes("incorrect") ||
         err?.response?.status === 401
       ) {
-        // Check if email format is valid first
         if (!validateEmail(email)) {
           setFieldErrors({
             email: "",
             password: "",
           });
         } else {
-          // If email format is valid, assume password is wrong
           setFieldErrors({
             email: "Wrong or incorrect email address",
             password: "Wrong or incorrect password",
@@ -157,7 +189,6 @@ export default function SignIn() {
           Sign in if you already have an account
         </p>
 
-        {/* ✅ Alerts */}
         {error === "network" && (
           <div className="mt-4">
             <Alert
@@ -181,7 +212,6 @@ export default function SignIn() {
         )}
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          {/* Email */}
           <div>
             <label className="block text-[14px] font-medium text-[#686464] mt-[32px]">
               Email Address
@@ -208,7 +238,6 @@ export default function SignIn() {
             )}
           </div>
 
-          {/* Password */}
           <PasswordInput
             label="Password"
             value={password}
@@ -217,11 +246,10 @@ export default function SignIn() {
               setFieldErrors((prev) => ({ ...prev, password: "" }));
             }}
             disabled={loading}
-            hasError={!!fieldErrors.password} // ✅ shows red border
+            hasError={!!fieldErrors.password}
             errorMessage={fieldErrors.password}
           />
 
-          {/* Remember / Forgot */}
           <div className="flex items-center justify-between text-[14px] pb-[32px] font-medium">
             <label className="flex items-center space-x-[8px]">
               <span className="relative inline-flex items-center justify-center w-[18px] h-[18px]">
@@ -248,7 +276,6 @@ export default function SignIn() {
             </Link>
           </div>
 
-          {/* Sign in button */}
           <Button
             text={loading ? "Signing in..." : "Sign in"}
             type="submit"
@@ -256,14 +283,12 @@ export default function SignIn() {
           />
         </form>
 
-        {/* OR divider */}
         <div className="flex items-center my-6">
           <hr className="flex-grow border-[#E6E6E6]" />
           <span className="px-2 text-sm text-[#666666]">OR</span>
           <hr className="flex-grow border-[#E6E6E6]" />
         </div>
 
-        {/* Sign up button */}
         <Link to="/choose-type">
           <button
             className="w-full bg-[#E6E6E6] py-3 rounded-[10px] text-[#666666] mb-[140px] h-[56px] text-[16px] font-regular disabled:opacity-50"
@@ -273,7 +298,6 @@ export default function SignIn() {
           </button>
         </Link>
 
-        {/* Footer */}
         <div className="flex justify-center space-x-4 text-[14px] text-[#333333] pb-[-1px]">
           <Link to="/terms" className="hover:underline">
             Terms & Conditions

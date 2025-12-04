@@ -335,9 +335,8 @@ export default function BookingDetails({ role = "guest" }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A20BA2] mb-4"></div>
-        <p className="text-gray-500">Loading booking details...</p>
+      <div className="w-full min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#A20BA2]"></div>
       </div>
     );
   }
@@ -433,7 +432,7 @@ export default function BookingDetails({ role = "guest" }) {
             {/* Status + Price */}
             <div className="flex flex-col items-end">
               <span
-                className={`text-[10px] px-3 rounded-full font-medium mb-[32px] text-center h-[16px] ${currentStatus.bg} ${currentStatus.text}`}
+                className={`text-[10px] px-3 rounded-full font-medium mb-[32px] text-center mt-1  h-[16px] ${currentStatus.bg} ${currentStatus.text}`}
               >
                 {currentStatus.label}
               </span>

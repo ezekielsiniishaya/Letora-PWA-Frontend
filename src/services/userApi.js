@@ -45,6 +45,12 @@ export const deleteReadNotifications = async () => {
     method: "DELETE",
   });
 };
+// Send a test push to the logged-in user
+export const sendTestPush = async () => {
+  return apiRequest("/api/users/notification/test-push", {
+    method: "POST",
+  });
+};
 
 // ========== PROFILE APIS ==========
 
@@ -52,6 +58,14 @@ export const deleteReadNotifications = async () => {
 export const getUserProfile = async () => {
   return apiRequest("/api/users/profile", {
     method: "GET",
+  });
+};
+
+// Update firebase token
+export const updateFcmToken = async (fcmToken) => {
+  return apiRequest("/api/users/me/fcm-token", {
+    method: "PUT",
+    body: { fcmToken },
   });
 };
 

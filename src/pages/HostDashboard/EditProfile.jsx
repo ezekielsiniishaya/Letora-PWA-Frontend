@@ -6,6 +6,8 @@ import Header2 from "../../components/Header2";
 import { useUser } from "../../hooks/useUser";
 import { updateUserProfile } from "../../services/userApi";
 import Alert from "../../components/utils/Alerts";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext.jsx";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
 export default function EditProfilePage() {
   const [showModal, setShowModal] = useState(false);
@@ -24,7 +26,15 @@ export default function EditProfilePage() {
   const [alert, setAlert] = useState({ show: false, message: "", type: "" });
   // Check if user has existing date of birth
   const hasExistingDOB = user?.dateOfBirth;
+  const { setBackgroundColor } = useBackgroundColor();
 
+  useEffect(() => {
+    // Set purple background + white icons for status bar
+    if (window.Capacitor || window.capacitor) {
+      StatusBar.setBackgroundColor({ color: "#A20BA2" });
+      StatusBar.setStyle({ style: Style.Dark }); // white icons
+    }
+  }, [setBackgroundColor]);
   // Populate form with user data from context
   useEffect(() => {
     if (user) {

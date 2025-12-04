@@ -3,8 +3,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import { UserContext } from "./UserContext";
 import { getUserProfile } from "../services/userApi";
 import { toggleFavoriteAPI } from "../services/apartmentApi";
-import { markNotificationAsRead } from "../services/userApi";
-import { deleteReadNotifications as deleteReadNotificationsApi } from "../services/userApi";
+import {
+  markNotificationAsRead,
+  deleteReadNotifications as deleteReadNotificationsApi,
+  updateFcmToken,
+} from "../services/userApi";
+import { Preferences } from "@capacitor/preferences";
 
 const AUTH_TOKEN_KEY = "token";
 const USER_LOCATION_KEY = "userLocation";
@@ -15,17 +19,20 @@ const UserProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
 
-  // Get token helper
-  const getToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
+  // Get token helper (async)
+  const getToken = useCallback(async () => {
+    const { value } = await Preferences.get({ key: AUTH_TOKEN_KEY });
+    return value;
+  }, []);
 
-  // Set token helper
-  const setToken = (token) => {
+  // Set token helper (async)
+  const setToken = useCallback(async (token) => {
     if (token) {
-      localStorage.setItem(AUTH_TOKEN_KEY, token);
+      await Preferences.set({ key: AUTH_TOKEN_KEY, value: token });
     } else {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
+      await Preferences.remove({ key: AUTH_TOKEN_KEY });
     }
-  };
+  }, []);
 
   // Initialize user location from localStorage
   useEffect(() => {
@@ -44,7 +51,7 @@ const UserProvider = ({ children }) => {
     const initializeUser = async () => {
       try {
         setLoading(true);
-        const token = getToken();
+        const token = await getToken();
 
         console.log("🔄 Initializing user, token found:", !!token);
 
@@ -54,7 +61,6 @@ const UserProvider = ({ children }) => {
             const response = await getUserProfile();
             console.log("Profile API response:", response);
 
-            // Extract the actual user data from the response
             const userData = response.data || response;
 
             console.log("✅ User initialized successfully:", userData);
@@ -63,21 +69,18 @@ const UserProvider = ({ children }) => {
           } catch (err) {
             console.error("❌ Error fetching user profile:", err);
 
-            // Check if it's an authentication error
             if (err.response?.status === 401) {
               console.warn("Authentication failed, clearing token");
-              setToken(null); // Clear invalid token
+              await setToken(null);
               setUser(null);
               setError("Session expired. Please login again.");
             } else {
-              // For other errors, keep user as authenticated but show warning
               console.warn("Could not fetch user profile, but token is valid");
               setUser({ isAuthenticated: true });
               setError("Could not load user profile");
             }
           }
         } else {
-          // No token, user is not authenticated
           console.log("No token found, user is not authenticated");
           setUser(null);
           setError(null);
@@ -91,39 +94,24 @@ const UserProvider = ({ children }) => {
     };
 
     initializeUser();
-  }, []);
+  }, [getToken, setToken]);
 
   // Set user location function
   const setUserLocation = useCallback((location) => {
     console.log("📍 Setting user location:", location);
-
-    // Save to state
     setCurrentLocation(location);
-
-    // Save to localStorage
     localStorage.setItem(USER_LOCATION_KEY, JSON.stringify(location));
-
-    // Update user context if user is logged in
     setUser((prev) => (prev ? { ...prev, currentLocation: location } : prev));
-
     console.log("✅ Location saved to localStorage and state");
   }, []);
 
   // Get user location function
   const getUserLocation = useCallback(() => {
-    // Priority: 1. Current location state, 2. User profile location, 3. Default
-    if (currentLocation) {
-      return currentLocation;
-    }
-
-    if (user?.currentLocation) {
-      return user.currentLocation;
-    }
-
+    if (currentLocation) return currentLocation;
+    if (user?.currentLocation) return user.currentLocation;
     if (user?.location?.state) {
       return { state: user.location.state, town: user.location.town };
     }
-
     return null;
   }, [currentLocation, user]);
 
@@ -134,60 +122,93 @@ const UserProvider = ({ children }) => {
     console.log("📍 User location cleared");
   }, []);
 
-  // Login function
+  // In your login function, fix the verification storage:
   const login = async (userData, token) => {
     try {
       setLoading(true);
       setError(null);
 
-      // ✅ Store token as "token"
-      setToken(token);
+      await setToken(token);
       console.log("✅ Token stored as 'token':", token ? "Yes" : "No");
 
+      const fcmToken = localStorage.getItem("fcm_token");
+      if (fcmToken) {
+        try {
+          await updateFcmToken(fcmToken);
+          console.log("FCM token re-synced for new user");
+        } catch (e) {
+          console.error("Failed to resync FCM token on login", e);
+        }
+      }
+
       try {
-        // Fetch complete user profile with notifications
         console.log("🔄 Fetching user profile after login...");
         const profileResponse = await getUserProfile();
         const completeUserData = profileResponse.data || profileResponse;
 
         console.log("✅ Complete user data after login:", completeUserData);
         setUser(completeUserData);
+
+        // Store host verification status based on the fetched user data
+        const isHostVerified =
+          completeUserData?.hostProfile?.isVerified ||
+          completeUserData?.hostVerification?.status === "VERIFIED";
+        await Preferences.set({
+          key: "hostVerificationStatus",
+          value: isHostVerified ? "verified" : "pending",
+        });
+
+        // Also store user type/role if needed
+        const userType = completeUserData?.role || completeUserData?.userType;
+        if (userType) {
+          await Preferences.set({
+            key: "userType",
+            value: userType.toLowerCase(),
+          });
+        }
+
         setError(null);
       } catch (profileErr) {
         console.error(
           "❌ Error fetching user profile after login:",
           profileErr
         );
-
-        // Fallback: use the basic user data from login
         const actualUserData = userData.data || userData;
         console.log("🔄 Using fallback user data:", actualUserData);
         setUser(actualUserData);
+
+        // Try to store verification with fallback data
+        const isHostVerified =
+          actualUserData?.hostProfile?.isVerified ||
+          actualUserData?.hostVerification?.status === "VERIFIED";
+        await Preferences.set({
+          key: "hostVerificationStatus",
+          value: isHostVerified ? "verified" : "pending",
+        });
+
         setError("Logged in but could not load complete profile");
       }
     } catch (err) {
       console.error("❌ Error during login process:", err);
       setError("Login failed");
-      // Clear the token if login fails
-      setToken(null);
+      await setToken(null);
       setUser(null);
     } finally {
       setLoading(false);
     }
   };
-  const logout = useCallback(() => {
+
+  const logout = useCallback(async () => {
     console.log("🚪 Logging out user...");
 
-    // Clear user-specific search history
     const userId = user?.id || "anonymous";
     const storageKey = `apartmentSearchHistory_${userId}`;
     localStorage.removeItem(storageKey);
 
-    // Clear all other user-related localStorage items
-    localStorage.removeItem(AUTH_TOKEN_KEY);
+    // remove token from Preferences instead of localStorage
+    await setToken(null);
     localStorage.removeItem(USER_LOCATION_KEY);
 
-    // Clear any additional potential storage items that might contain user data
     const userStorageKeys = [
       "userPreferences",
       "userSettings",
@@ -196,7 +217,6 @@ const UserProvider = ({ children }) => {
       "apartmentFilters",
       "bookingDraft",
       "draftListing",
-      // Add any other keys your app might use
     ];
 
     userStorageKeys.forEach((key) => {
@@ -206,23 +226,20 @@ const UserProvider = ({ children }) => {
       }
     });
 
-    // Clear sessionStorage as well (if used)
     sessionStorage.clear();
 
-    // Clear all state
-    setToken(null);
     setUser(null);
     setError(null);
     setCurrentLocation(null);
     setLoading(false);
 
     console.log("✅ User logged out successfully - all storage cleared");
-  }, [user?.id]);
-  // Update the refreshUser function to handle location updates
+  }, [setToken, user?.id]);
+
   const refreshUser = useCallback(async () => {
     try {
       console.log("🔄 Refreshing user data...");
-      const token = getToken();
+      const token = await getToken();
 
       if (!token) {
         console.warn("No token available for refresh");
@@ -233,7 +250,6 @@ const UserProvider = ({ children }) => {
       const response = await getUserProfile();
       const userData = response.data || response;
 
-      // Merge with current location if it exists
       const updatedUserData = currentLocation
         ? { ...userData, currentLocation }
         : userData;
@@ -247,22 +263,21 @@ const UserProvider = ({ children }) => {
 
       if (err.response?.status === 401) {
         console.warn("Authentication failed during refresh, logging out");
-        logout();
+        await logout();
         setError("Session expired. Please login again.");
       } else {
         setError("Failed to refresh user data");
       }
       throw err;
     }
-  }, [logout, currentLocation]); // Add currentLocation as dependency
-  // Update user function
+  }, [getToken, logout, currentLocation]);
+
   const updateUser = useCallback((updatedData) => {
     setUser((prev) => {
       if (!prev) return updatedData;
       return { ...prev, ...updatedData };
     });
   }, []);
-  // Add these functions in the UserProvider, around line 350-400 (after guest verification functions)
 
   // Host verification functions
   const isHostVerified = useCallback(() => {
@@ -299,14 +314,13 @@ const UserProvider = ({ children }) => {
   const canHostListProperties = useCallback(() => {
     return isHostVerified();
   }, [isHostVerified]);
-  // Get user notifications
+
   const getUserNotifications = useCallback(() => {
     return Array.isArray(user?.notifications?.items)
       ? user.notifications.items
       : [];
   }, [user]);
 
-  // Get unread notifications count
   const getUnreadNotificationsCount = useCallback(() => {
     if (user?.notifications?.unread !== undefined) {
       return user.notifications.unread;
@@ -316,11 +330,9 @@ const UserProvider = ({ children }) => {
       : 0;
   }, [user]);
 
-  // Mark notification as read
   const markAsRead = useCallback(
     async (notificationId) => {
       try {
-        // Check if notification is already read in local state to avoid unnecessary API calls
         const currentNotification = user?.notifications?.items?.find(
           (n) => n.id === notificationId
         );
@@ -332,7 +344,6 @@ const UserProvider = ({ children }) => {
 
         console.log("📬 Marking notification as read:", notificationId);
 
-        // Call API to mark as read
         const response = await markNotificationAsRead(notificationId);
 
         if (!response.success) {
@@ -341,7 +352,6 @@ const UserProvider = ({ children }) => {
           );
         }
 
-        // Update local state
         setUser((prev) => {
           if (!prev || !prev.notifications?.items) return prev;
 
@@ -374,13 +384,8 @@ const UserProvider = ({ children }) => {
     [user]
   );
 
-  // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
     try {
-      // You'll need to create this API function
-      // await markAllNotificationsAsRead();
-
-      // Update local state
       setUser((prev) => ({
         ...prev,
         notifications: {
@@ -404,7 +409,6 @@ const UserProvider = ({ children }) => {
     }
   }, []);
 
-  // Add new notification (for real-time updates)
   const addNotification = useCallback((notification) => {
     setUser((prev) => ({
       ...prev,
@@ -417,7 +421,6 @@ const UserProvider = ({ children }) => {
     console.log("✅ New notification added");
   }, []);
 
-  // Remove notification
   const removeNotification = useCallback((notificationId) => {
     setUser((prev) => {
       const notificationToRemove = prev.notifications?.items?.find(
@@ -443,7 +446,6 @@ const UserProvider = ({ children }) => {
     });
   }, []);
 
-  // Favorite functions
   const addToFavorites = useCallback(
     async (apartmentId) => {
       try {
@@ -488,7 +490,6 @@ const UserProvider = ({ children }) => {
     [refreshUser]
   );
 
-  // Refresh favorites
   const refreshFavorites = useCallback(async () => {
     try {
       console.log("🔄 Refreshing favorites...");
@@ -502,12 +503,11 @@ const UserProvider = ({ children }) => {
     }
   }, [refreshUser, user?.favorites]);
 
-  // Authentication and role helpers
-  const isAuthenticated = useCallback(() => {
-    const token = getToken();
-    const authenticated = !!token && !!user;
-    return authenticated;
-  }, [user]);
+  // Async isAuthenticated helper for callers that care about token
+  const isAuthenticated = useCallback(async () => {
+    const token = await getToken();
+    return !!token && !!user;
+  }, [getToken, user]);
 
   const isHost = user?.role === "HOST";
   const isGuest = user?.role === "GUEST";
@@ -516,7 +516,7 @@ const UserProvider = ({ children }) => {
   const getUserBookings = useCallback(() => {
     return user?.bookings || [];
   }, [user]);
-  // Then add this function inside your component
+
   const deleteReadNotifications = async () => {
     try {
       const response = await deleteReadNotificationsApi();
@@ -526,6 +526,7 @@ const UserProvider = ({ children }) => {
       throw error;
     }
   };
+
   const getUserFavorites = useCallback(() => {
     return user?.favorites || [];
   }, [user]);
@@ -538,7 +539,6 @@ const UserProvider = ({ children }) => {
     return user?.documents || [];
   }, [user]);
 
-  // Guest verification functions
   const isGuestVerified = useCallback(() => {
     return user?.guestVerification?.canBook || false;
   }, [user]);
@@ -568,15 +568,15 @@ const UserProvider = ({ children }) => {
     );
   }, [user]);
 
-  // Clear error function
   const clearError = useCallback(() => {
     setError(null);
   }, []);
+
   const value = {
     user,
     loading,
     error,
-    isAuthenticated,
+    isAuthenticated, // now async
     isHost,
     isGuest,
     isAdmin,
@@ -594,21 +594,15 @@ const UserProvider = ({ children }) => {
     getUserFavorites,
     getUserApartments,
     getUserDocuments,
-
-    // Guest verification functions
     isGuestVerified,
     getGuestVerificationStatus,
     hasPendingGuestDocuments,
     getGuestDocuments,
-
-    // ✅ ADD THESE NEW HOST VERIFICATION FUNCTIONS
     isHostVerified,
     getHostVerificationStatus,
     hasPendingHostDocuments,
     getHostDocuments,
     canHostListProperties,
-
-    // Notification functions
     getUserNotifications,
     getUnreadNotificationsCount,
     markAsRead,
@@ -616,10 +610,7 @@ const UserProvider = ({ children }) => {
     addNotification,
     removeNotification,
     deleteReadNotifications,
-    // Error handling
     clearError,
-
-    // Token helpers (for debugging)
     getToken,
   };
 

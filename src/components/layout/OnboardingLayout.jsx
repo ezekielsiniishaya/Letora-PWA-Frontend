@@ -5,9 +5,36 @@ const OnboardingLayout = ({
   title,
   description,
   onGetStarted,
+  onSignIn,
   currentIndex,
   totalSlides,
+  showSignInButton = true, // Add this prop with default value
 }) => {
+  // Handle sign in click
+  const handleSignIn = (e) => {
+    e.preventDefault(); // Prevent default link behavior
+    if (onSignIn) {
+      console.log("OnboardingLayout: handleSignIn called");
+      onSignIn(); // Call the onSignIn function
+    }
+  };
+
+  // Handle skip click
+  const handleSkip = () => {
+    console.log("OnboardingLayout: Skip button clicked");
+    if (onGetStarted) {
+      onGetStarted(); // Use onGetStarted to mark as seen
+    }
+  };
+
+  // Handle get started click
+  const handleGetStarted = () => {
+    console.log("OnboardingLayout: Get Started button clicked");
+    if (onGetStarted) {
+      onGetStarted();
+    }
+  };
+
   return (
     <div
       className="relative h-screen w-full bg-cover bg-center flex flex-col justify-between"
@@ -38,10 +65,13 @@ const OnboardingLayout = ({
           ))}
         </div>
 
-        {/* Skip button */}
-        <Link to="/choose-type" className="text-white text-[14px] font-medium">
+        {/* Skip button - also needs to mark onboarding as seen */}
+        <button
+          onClick={handleSkip}
+          className="text-white text-[14px] font-medium hover:opacity-80"
+        >
           Skip
-        </Link>
+        </button>
       </div>
 
       {/* Bottom Content - All content centered at bottom */}
@@ -59,17 +89,24 @@ const OnboardingLayout = ({
 
           {/* Button and sign in link */}
           <button
-            onClick={onGetStarted}
-            className="w-[314.18px] h-[45.82px] text-[14px] bg-[#A20BA2] rounded-[12.9px] text-white font-semibold"
+            onClick={handleGetStarted}
+            className="w-[314.18px] h-[45.82px] text-[14px] bg-[#A20BA2] rounded-[12.9px] text-white font-semibold hover:opacity-90 active:scale-95 transition-all"
           >
             Get Started
           </button>
-          <p className="mt-[22px] text-center  text-[12px] font-medium">
-            Have an account?{" "}
-            <Link to="/sign-in" className="text-[#F711F7]">
-              Sign in
-            </Link>
-          </p>
+
+          {/* Conditionally render sign in link */}
+          {showSignInButton && (
+            <p className="mt-[22px] text-center text-[13px] font-medium">
+              Have an account?{" "}
+              <button
+                onClick={handleSignIn}
+                className="text-[#F711F7] cursor-pointer hover:underline font-semibold bg-transparent border-none p-0"
+              >
+                Sign in
+              </button>
+            </p>
+          )}
         </div>
       </div>
     </div>
