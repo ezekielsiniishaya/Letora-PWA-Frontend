@@ -3,6 +3,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { BookingContext } from "../../contexts/BookingContext";
 import Button from "../../components/Button";
 import { getBookingById, downloadReceipt } from "../../services/userApi"; // Import downloadReceipt
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
+import { FileOpener } from "@capacitor-community/file-opener";
+import { Capacitor } from "@capacitor/core";
 
 export default function BookingStatusPage() {
   const navigate = useNavigate();
@@ -95,22 +98,47 @@ export default function BookingStatusPage() {
 
       const result = await downloadReceipt(booking.id);
 
-      if (result.success) {
-        // Success handled in the downloadReceipt function
-        console.log("Receipt downloaded successfully");
-      } else {
+      if (!result.success) {
         throw new Error(result.error || "Failed to download receipt");
       }
+
+      const blob = result.data;
+
+      // Convert Blob -> base64 for Filesystem.writeFile
+      const base64 = await blobToBase64(blob);
+
+      // Choose a file name
+      const fileName = `letora-receipt-${booking.id}.pdf`;
+
+      // Save to device
+      const writeResult = await Filesystem.writeFile({
+        path: fileName,
+        data: base64,
+        directory:
+          Capacitor.getPlatform() === "android"
+            ? Directory.Documents
+            : Directory.Documents,
+      });
+
+      // Android: path will look like file:///...
+      const filePath = writeResult.uri;
+
+      // Open with native viewer
+      await FileOpener.open({
+        filePath,
+        contentType: "application/pdf",
+      });
+
+      console.log("Receipt downloaded and opened:", filePath);
     } catch (error) {
       console.error("Receipt download error:", error);
 
-      // Show error toast
       const toast = document.createElement("div");
       toast.innerHTML = `
-        <div class="fixed top-4 right-4 bg-white text-red-500 border border-red-500 px-4 py-2 rounded-lg z-50 flex items-center space-x-2">
-          <span>${error.message}</span>
-        </div>
-      `;
+      <div class="fixed top-4 right-4 bg-white text-red-500 border border-red-500 px-4 py-2 rounded-lg z-50 flex items-center space-x-2">
+        <span>${error.message || "Failed to download receipt"}</span>
+      </div>
+    `;
       document.body.appendChild(toast);
       setTimeout(() => {
         document.body.removeChild(toast);
@@ -119,6 +147,19 @@ export default function BookingStatusPage() {
       setDownloading(false);
     }
   };
+
+  // helper: Blob → base64
+  const blobToBase64 = (blob) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onloadend = () => {
+        const dataUrl = reader.result; // "data:application/pdf;base64,AAAA..."
+        const base64 = dataUrl.split(",")[1];
+        resolve(base64);
+      };
+      reader.readAsDataURL(blob);
+    });
   const handleFinish = () => {
     clearBookingData();
     navigate("/guest/home");

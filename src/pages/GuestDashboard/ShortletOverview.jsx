@@ -571,10 +571,10 @@ export default function ShortletOverviewPage() {
           We couldn't load the apartment details right now.
         </p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => navigate(-1)}
           className="px-4 py-2 rounded-lg bg-[#A20BA2] text-white text-[12px] font-medium hover:bg-[#8E0A8E] transition"
         >
-          Refresh Page
+          Go Back
         </button>
       </div>
     );

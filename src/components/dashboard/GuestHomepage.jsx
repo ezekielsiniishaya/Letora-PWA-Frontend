@@ -1,20 +1,24 @@
-// Updated Dashboard component (simplified version)
-import { useState, useEffect, useRef } from "react";
+import { useState, useContext } from "react";
+import { Link } from "react-router-dom";
 import ApartmentSlider from "../../components/dashboard/ApartmentSlider";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
 import ShowSuccess from "../../components/ShowSuccess";
-import { Link } from "react-router-dom";
 import Bookings from "../../components/dashboard/Bookings";
 import Navigation from "../../components/dashboard/Navigation";
-import BecomeHostBanner from "./BecomeHostBanner"; // Import the new component
+import BecomeHostBanner from "./BecomeHostBanner";
+import CurrentLocationDropdown from "../dashboard/SelectState";
+import Button from "../../components/Button";
 import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useUser } from "../../hooks/useUser";
-import Button from "../../components/Button";
-import CurrentLocationDropdown from "../dashboard/SelectState";
+import { LocationContext } from "../../contexts/LocationContext";
 
 export default function Dashboard() {
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Get selectedLocation from context
+  const { setSelectedLocation } = useContext(LocationContext);
+
+  // Use the ApartmentListingProvider context instead
   const {
     apartments,
     hotApartments,
@@ -22,7 +26,7 @@ export default function Dashboard() {
     hotApartmentsLoading,
     nearbyApartmentsLoading,
     error,
-    refetch: refetchApartments,
+    refreshApartments,
   } = useApartmentListing();
 
   const {
@@ -37,51 +41,25 @@ export default function Dashboard() {
 
   const unreadCount = getUnreadNotificationsCount();
   const userBookings = getUserBookings();
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const hasReloadedRef = useRef(false); // Track if we've already reloaded
 
-  const currentBooking = userBookings.find(
-    (booking) => booking.status?.toLowerCase() !== "pending" || null
-  );
-  // In Dashboard component
+  const currentBooking =
+    userBookings.find(
+      (booking) => booking.status?.toLowerCase() !== "pending"
+    ) || null;
 
+  // Handle location change - pass to refreshApartments
   const handleLocationChange = (newLocation) => {
-    console.log(
-      "📍 Location changed to:",
-      newLocation,
-      "Initial load:",
-      isInitialLoad
-    );
+    console.log("📍 Location changed to:", newLocation);
+    setSelectedLocation(newLocation);
 
-    if (isInitialLoad) {
-      // Don't reload on initial load - just store the location
-      console.log("✅ Initial location set, skipping reload");
-      setIsInitialLoad(false);
+    // Extract state and town if available
+    const state = newLocation?.state || null;
+    const town = newLocation?.town || null;
 
-      // You might want to store this location for future use
-      if (refetchApartments) {
-        refetchApartments(); // Refetch without reloading
-      }
-      return;
-    }
-
-    // Only reload for actual user selections after initial load
-    if (!hasReloadedRef.current) {
-      console.log("🔄 User changed location, reloading page...");
-      hasReloadedRef.current = true;
-      window.location.reload();
-    }
+    // Refresh apartments with new location
+    refreshApartments(state, town);
   };
 
-  // Reset the reload flag when component mounts
-  useEffect(() => {
-    hasReloadedRef.current = false;
-    setIsInitialLoad(true);
-
-    return () => {
-      // Cleanup if needed
-    };
-  }, []);
   // --- Loading state ---
   if (userLoading || hotApartmentsLoading || nearbyApartmentsLoading) {
     return (
@@ -103,7 +81,7 @@ export default function Dashboard() {
         <img
           src="/icons/unconfirmed-payment.png"
           alt="Error"
-          className="w-[60px] h-[60px] rounded-full mb-4 "
+          className="w-[60px] h-[60px] rounded-full mb-4"
         />
         <h3 className="text-[#505050] font-semibold mb-2 text-[14px]">
           Oops! Something went wrong.
@@ -116,9 +94,8 @@ export default function Dashboard() {
         <Button
           text="Retry"
           onClick={() => {
-            window.location.reload();
             refetchUser?.();
-            refetchApartments?.();
+            refreshApartments();
           }}
         />
       </div>
@@ -139,8 +116,6 @@ export default function Dashboard() {
 
         {/* Profile + Notifications */}
         <div className="flex items-center">
-          {/* Your other elements on the left */}
-
           <Link to="/notifications" className="ml-auto">
             <div className="relative w-[30px] h-[30px] bg-[#1A1A1A] rounded-full flex items-center justify-center">
               <img
@@ -162,6 +137,7 @@ export default function Dashboard() {
           onLocationChange={handleLocationChange}
           triggerBgColor="bg-[#1A1A1A]"
         />
+
         {/* Guest name */}
         <div className="relative mb-[15px] z-10">
           <h2 className="text-[17px] font-semibold">
@@ -179,9 +155,9 @@ export default function Dashboard() {
             <img
               src="/icons/search.svg"
               alt="Search"
-              className="w-[14.3px]mt-1 h-[14.3px] mt-[1px] mr-[14.3px]"
+              className="w-[14.3px] h-[14.3px] mt-[1px] mr-[14.3px]"
             />
-            <div className="flex-1 text-[12px]  text-[#666666]">
+            <div className="flex-1 text-[12px] text-[#666666]">
               Search Apartments, Type, Location....
             </div>
           </div>
@@ -245,7 +221,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Become a Host Banner - Now self-contained */}
+      {/* Become a Host Banner */}
       <BecomeHostBanner />
 
       {/* Nearby Apartments */}

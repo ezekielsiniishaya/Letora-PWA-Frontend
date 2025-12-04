@@ -764,7 +764,7 @@ export default function CurrentBookingOverviewPage() {
           <img
             src={getHostProfilePicture()}
             alt={getHostName()}
-            className="absolute left-1 -bottom-3 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover border-2 border-white"
+            className="absolute left-1 -bottom-3 transform translate-y-1/2 w-[50px] h-[50px] rounded-full z-10 object-cover"
             onError={(e) => {
               e.target.src = "/images/profile-image.png";
             }}

@@ -192,17 +192,17 @@ export const getPaymentStatus = async (bookingId) => {
   });
 };
 
-// Download receipt
+// Download receipt (returns Blob so caller can handle web/APK separately)
 export const downloadReceipt = async (bookingId) => {
   try {
-    // For file downloads, we need to handle blob response differently
     const token = localStorage.getItem("token");
+
     const response = await fetch(
       `${BASE_URL}/api/bookings/${bookingId}/receipt`,
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: token ? `Bearer ${token}` : undefined,
         },
       }
     );
@@ -211,19 +211,22 @@ export const downloadReceipt = async (bookingId) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
+    // Get PDF as Blob
     const blob = await response.blob();
 
-    // Create download link
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `letora-receipt-${bookingId}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+    // Basic validation: ensure it's a PDF
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/pdf")) {
+      return {
+        success: false,
+        error: "Invalid receipt format received from server",
+      };
+    }
 
-    return { success: true };
+    return {
+      success: true,
+      data: blob, // let UI decide how to handle this
+    };
   } catch (error) {
     console.error("Receipt download error:", error);
     return {

@@ -1,4 +1,3 @@
-// contexts/ApartmentListingProvider.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { ApartmentListingContext } from "./ApartmentListingContext";
 import { useUser } from "../hooks/useUser";
@@ -25,7 +24,6 @@ const ApartmentListingProvider = ({ children }) => {
     async (state = null, town = null) => {
       setHotApartmentsLoading(true);
       try {
-        // Pass the user ID to exclude host's own apartments
         const excludeHostId = user?.id || null;
         console.log(
           "Fetching hot apartments, excluding host ID:",
@@ -73,7 +71,7 @@ const ApartmentListingProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Fetch nearby apartments
+  // Fetch nearby apartments - UPDATED to use selectedLocation from context
   const fetchNearbyApartments = useCallback(
     async (state = null, town = null) => {
       setNearbyApartmentsLoading(true);
@@ -123,7 +121,7 @@ const ApartmentListingProvider = ({ children }) => {
   // Refresh all data - UPDATED to include location
   const refreshApartments = useCallback(
     (state = null, town = null) => {
-      setHasFetched(false); // Reset to allow fresh fetch
+      setHasFetched(false);
       fetchApartments();
       fetchHotApartments(state, town);
       fetchNearbyApartments(state, town);
@@ -131,12 +129,11 @@ const ApartmentListingProvider = ({ children }) => {
     [fetchApartments, fetchHotApartments, fetchNearbyApartments]
   );
 
-  // Fetch data on component mount - only when user is available
+  // Fetch data on component mount
   useEffect(() => {
     const fetchAllData = async () => {
-      if (hasFetched) return; // Prevent duplicate fetches
+      if (hasFetched) return;
 
-      // Get user location for hot and nearby apartments
       let userState = null;
       let userTown = null;
 
@@ -153,7 +150,6 @@ const ApartmentListingProvider = ({ children }) => {
       setHasFetched(true);
     };
 
-    // Only fetch if we have user data or we're not authenticated
     if ((!isAuthenticated || user) && !hasFetched) {
       fetchAllData();
     }
