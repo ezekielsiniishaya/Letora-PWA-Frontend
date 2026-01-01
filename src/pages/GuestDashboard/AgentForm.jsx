@@ -16,7 +16,7 @@ export default function AgentForm({ files, onFileChange, fieldErrors }) {
         >
           <input
             type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf"
             className="hidden"
             onChange={(e) => onFileChange(e, "professional_license")}
           />
@@ -69,7 +69,7 @@ export default function AgentForm({ files, onFileChange, fieldErrors }) {
         >
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,.jpg,.jpeg,.png,.webp,.gif"
             className="hidden"
             onChange={(e) => onFileChange(e, "utility_bill")}
           />

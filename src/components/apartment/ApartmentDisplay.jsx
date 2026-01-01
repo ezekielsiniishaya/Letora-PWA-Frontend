@@ -417,7 +417,7 @@ export const ApartmentDisplay = ({
   console.log("🔍 profileImages for display:", profileImages);
 
   return (
-    <div className="mx-[18px] text-[#39302A] mb-[24px] mt-[10px] bg-white">
+    <div className="mx-[18px] text-[#39302A] mb-[24px] mt-[10px]">
       {/* Alert Display */}
       {displayError && (
         <div className="fixed top-4 right-4 z-50">
@@ -666,32 +666,32 @@ export const ApartmentDisplay = ({
           </p>
         </div>
       </div>
-  {showLegalDocuments && actualDocuments.length > 0 && (
-  <div className="mt-[31.66px]">
-    <h2 className="text-[#333333] text-[14px] font-semibold">
-      Documentations
-    </h2>
-    <div className="flex gap-[7.5px] mt-[10px]">
-      {actualDocuments.slice(0, 3).map((doc, index) => (
-        <div
-          key={index}
-          className="flex-1 min-w-0 border-[1.5px] border-[#D1D0D0] rounded-lg bg-[#CCCCCC42] h-[98px] flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] p-1"
-        >
-          <img
-            src={doc.icon || getDocumentIconFromType(doc.documentType)} 
-            alt={doc.name}
-            className="w-6 h-6 mb-1 flex-shrink-0"
-          />
-          <span className="text-center px-1 text-[10px] truncate w-full">
-            {doc.name && doc.name.length > 15
-              ? `${doc.name.substring(0, 12)}...`
-              : doc.name}
-          </span>
+      {showLegalDocuments && actualDocuments.length > 0 && (
+        <div className="mt-[31.66px]">
+          <h2 className="text-[#333333] text-[14px] font-semibold">
+            Documentations
+          </h2>
+          <div className="flex gap-[7.5px] mt-[10px]">
+            {actualDocuments.slice(0, 3).map((doc, index) => (
+              <div
+                key={index}
+                className="flex-1 min-w-0 border-[1.5px] border-[#D1D0D0] rounded-lg bg-[#CCCCCC42] h-[98px] flex flex-col items-center justify-center cursor-pointer text-[#505050] font-medium text-[12px] p-1"
+              >
+                <img
+                  src={doc.icon || getDocumentIconFromType(doc.documentType)}
+                  alt={doc.name}
+                  className="w-6 h-6 mb-1 flex-shrink-0"
+                />
+                <span className="text-center px-1 text-[10px] truncate w-full">
+                  {doc.name && doc.name.length > 15
+                    ? `${doc.name.substring(0, 12)}...`
+                    : doc.name}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-)}
+      )}
       {/* Gallery Overlay */}
       {showGallery && (
         <div

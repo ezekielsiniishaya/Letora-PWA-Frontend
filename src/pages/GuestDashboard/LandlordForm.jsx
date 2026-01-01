@@ -18,7 +18,7 @@ export default function LandlordForm({ files, onFileChange, fieldErrors }) {
         >
           <input
             type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
+            accept=".pdf"
             className="hidden"
             onChange={(e) => onFileChange(e, "proof_of_ownership")}
           />
@@ -72,7 +72,7 @@ export default function LandlordForm({ files, onFileChange, fieldErrors }) {
         >
           <input
             type="file"
-            accept="image/*,.pdf"
+            accept="image/*,.jpg,.jpeg,.png,.webp,.gif"
             className="hidden"
             onChange={(e) => onFileChange(e, "utility_bill")}
           />

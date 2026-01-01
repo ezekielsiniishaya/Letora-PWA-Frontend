@@ -279,7 +279,7 @@ export const ApartmentOverview = ({
   };
 
   return (
-    <div className="text-[#39302A] mb-[24px] bg-white">
+    <div className="text-[#39302A] mb-[24px]">
       {/* Header Actions */}
       {showActions && (
         <div className="flex items-center mb-[20px] justify-between mx-[19px]">

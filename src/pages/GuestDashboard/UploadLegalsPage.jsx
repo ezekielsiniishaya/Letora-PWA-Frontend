@@ -27,7 +27,20 @@ export default function UploadLegalsPage() {
     []
   );
 
-  // 🔹 SIMPLIFIED: Reset and hydrate on every mount
+  // Helper function to map documentType back to field name
+  const getFieldFromDocumentType = (documentType) => {
+    const reverseMap = {
+      PROOF_OF_OWNERSHIP: "proof_of_ownership",
+      UTILITY_BILL: "utility_bill",
+      TENANCY_AGREEMENT: "tenancy_agreement",
+      AUTHORIZATION_DOCUMENT: "authorization_document",
+      PROFESSIONAL_LICENSE: "professional_license",
+      CONSENT_LETTER: "consent_letter",
+    };
+    return reverseMap[documentType] || documentType.toLowerCase();
+  };
+
+  // 🔹 FIXED: Reset and hydrate on every mount
   useEffect(() => {
     console.log("=== RESETTING AND HYDRATING ===");
     console.log("Apartment legalDocuments:", apartmentData.legalDocuments);
@@ -52,16 +65,18 @@ export default function UploadLegalsPage() {
         }
       }
 
-      // Set files
+      // Set files - FIXED: Use reverse mapping
       if (documents.length > 0) {
         const filesToSet = {};
         documents.forEach((doc) => {
-          const fieldName = doc.documentType.toLowerCase();
+          // Use reverse mapping to get the correct field name
+          const fieldName = getFieldFromDocumentType(doc.documentType);
           filesToSet[fieldName] = {
             name: doc.name,
             data: doc.data,
             type: doc.type || "application/pdf",
           };
+          console.log(`Mapping ${doc.documentType} to field: ${fieldName}`);
         });
         setFiles(filesToSet);
         console.log("Setting files from context:", filesToSet);
@@ -155,17 +170,18 @@ export default function UploadLegalsPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // FIXED: This is the only mapFieldToDocumentType function you need
   const mapFieldToDocumentType = (fieldName) => {
-    const fieldMap = {
-      proof_of_ownership: "PROOF_OF_OWNERSHIP",
-      utility_bill: "UTILITY_BILL",
-      tenancy_agreement: "TENANCY_AGREEMENT",
-      authorization_document: "AUTHORIZATION_DOCUMENT",
-      professional_license: "PROFESSIONAL_LICENSE",
-      consent_letter: "CONSENT_LETTER",
-    };
+    // Direct mapping - no default fallback to UTILITY_BILL
+    if (fieldName === "proof_of_ownership") return "PROOF_OF_OWNERSHIP";
+    if (fieldName === "utility_bill") return "UTILITY_BILL";
+    if (fieldName === "tenancy_agreement") return "TENANCY_AGREEMENT";
+    if (fieldName === "authorization_document") return "AUTHORIZATION_DOCUMENT";
+    if (fieldName === "professional_license") return "PROFESSIONAL_LICENSE";
+    if (fieldName === "consent_letter") return "CONSENT_LETTER";
 
-    return fieldMap[fieldName] || "UTILITY_BILL";
+    // If field doesn't match, convert to uppercase with underscores
+    return fieldName.toUpperCase().replace(/\s+/g, "_");
   };
 
   const handleSubmit = (e) => {
@@ -184,13 +200,17 @@ export default function UploadLegalsPage() {
       }
 
       // Prepare documents for context
-      const legalDocuments = Object.entries(files).map(([field, file]) => ({
-        documentType: mapFieldToDocumentType(field),
-        name: file.name,
-        type: file.type,
-        data: file.data,
-        // Remove role from individual documents - it's stored at the parent level
-      }));
+      const legalDocuments = Object.entries(files).map(([field, file]) => {
+        const docType = mapFieldToDocumentType(field);
+        console.log(`Mapping field "${field}" to documentType: "${docType}"`);
+        
+        return {
+          documentType: docType,
+          name: file.name,
+          type: file.type,
+          data: file.data,
+        };
+      });
 
       console.log("Saving to context:", {
         role: selectedRole.value,

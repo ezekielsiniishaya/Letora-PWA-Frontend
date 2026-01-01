@@ -102,34 +102,31 @@ export default function SignUpForm() {
     } catch (err) {
       console.error("Error registering user:", err);
 
-      // Enhanced error handling - check the actual API response structure
       const errorResponse = err.response?.data || {};
-      const errorMessage =
-        errorResponse.message?.toLowerCase() ||
-        errorResponse.error?.toLowerCase() ||
-        err.message?.toLowerCase() ||
-        "";
+      const errorMessage = errorResponse.error || errorResponse.message || "";
 
       console.log("Error response data:", errorResponse);
-      console.log("Error message:", errorMessage);
 
-      // Check for specific error patterns from your API
-      if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
-        setError("network");
-      } else if (
-        errorMessage.includes("exists") ||
-        errorMessage.includes("duplicate") ||
-        errorMessage.includes("already") ||
-        errorResponse.error?.toLowerCase().includes("exists") ||
-        errorResponse.error?.toLowerCase().includes("duplicate") ||
-        errorResponse.error?.toLowerCase().includes("already") ||
-        err.response?.status === 409 // Conflict status code for existing user
+      // Check for specific backend error messages
+      if (
+        errorMessage.toLowerCase().includes("network") ||
+        errorMessage.toLowerCase().includes("fetch")
       ) {
+        setError("network");
+      } else if (errorMessage.toLowerCase().includes("email")) {
         setError("email");
+      } else if (errorMessage.toLowerCase().includes("phone")) {
+        // Handle phone-related errors specifically
+        setError("phone");
+      } else if (
+        err.response?.status === 409 ||
+        errorMessage.toLowerCase().includes("already exists") ||
+        errorMessage.toLowerCase().includes("duplicate")
+      ) {
+        // Generic duplicate error - show backend message
+        setError(errorMessage || "User already exists");
       } else if (err.response?.status === 400) {
-        // Handle validation errors from server
         if (errorResponse.errors) {
-          // Map server validation errors to field errors
           const serverFieldErrors = {};
           Object.keys(errorResponse.errors).forEach((field) => {
             serverFieldErrors[field] = errorResponse.errors[field][0];
@@ -388,7 +385,16 @@ export default function SignUpForm() {
               />
             </div>
           )}
-
+          {error === "phone" && (
+            <div className="mt-4 pb-[62px]">
+              <Alert
+                type="error"
+                message="Phone number already exists."
+                onDismiss={() => setError("")}
+                timeout={5000}
+              />
+            </div>
+          )}
           <div className="pt-[60px]">
             <Button
               type="submit"
