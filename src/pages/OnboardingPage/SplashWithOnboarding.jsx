@@ -11,6 +11,7 @@ const onboardingSlides = [
   {
     bg: "/images/background/onboard-bg-1.jpg",
     statusBarColor: "#B3B6BC",
+    statusBarStyle: Style.Light,
     title: "Welcome to Letora",
     description:
       "Hosting made easy. Take full control of your shortlet business directly from your app",
@@ -18,6 +19,7 @@ const onboardingSlides = [
   {
     bg: "/images/background/onboard-bg-2.jpg",
     statusBarColor: "#000000",
+    statusBarStyle: Style.Dark,
     title: "Turn your Space into Steady Income",
     description:
       "List your apartment on Letora and start earning from verified short-stay guests",
@@ -39,8 +41,29 @@ export default function SplashWithOnboarding() {
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(null);
   const [hasRememberMe, setHasRememberMe] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(null);
-  const [navigationTarget, setNavigationTarget] = useState(null); // Track where to navigate after splash
+  const [navigationTarget, setNavigationTarget] = useState(null);
 
+  // At the top of your component, add this useEffect FIRST
+  useEffect(() => {
+    // Ensure body stays purple until we change it
+    document.body.style.backgroundColor = "#A20BA2";
+    document.documentElement.style.backgroundColor = "#A20BA2";
+
+    const initializeStatusBar = async () => {
+      if (window.Capacitor || window.capacitor) {
+        try {
+          await StatusBar.setBackgroundColor({ color: "#A20BA2" });
+          await StatusBar.setStyle({ style: Style.Light });
+          await StatusBar.setOverlaysWebView({ overlay: false });
+          console.log("✅ React: Status bar confirmed purple");
+        } catch (error) {
+          console.error("Error initializing status bar:", error);
+        }
+      }
+    };
+
+    initializeStatusBar();
+  }, []); // Run once on mount/
   // Load all user status data from persistent storage
   useEffect(() => {
     const loadUserStatus = async () => {
@@ -86,7 +109,7 @@ export default function SplashWithOnboarding() {
         hasSeenOnboarding === null ||
         hasRememberMe === null ||
         isLoggedIn === null ||
-        navigationTarget !== null // Already determined
+        navigationTarget !== null
       )
         return;
 
@@ -102,7 +125,6 @@ export default function SplashWithOnboarding() {
         try {
           console.log("✅ Checking for verified host redirect...");
 
-          // Get host verification status from Preferences (stored by UserProvider)
           const verificationResult = await Preferences.get({
             key: "hostVerificationStatus",
           });
@@ -112,7 +134,6 @@ export default function SplashWithOnboarding() {
             verificationResult.value
           );
 
-          // Check if user is a VERIFIED HOST
           const isVerifiedHost = verificationResult.value === "verified";
 
           if (isVerifiedHost) {
@@ -128,7 +149,6 @@ export default function SplashWithOnboarding() {
           }
         } catch (error) {
           console.error("Error checking verification status:", error);
-          // Fallback to guest homepage
           setNavigationTarget("/guest-homepage");
         }
       }
@@ -142,7 +162,7 @@ export default function SplashWithOnboarding() {
       // 3. User hasn't seen onboarding - will show onboarding after splash
       else {
         console.log("👋 First time user - will show onboarding after splash");
-        setNavigationTarget("onboarding"); // Special value for showing onboarding
+        setNavigationTarget("onboarding");
       }
     };
 
@@ -161,7 +181,6 @@ export default function SplashWithOnboarding() {
 
     const splashTimer = setTimeout(() => {
       if (navigationTarget === "onboarding") {
-        // Show onboarding flow after splash
         setCurrentPhase("transitioning");
         setSplashOpacity(0);
 
@@ -173,7 +192,6 @@ export default function SplashWithOnboarding() {
           setCurrentPhase("onboarding");
         }, 1200);
       } else {
-        // Navigate directly to target page
         console.log("⏰ Splash complete, navigating to:", navigationTarget);
         if (navigationTarget === "/host-homepage") {
           setCurrentPhase("navigatingToHostHome");
@@ -185,7 +203,7 @@ export default function SplashWithOnboarding() {
 
         navigate(navigationTarget, { replace: true });
       }
-    }, 3000); // 3-second splash for EVERYONE
+    }, 3000);
 
     return () => clearTimeout(splashTimer);
   }, [navigationTarget, navigate]);
@@ -205,43 +223,31 @@ export default function SplashWithOnboarding() {
       navigate(navigateTo, { replace: true });
     } catch (error) {
       console.error("Error marking onboarding as seen:", error);
-      // Still navigate even if there's an error
       navigate(navigateTo, { replace: true });
     }
   };
 
   // When user signs in from onboarding
   const handleSignIn = async () => {
-    console.log("🔐 User signing in from onboarding - handleSignIn called");
+    console.log("🔐 User signing in from onboarding");
 
     try {
-      // Mark onboarding as seen
-      console.log("Setting hasSeenOnboarding to true");
       await Preferences.set({
         key: HAS_SEEN_ONBOARDING_KEY,
         value: "true",
       });
-
-      // Update state
       setHasSeenOnboarding(true);
-      console.log("hasSeenOnboarding state updated");
-
-      // Navigate to sign in page
-      console.log("Navigating to /sign-in");
       navigate("/sign-in", { replace: true });
     } catch (error) {
       console.error("Error in handleSignIn:", error);
-      // Still navigate even if there's an error
       navigate("/sign-in", { replace: true });
     }
   };
 
-  // When user taps "Get Started" on any slide
+  // When user taps "Get Started"
   const handleGetStarted = async () => {
     console.log("🚀 Get Started clicked on slide", activeSlideIndex);
-
     try {
-      console.log("Calling completeOnboarding with /choose-type");
       await completeOnboarding("/choose-type");
     } catch (error) {
       console.error("Error in handleGetStarted:", error);
@@ -264,12 +270,38 @@ export default function SplashWithOnboarding() {
     }
   }, [currentPhase, activeSlideIndex, setBackgroundColor]);
 
-  // Status bar style
+  // Status bar style and background color (Secondary update)
   useEffect(() => {
-    if (window.Capacitor || window.capacitor) {
-      StatusBar.setStyle({ style: Style.Dark });
-    }
-  }, []);
+    const updateStatusBar = async () => {
+      if (window.Capacitor || window.capacitor) {
+        if (
+          currentPhase === "splash" ||
+          currentPhase === "checking" ||
+          currentPhase === "navigatingToHostHome" ||
+          currentPhase === "navigatingToGuestHome" ||
+          currentPhase === "navigatingToChooseType" ||
+          (currentPhase === "transitioning" && onboardingOpacity < 50)
+        ) {
+          // This will now just confirm the purple color (already set on mount)
+          await StatusBar.setBackgroundColor({ color: "#A20BA2" });
+          await StatusBar.setStyle({ style: Style.Light });
+        } else if (
+          currentPhase === "onboarding" ||
+          (currentPhase === "transitioning" && onboardingOpacity >= 50)
+        ) {
+          const slideColor = onboardingSlides[activeSlideIndex].statusBarColor;
+          await StatusBar.setBackgroundColor({ color: slideColor });
+
+          const isDarkBackground = slideColor === "#000000";
+          await StatusBar.setStyle({
+            style: isDarkBackground ? Style.Dark : Style.Light,
+          });
+        }
+      }
+    };
+
+    updateStatusBar();
+  }, [currentPhase, activeSlideIndex, onboardingOpacity]);
 
   // Don't render anything while checking or navigating
   if (
@@ -299,7 +331,7 @@ export default function SplashWithOnboarding() {
 
   return (
     <div className="full-screen-container">
-      {/* SPLASH SCREEN LAYER - Show for everyone during splash phase */}
+      {/* SPLASH SCREEN LAYER */}
       {(currentPhase === "splash" || currentPhase === "transitioning") && (
         <div
           className="splash-screen"
@@ -321,58 +353,59 @@ export default function SplashWithOnboarding() {
                 e.target.style.display = "none";
               }}
             />
-            <h1 className="text-[43.04px] font-semibold tracking-tight">
+            <h1 className="text-[43.04px] font-semibold tracking-tight text-white">
               Letora
             </h1>
           </div>
-          <p className="mt-4 text-[14px] font-medium opacity-90 text-center max-w-xs">
+          <p className="mt-4 text-[14px] font-medium opacity-90 text-center max-w-xs text-white">
             Enjoy the Mi Casa Su Casa Experience
           </p>
         </div>
       )}
 
-      {/* ONBOARDING CAROUSEL LAYER - Only shown when hasn't seen onboarding */}
-      {currentPhase === "onboarding" && !hasSeenOnboarding && (
-        <div
-          className="onboarding-container"
-          style={{
-            opacity: onboardingOpacity / 100,
-            transition: "opacity 1200ms cubic-bezier(0.4, 0.0, 0.2, 1)",
-            pointerEvents: "auto",
-          }}
-        >
-          <Swiper
-            spaceBetween={0}
-            slidesPerView={1}
-            onSlideChange={(swiper) => {
-              setActiveSlideIndex(swiper.activeIndex);
-              swiper.allowSlidePrev = swiper.activeIndex !== 0;
-              swiper.allowSlideNext =
-                swiper.activeIndex !== swiper.slides.length - 1;
+      {/* ONBOARDING CAROUSEL LAYER */}
+      {(currentPhase === "transitioning" || currentPhase === "onboarding") &&
+        !hasSeenOnboarding && (
+          <div
+            className="onboarding-container"
+            style={{
+              opacity: onboardingOpacity / 100,
+              transition: "opacity 1200ms cubic-bezier(0.4, 0.0, 0.2, 1)",
+              pointerEvents: "auto",
             }}
-            allowTouchMove={true}
-            loop={false}
-            speed={400}
-            resistance={false}
-            resistanceRatio={0}
-            className="h-full"
           >
-            {onboardingSlides.map((slide, index) => (
-              <SwiperSlide key={index} className="h-full">
-                <OnboardingLayout
-                  bgImage={slide.bg}
-                  title={slide.title}
-                  description={slide.description}
-                  currentIndex={activeSlideIndex}
-                  totalSlides={onboardingSlides.length}
-                  onGetStarted={handleGetStarted}
-                  onSignIn={handleSignIn} // Pass sign in handler
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-      )}
+            <Swiper
+              spaceBetween={0}
+              slidesPerView={1}
+              onSlideChange={(swiper) => {
+                setActiveSlideIndex(swiper.activeIndex);
+                swiper.allowSlidePrev = swiper.activeIndex !== 0;
+                swiper.allowSlideNext =
+                  swiper.activeIndex !== swiper.slides.length - 1;
+              }}
+              allowTouchMove={true}
+              loop={false}
+              speed={400}
+              resistance={false}
+              resistanceRatio={0}
+              className="h-full"
+            >
+              {onboardingSlides.map((slide, index) => (
+                <SwiperSlide key={index} className="h-full">
+                  <OnboardingLayout
+                    bgImage={slide.bg}
+                    title={slide.title}
+                    description={slide.description}
+                    currentIndex={activeSlideIndex}
+                    totalSlides={onboardingSlides.length}
+                    onGetStarted={handleGetStarted}
+                    onSignIn={handleSignIn}
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        )}
     </div>
   );
 }

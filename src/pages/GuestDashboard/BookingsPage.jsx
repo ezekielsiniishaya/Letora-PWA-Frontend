@@ -216,12 +216,12 @@ export default function BookingsPage() {
       </header>
 
       {/* Filter buttons */}
-      <div className="flex bg-white justify-around rounded-[5px] mx-4 p-1">
+      <div className="flex bg-white rounded-[5px] mx-4 p-[3px] gap-[5px]">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 rounded-[4px] h-[25px] w-[120px] text-[12px] font-medium ${
+            className={`flex-1 rounded-[4px] h-[25px] text-[12px] font-medium  ${
               activeTab === tab.key
                 ? "bg-[#A20BA2] text-white"
                 : "bg-[#E9E9E9] text-[#666666]"

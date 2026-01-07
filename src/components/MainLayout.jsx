@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useBackgroundColor } from "../contexts/BackgroundColorContext.jsx";
-// --- add at top ---
 import { Preferences } from "@capacitor/preferences";
+import { updateFcmToken } from "../services/userApi.js";
 
 function MainLayout({ children }) {
   const { backgroundColor } = useBackgroundColor();
@@ -42,6 +42,9 @@ function MainLayout({ children }) {
           const { PushNotifications } = await import(
             "@capacitor/push-notifications"
           );
+
+          // Notification channel is now created in native Android code (MainActivity.java)
+          console.log("✅ Notification channel handled by native Android");
 
           // First, let's check current permissions
           const currentPermission = await PushNotifications.checkPermissions();
@@ -85,13 +88,24 @@ function MainLayout({ children }) {
     const setupPushListeners = (PushNotifications) => {
       // Listen for registration
       PushNotifications.addListener("registration", async (token) => {
-        console.log("Push registration success. Token:", token.value);
+        console.log("✅ Push registration success. Token:", token.value);
+        console.log("📋 COPY THIS TOKEN FOR TESTING:", token.value);
+
+        // Save token to localStorage for testing
         localStorage.setItem("fcm_token", token.value);
+
+        // Send token to your backend
+        try {
+          await updateFcmToken(token.value);
+          console.log("✅ FCM token synced to backend");
+        } catch (error) {
+          console.error("❌ Failed to sync FCM token to backend:", error);
+        }
       });
 
       // Listen for registration errors
       PushNotifications.addListener("registrationError", (error) => {
-        console.error("Push registration error:", error);
+        console.error("❌ Push registration error:", error);
       });
 
       // Handle notifications when app is OPEN
@@ -99,8 +113,8 @@ function MainLayout({ children }) {
         "pushNotificationReceived",
         (notification) => {
           console.log(
-            "Push received (foreground):",
-            JSON.stringify(notification)
+            "📬 Push received (foreground):",
+            JSON.stringify(notification, null, 2)
           );
         }
       );
@@ -109,7 +123,10 @@ function MainLayout({ children }) {
       PushNotifications.addListener(
         "pushNotificationActionPerformed",
         (notification) => {
-          console.log("Push action performed:", JSON.stringify(notification));
+          console.log(
+            "👆 Push action performed:",
+            JSON.stringify(notification, null, 2)
+          );
         }
       );
     };
@@ -147,7 +164,7 @@ function MainLayout({ children }) {
     }
   }, [backgroundColor]);
 
-  return <div>{children}</div>;
+  return <div id="main-scroll">{children}</div>;
 }
 
 export default MainLayout;

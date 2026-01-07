@@ -111,6 +111,24 @@ export default function Dashboard() {
   };
 
   const unreadCount = getUnreadNotificationsCount();
+  useEffect(() => {
+    const handleAppRefresh = async () => {
+      try {
+        if (isAuthenticated() && !userLoading) {
+          await refreshUser();
+          console.log("Dashboard refreshed via pull-down");
+        }
+      } catch (err) {
+        console.error("Dashboard refresh failed:", err);
+      }
+    };
+
+    window.addEventListener("app-refresh", handleAppRefresh);
+
+    return () => {
+      window.removeEventListener("app-refresh", handleAppRefresh);
+    };
+  }, [isAuthenticated, userLoading, refreshUser]);
 
   // Update bookings whenever user data changes
   useEffect(() => {
@@ -167,6 +185,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     const refreshUserData = async () => {
+      const justLoggedIn = sessionStorage.getItem("justLoggedIn");
+
+      if (justLoggedIn === "true") {
+        sessionStorage.removeItem("justLoggedIn");
+        return; // 🚫 skip refresh
+      }
+
       if (isAuthenticated() && !userLoading) {
         try {
           await refreshUser();
@@ -179,7 +204,8 @@ export default function Dashboard() {
 
     refreshUserData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array - run only once
+  }, []);
+
   // Show loading state for user data
   if (userLoading) {
     return (

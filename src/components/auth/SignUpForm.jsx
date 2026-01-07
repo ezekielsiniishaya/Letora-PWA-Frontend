@@ -167,7 +167,7 @@ export default function SignUpForm() {
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              placeholder="As seen in your documents"
+              placeholder="Enter first name as seen on your BVN"
               type="text"
               className={`border mt-[8px] w-full h-[48px] rounded-md px-4 py-2 text-sm outline-none
                 ${
@@ -193,7 +193,7 @@ export default function SignUpForm() {
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
-              placeholder="As seen in your documents"
+              placeholder="Enter last name as seen on your BVN"
               type="text"
               className={`border mt-[8px] w-full h-[48px] rounded-md px-4 py-2 text-sm outline-none
                 ${

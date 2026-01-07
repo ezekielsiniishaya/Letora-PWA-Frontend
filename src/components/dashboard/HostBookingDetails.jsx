@@ -392,7 +392,7 @@ export default function HostBookingDetails() {
             {/* Status + Price Per Night */}
             <div className="flex flex-col items-end">
               <span
-                className={`text-[10px] px-3 rounded-full font-medium mb-[32px] text-center h-[16px] ${currentStatus.bg} ${currentStatus.text}`}
+                className={`flex items-center justify-center text-[10px] px-3 rounded-full font-medium h-[16px] ${currentStatus.bg} ${currentStatus.text}`}
               >
                 {currentStatus.label}
               </span>

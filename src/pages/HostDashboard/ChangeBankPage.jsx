@@ -293,8 +293,8 @@ export default function BankAccount() {
         <h2 className="text-[24px] font-medium text-[#0D1321]">Bank Account</h2>
         <p className="text-[14px] text-[#666666] mt-[4px]">
           {user?.hostProfile
-            ? "Update your bank account details"
-            : "Yeah, We need to pay you 😏"}
+            ? "Provide account linked to your BVN"
+            : "Provide account linked to your BVN"}
         </p>
 
         {/* ✅ Alert display - for backend responses and update restrictions */}

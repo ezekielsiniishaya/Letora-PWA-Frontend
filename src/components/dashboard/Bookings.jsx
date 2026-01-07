@@ -398,6 +398,16 @@ export default function MyBooking({
 
   return (
     <div className="bg-white rounded-[5px] w-full h-[158px] pt-[10px] px-[10px] relative">
+      {status !== "cancelled" && currentStatus && (
+        <span
+          className={`absolute top-[10px] right-[5px]
+      text-[10px] px-2 py-0.5 font-medium rounded-full whitespace-nowrap
+      ${currentStatus.bg} ${currentStatus.text}`}
+        >
+          {currentStatus.label}
+        </span>
+      )}
+
       {/* Alert Container */}
       {alert.show && !onShowAlert && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
@@ -429,13 +439,6 @@ export default function MyBooking({
             <h4 className="font-medium text-[12px] truncate w-[160px]">
               {getTitle(booking)}
             </h4>
-            {status !== "cancelled" && currentStatus && (
-              <span
-                className={`text-[10px] px-2 py-0.5 font-medium rounded-full whitespace-nowrap ${currentStatus.bg} ${currentStatus.text}`}
-              >
-                {currentStatus.label}
-              </span>
-            )}
           </div>
 
           <div className="flex items-center gap-1 mt-[2px] mb-[5px]">

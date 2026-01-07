@@ -185,6 +185,8 @@ const UserProvider = ({ children }) => {
       setError(null);
 
       await setToken(token);
+      sessionStorage.setItem("justLoggedIn", "true");
+
       console.log("✅ Token stored as 'token':", token ? "Yes" : "No");
 
       try {

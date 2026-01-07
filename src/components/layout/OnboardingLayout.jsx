@@ -103,6 +103,7 @@ const OnboardingLayout = ({
                 onClick={handleSignIn}
                 className="text-[#F711F7] cursor-pointer hover:underline font-semibold bg-transparent border-none p-0"
               >
+                {" "}
                 Sign in
               </button>
             </p>

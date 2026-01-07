@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import ApartmentCreationProvider from "./contexts/ApartmentCreationProvider";
 import HostProfileProvider from "./contexts/HostProfileProvider";
 import ApartmentListingProvider from "./contexts/ApartmentListingProvider";
@@ -76,9 +81,80 @@ import ApartmentAvailability from "./components/apartment/AvailabilityResponsePa
 import { BackgroundColorProvider } from "./contexts/BackgroundColorProvider";
 import MainLayout from "./components/MainLayout";
 import { LocationProvider } from "./contexts/LocationProvider";
-import { LocateIcon } from "lucide-react";
-
+import {
+  useNavigate,
+  UNSAFE_NavigationContext as NavigationContext,
+} from "react-router-dom";
+import { App as CapacitorApp } from "@capacitor/app";
+import PullToRefresh from "./components/PullToRefresh";
 function App() {
+  // Global back button handler component
+  function GlobalBackButtonHandler() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+      const handleBackButton = async () => {
+        // Check if we can go back in history
+        if (window.history.length > 1) {
+          navigate(-1); // Go back one page
+        } else {
+          // On root page - show confirmation before exit
+          const shouldExit = window.confirm("Do you want to exit the app?");
+          if (shouldExit) {
+            await CapacitorApp.exitApp();
+          }
+        }
+      };
+
+      const backButtonListener = CapacitorApp.addListener(
+        "backButton",
+        handleBackButton
+      );
+
+      return () => {
+        backButtonListener.remove();
+      };
+    }, [navigate]);
+
+    return null; // This component doesn't render anything
+  }
+  function RefreshController() {
+    const location = useLocation();
+
+    const refreshableRoutes = [
+      "/host-dashboard",
+      "/guest-homepage",
+      "/apartments",
+      "/bookings",
+      "/favorites",
+      "/notifications",
+    ];
+
+    const disabledSubRoutes = [
+      "/booking-",
+      "/media-upload",
+      "/identity",
+      "/listing-",
+    ];
+
+    const enabled =
+      refreshableRoutes.some((r) => location.pathname.startsWith(r)) &&
+      !disabledSubRoutes.some((r) => location.pathname.includes(r));
+
+    const handleRefresh = () => {
+      // Trigger app-level refresh event
+      window.dispatchEvent(new Event("app-refresh"));
+    };
+
+    return (
+      <PullToRefresh
+        enabled={enabled}
+        onRefresh={handleRefresh}
+        containerId="main-scroll"
+      />
+    );
+  }
+
   useEffect(() => {
     const configureStatusBar = async () => {
       // Make sure we are in a native environment
@@ -107,6 +183,8 @@ function App() {
                     <GuestDocumentProvider>
                       <BookingProvider>
                         <MainLayout>
+                          <GlobalBackButtonHandler />
+                          <RefreshController />{" "}
                           <Routes>
                             {/* ===== PUBLIC ROUTES ===== */}
                             <Route

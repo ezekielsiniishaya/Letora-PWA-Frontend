@@ -15,7 +15,9 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Instrument Sans", sans-serif;
-  background: #f9f9f9;
+  /* Prevent content from going under status bar */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Root element */
@@ -25,7 +27,7 @@ body {
   min-height: 100dvh;
 }
 
-/* Full screen container */
+/* Full screen container - UPDATED with safe area */
 .full-screen-container {
   position: fixed;
   top: 0;
@@ -36,11 +38,14 @@ body {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  /* Add padding for safe areas */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Splash screen - extends to edges */
+/* Splash screen - UPDATED to respect safe area */
 .splash-screen {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -51,17 +56,23 @@ body {
   justify-content: center;
   background: #a20ba2;
   color: white;
-  z-index: 20;
+  z-index: 1000;
+  /* Content area should respect safe area, but background extends to edges */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Onboarding container - extends to edges */
+/* Onboarding container - UPDATED with safe area */
 .onboarding-container {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 10;
+  z-index: 999;
+  /* Respect safe areas */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Custom range slider */
@@ -101,4 +112,17 @@ body {
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
 }

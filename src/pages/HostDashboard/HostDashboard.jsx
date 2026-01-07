@@ -300,12 +300,12 @@ export default function HostDashboardPage() {
       </div>
 
       {/* Filter buttons */}
-      <div className="flex bg-white justify-around rounded-[5px] mx-4 p-1">
+      <div className="flex bg-white rounded-[5px] mx-4 p-[3px] gap-[5px]">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`rounded-[4px] h-[25px] w-[88px] text-[12px] text-center font-medium whitespace-nowrap ${
+            className={`flex-1 rounded-[4px] h-[25px] text-[12px] text-center font-medium whitespace-nowrap ${
               activeTab === tab.key
                 ? "bg-[#A20BA2] text-white"
                 : "bg-[#E9E9E9] text-[#666666]"

@@ -407,8 +407,9 @@ export default function BookingDetails({ role = "guest" }) {
         </div>
         {/* Info card */}
         <div className="pt-[37px] pb-[15px] px-2">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
+          <div className="grid grid-cols-[1fr_auto] gap-x-3">
+            {/* ROW 1 — NAME + STATUS */}
+            <div>
               <h2 className="text-[12px] font-medium text-[#333333]">
                 {getDisplayName(booking)}
               </h2>
@@ -423,23 +424,24 @@ export default function BookingDetails({ role = "guest" }) {
                   <span>{getTitle(booking)}</span>
                 </div>
               </div>
-
-              <p className="text-[12px] text-[#333333] mt-1">
-                {getLocation(booking)}
-              </p>
             </div>
 
-            {/* Status + Price */}
-            <div className="flex flex-col items-end">
+            <div className="flex items-start justify-end">
               <span
-                className={`text-[10px] px-3 rounded-full font-medium mb-[32px] text-center mt-1  h-[16px] ${currentStatus.bg} ${currentStatus.text}`}
+                className={`flex items-center justify-center text-[10px] px-3 min-h-[16px] rounded-full font-medium ${currentStatus.bg} ${currentStatus.text}`}
               >
                 {currentStatus.label}
               </span>
-              <p className="text-[14px] font-semibold">
-                {formatCurrency(booking.apartment?.price || 0)}/Night
-              </p>
             </div>
+
+            {/* ROW 2 — LOCATION + PRICE */}
+            <p className="text-[12px] text-[#333333] mt-1">
+              {getLocation(booking)}
+            </p>
+
+            <p className="text-[14px] font-semibold whitespace-nowrap self-end">
+              {formatCurrency(booking.apartment?.price || 0)}/Night
+            </p>
           </div>
         </div>
         {/* Booking Details */}

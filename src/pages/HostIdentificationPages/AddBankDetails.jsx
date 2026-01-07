@@ -364,7 +364,7 @@ export default function BankAccount() {
       <div className="w-full max-w-sm mt-[26px]">
         <h2 className="text-[24px] font-medium text-[#0D1321]">Bank Account</h2>
         <p className="text-[14px] text-[#666666] mt-[4px]">
-          Yeah, We need to pay you 😏
+          Provide account linked to your BVN
         </p>
 
         {/* ✅ Alert display - ONLY for backend responses */}

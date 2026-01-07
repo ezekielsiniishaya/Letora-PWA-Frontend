@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background-color: #a20ba2">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/title-icon.svg" />
@@ -11,22 +11,81 @@
     />
 
     <!-- Status bar styling for Android -->
-    <meta name="theme-color" />
-
-    <!-- Prevent zoom on input focus -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="theme-color" content="#A20BA2" id="theme-color" />
 
     <link
       href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
     <title>Letora</title>
+
+    <!-- Inline CSS to set background IMMEDIATELY -->
+    <style>
+      html,
+      body,
+      #root {
+        background-color: #a20ba2 !important;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+
+    <script>
+      // CRITICAL: Execute synchronously, before page renders
+      (function () {
+        "use strict";
+
+        // Set backgrounds INSTANTLY
+        document.documentElement.style.backgroundColor = "#A20BA2";
+        if (document.body) {
+          document.body.style.backgroundColor = "#A20BA2";
+        }
+
+        // Function to set status bar
+        function setStatusBar() {
+          try {
+            if (window.Capacitor?.Plugins?.StatusBar) {
+              window.Capacitor.Plugins.StatusBar.setBackgroundColor({
+                color: "#A20BA2",
+              });
+              window.Capacitor.Plugins.StatusBar.setStyle({ style: "LIGHT" });
+              window.Capacitor.Plugins.StatusBar.setOverlaysWebView({
+                overlay: false,
+              });
+              console.log("✅ Status bar set to purple");
+              return true;
+            }
+          } catch (e) {
+            console.warn("Status bar not ready:", e);
+          }
+          return false;
+        }
+
+        // Try immediately
+        setStatusBar();
+
+        // Keep trying until Capacitor is ready
+        var attempts = 0;
+        var checkInterval = setInterval(function () {
+          if (setStatusBar() || attempts++ > 30) {
+            clearInterval(checkInterval);
+          }
+        }, 50);
+
+        // Also try on these events
+        document.addEventListener("DOMContentLoaded", function () {
+          document.body.style.backgroundColor = "#A20BA2";
+          setStatusBar();
+        });
+
+        document.addEventListener("deviceready", setStatusBar);
+        window.addEventListener("load", setStatusBar);
+      })();
+    </script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="background-color: #a20ba2">
+    <div id="root" style="background-color: #a20ba2"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
