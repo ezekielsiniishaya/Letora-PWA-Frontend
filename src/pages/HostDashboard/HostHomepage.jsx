@@ -11,7 +11,6 @@ import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useUser } from "../../hooks/useUser";
 import CurrentLocationDropdown from "../../components/dashboard/SelectState";
 import { useNavigate } from "react-router-dom";
-
 export default function Dashboard() {
   const navigate = useNavigate();
 
@@ -66,12 +65,12 @@ export default function Dashboard() {
   const {
     user,
     loading: userLoading,
-    isAuthenticated,
     getUserBookings,
     getUnreadNotificationsCount,
     refreshUser,
   } = useUser();
-
+  // Authentication check - MUST BE AFTER ALL HOOKS
+  const isAuthenticated = !!user;
   const handleLocationChange = (newLocation) => {
     console.log("📍 Location changed to:", newLocation);
     window.location.reload();
@@ -114,9 +113,8 @@ export default function Dashboard() {
   useEffect(() => {
     const handleAppRefresh = async () => {
       try {
-        if (isAuthenticated() && !userLoading) {
+        if (isAuthenticated && !userLoading) {
           await refreshUser();
-          console.log("Dashboard refreshed via pull-down");
         }
       } catch (err) {
         console.error("Dashboard refresh failed:", err);
@@ -192,7 +190,7 @@ export default function Dashboard() {
         return; // 🚫 skip refresh
       }
 
-      if (isAuthenticated() && !userLoading) {
+      if (isAuthenticated && !userLoading) {
         try {
           await refreshUser();
           console.log("User data refreshed successfully");
@@ -206,6 +204,7 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ======== MOVE THIS DOWN HERE ========
   // Show loading state for user data
   if (userLoading) {
     return (
@@ -215,15 +214,10 @@ export default function Dashboard() {
     );
   }
 
-  // If user is not authenticated, show login prompt
   if (!isAuthenticated) {
-    return (
-      <div className="w-full min-h-screen bg-[#F9F9F9] flex items-center justify-center">
-        <div>Please login to view dashboard</div>
-      </div>
-    );
+    navigate("/login");
+    return null;
   }
-
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] overflow-x-hidden pb-[80px]">
       {/* Header */}

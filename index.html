@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="background-color: #a20ba2">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/title-icon.svg" />
@@ -25,7 +25,6 @@
       html,
       body,
       #root {
-        background-color: #a20ba2 !important;
         margin: 0;
         padding: 0;
       }
@@ -35,13 +34,6 @@
       // CRITICAL: Execute synchronously, before page renders
       (function () {
         "use strict";
-
-        // Set backgrounds INSTANTLY
-        document.documentElement.style.backgroundColor = "#A20BA2";
-        if (document.body) {
-          document.body.style.backgroundColor = "#A20BA2";
-        }
-
         // Function to set status bar
         function setStatusBar() {
           try {
@@ -73,19 +65,13 @@
           }
         }, 50);
 
-        // Also try on these events
-        document.addEventListener("DOMContentLoaded", function () {
-          document.body.style.backgroundColor = "#A20BA2";
-          setStatusBar();
-        });
-
         document.addEventListener("deviceready", setStatusBar);
         window.addEventListener("load", setStatusBar);
       })();
     </script>
   </head>
-  <body style="background-color: #a20ba2">
-    <div id="root" style="background-color: #a20ba2"></div>
+  <body>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

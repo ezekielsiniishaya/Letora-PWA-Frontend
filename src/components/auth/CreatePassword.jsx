@@ -7,6 +7,10 @@ import ShowSuccess from "../ShowSuccess";
 import Alert from "../utils/Alerts.jsx";
 import { setPasswordAPI } from "../../services/authApi";
 import { useUser } from "../../hooks/useUser";
+import { Preferences } from "@capacitor/preferences";
+
+const REMEMBER_ME_KEY = "rememberMe";
+const REMEMBERED_EMAIL_KEY = "rememberedEmail";
 
 export default function CreatePassword() {
   const [password, setPassword] = useState("");
@@ -28,16 +32,19 @@ export default function CreatePassword() {
 
   // Get user role ONLY from navigation state
   const [userRole, setUserRole] = useState("");
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-    // Get user role only from navigation state
+    // Get user role and email from navigation state
     if (location.state?.role) {
       console.log("User role from navigation state:", location.state.role);
       setUserRole(location.state.role);
-    } else {
-      console.log("No role found in navigation state");
-      // Optional: Handle case where no role is provided
-      // You might want to navigate back or show an error
+    }
+
+    // Get email from navigation state if available
+    if (location.state?.email) {
+      console.log("User email from navigation state:", location.state.email);
+      setUserEmail(location.state.email);
     }
   }, [location.state]);
 
@@ -111,10 +118,19 @@ export default function CreatePassword() {
       // Check what we actually received
       if (result?.user && result?.accessToken) {
         console.log("✅ Logging in user automatically");
-        login(result.user, result.accessToken);
+        await login(result.user, result.accessToken);
 
-        // ✅ Store the token for authenticated requests
-        localStorage.setItem("token", result.accessToken);
+        // ✅ Apply Remember Me pattern after successful signup
+        // Since users just created an account, we can ask them if they want
+        // to stay logged in, but for now let's implement the same pattern
+        // We can check if they have email available and apply similar logic
+        if (userEmail) {
+          // You might want to add a "Remember me" checkbox in the signup flow too
+          // For now, we'll use the same keys but you can customize this
+          // Example: await Preferences.set({ key: REMEMBER_ME_KEY, value: "true" });
+          // Example: await Preferences.set({ key: REMEMBERED_EMAIL_KEY, value: userEmail });
+        }
+
         setIsSuccessOpen(true);
       } else {
         console.log("❌ No user data received from setPasswordAPI");

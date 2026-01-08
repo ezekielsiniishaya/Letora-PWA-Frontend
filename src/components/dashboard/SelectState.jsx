@@ -101,15 +101,17 @@ export default function CurrentLocationDropdown({
     >
       {/* Location Trigger Button */}
       <div
-        className={`flex items-center justify-center ${triggerBgColor} w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10 cursor-pointer hover:bg-[#2A2A2A] transition-colors px-[12px] py-[5px]`}
+        className={`flex justify-center ${triggerBgColor} w-[117px] rounded-[40px] h-[25px] mt-[-60px] mb-[40px] mx-auto relative z-10 cursor-pointer hover:bg-[#2A2A2A] transition-colors py-[5px] px-[12px]`}
         onClick={() => setOpen(!open)}
       >
         <img
           src="/icons/location-white.svg"
           alt="Location"
-          className="w-[9px] h-[12.5px] mr-[7px]"
+          className="w-[9px] h-[13.5px]"
         />
-        <span className="text-[#FFFFFF] text-[11px]">{displayText}</span>
+        <span className="text-[#FFFFFF] text-[11px] ml-[7px] leading-none align-middle">
+          {displayText}
+        </span>
       </div>
       {/* Dropdown Menu */}
       {open && (

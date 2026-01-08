@@ -436,7 +436,7 @@ export default function MyBooking({
         {/* Apartment Info */}
         <div className="mt-1 ml-1 text-[#333333] flex flex-col">
           <div className="flex items-center gap-2">
-            <h4 className="font-medium text-[12px] truncate w-[160px]">
+            <h4 className="font-medium text-[12px] truncate w-[140px]">
               {getTitle(booking)}
             </h4>
           </div>

@@ -1,5 +1,5 @@
-import { useState, useContext } from "react";
-import { Link } from "react-router-dom";
+import { useState, useContext, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import ApartmentSlider from "../../components/dashboard/ApartmentSlider";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
 import ShowSuccess from "../../components/ShowSuccess";
@@ -14,6 +14,7 @@ import { LocationContext } from "../../contexts/LocationContext";
 
 export default function Dashboard() {
   const [showSuccess, setShowSuccess] = useState(false);
+  const navigate = useNavigate();
 
   // Get selectedLocation from context
   const { setSelectedLocation } = useContext(LocationContext);
@@ -59,6 +60,17 @@ export default function Dashboard() {
     // Refresh apartments with new location
     refreshApartments(state, town);
   };
+  const shouldRedirectToSignin =
+    !userLoading &&
+    (!isAuthenticated ||
+      !user ||
+      userError?.toLowerCase().includes("user not found"));
+
+  useEffect(() => {
+    if (shouldRedirectToSignin) {
+      navigate("/sign-in", { replace: true });
+    }
+  }, [shouldRedirectToSignin, navigate]);
 
   // --- Loading state ---
   if (userLoading || hotApartmentsLoading || nearbyApartmentsLoading) {
@@ -70,12 +82,10 @@ export default function Dashboard() {
   }
 
   // --- Handle server/db errors or missing user profile ---
-  if (
-    userError ||
-    !user ||
-    !isAuthenticated ||
-    (error && apartments.length === 0 && hotApartments.length === 0)
-  ) {
+  if (error && apartments.length === 0 && hotApartments.length === 0) {
+    if (shouldRedirectToSignin) {
+      return null;
+    }
     return (
       <div className="w-full min-h-screen bg-[#F9F9F9] flex flex-col items-center justify-center px-4 text-center">
         <img
@@ -100,6 +110,9 @@ export default function Dashboard() {
         />
       </div>
     );
+  }
+  if (shouldRedirectToSignin) {
+    return null;
   }
 
   // --- Render full dashboard ---

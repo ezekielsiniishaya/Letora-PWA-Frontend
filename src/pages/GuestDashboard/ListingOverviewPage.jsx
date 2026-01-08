@@ -192,7 +192,7 @@ export default function ListingOverviewPage() {
       if (response.success) {
         // Success case
         console.log("🟢 Apartment operation successful:", response.apartment);
-       // clearApartmentData();
+        clearApartmentData();
         setSubmissionResponse(response); // Store the response
 
         setShowSuccess(true);

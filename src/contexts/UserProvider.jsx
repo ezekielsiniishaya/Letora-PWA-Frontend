@@ -86,9 +86,11 @@ const UserProvider = ({ children }) => {
               setUser(null);
               setError("Session expired. Please login again.");
             } else {
-              console.warn("Could not fetch user profile, but token is valid");
-              setUser({ isAuthenticated: true });
-              setError("Could not load user profile");
+              console.warn("User profile invalid, clearing auth state");
+
+              await setToken(null);
+              setUser(null);
+              setError("Session expired. Please login again.");
             }
           }
         } else {

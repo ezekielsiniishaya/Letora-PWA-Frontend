@@ -128,13 +128,21 @@ export default function ShortletOverviewPage() {
       ratings: apiData.ratings || {},
     };
   };
+
+  // Check if current user is the host and owner of this apartment
+  const isHostAndOwner = user && host && user.id === host.id;
+
   // Check if we should show the request button
   const shouldShowRequestButton = () => {
-    if (!apartment?.availabilityRequest) {
-      return true; // No request exists, show button
-    }
+    // Don't show if user is host and owner
+    if (isHostAndOwner) return false;
 
-    const request = apartment.availabilityRequest;
+    const request = apartment?.availabilityRequest;
+
+    // If no request exists, show the button
+    if (!request) return true;
+
+    // Check request status and timing
     const requestDate = new Date(request.createdAt);
     const today = new Date();
 
@@ -144,74 +152,15 @@ export default function ShortletOverviewPage() {
       requestDate.getMonth() === today.getMonth() &&
       requestDate.getFullYear() === today.getFullYear();
 
-    // Check if status is pending
-    const isPending = request.status === "PENDING";
+    // Don't show button if:
+    // 1. Request was made today AND is still PENDING
+    // 2. Request is already CONFIRMED_AVAILABLE (user can book now)
+    // 3. Request is CONFIRMED_UNAVAILABLE (host said no)
+    if (isToday && request.status === "PENDING") return false;
+    if (request.status === "CONFIRMED_AVAILABLE") return false;
+    if (request.status === "CONFIRMED_UNAVAILABLE") return true; // Allow re-request if unavailable
 
-    console.log("Availability request check:", {
-      request,
-      isToday,
-      isPending,
-      shouldShowButton: !(isToday || !isPending),
-    });
-
-    // Hide button if request was made today OR status is not pending
-    return !(isToday || !isPending);
-  };
-
-  // Check document verification status
-  const checkDocumentStatus = () => {
-    const documents = user?.documents || [];
-    const hostVerification = user?.hostVerification;
-    const guestVerification = user?.guestVerification;
-
-    // Using the verification objects (preferred)
-    if (hostVerification) {
-      const {
-        status,
-        hasRequiredDocuments,
-        documents: verificationDocs,
-      } = hostVerification;
-
-      return {
-        overallStatus: status, // "VERIFIED", "PENDING", "REJECTED"
-        hasRequiredDocuments,
-        isFullyVerified: status === "VERIFIED" && hasRequiredDocuments,
-        documents: verificationDocs || documents,
-        verificationType: "HOST",
-      };
-    }
-
-    if (guestVerification) {
-      const { status, hasRequiredDocuments } = guestVerification;
-
-      return {
-        overallStatus: status,
-        hasRequiredDocuments,
-        isFullyVerified: status === "VERIFIED" && hasRequiredDocuments,
-        documents: documents,
-        verificationType: "GUEST",
-      };
-    }
-
-    // Fallback: Manual document check
-    const requiredDocumentTypes = ["ID_CARD", "ID_PHOTOGRAPH"];
-    const uploadedDocuments = documents.map((doc) => doc.type);
-
-    const hasAllRequiredTypes = requiredDocumentTypes.every((type) =>
-      uploadedDocuments.includes(type)
-    );
-
-    const allDocumentsVerified = requiredDocumentTypes.every((type) =>
-      documents.some((doc) => doc.type === type && doc.status === "VERIFIED")
-    );
-
-    return {
-      overallStatus: allDocumentsVerified ? "VERIFIED" : "PENDING",
-      hasRequiredDocuments: hasAllRequiredTypes,
-      isFullyVerified: allDocumentsVerified,
-      documents: documents,
-      verificationType: "UNKNOWN",
-    };
+    return true;
   };
 
   // Check user status whether they can book
@@ -225,14 +174,6 @@ export default function ShortletOverviewPage() {
       };
     }
 
-    console.log("User data for verification:", {
-      role: user.role,
-      verificationStatus: user.verificationStatus,
-      guestDocumentStatus: user.guestDocumentStatus,
-      guestVerification: user.guestVerification,
-      documents: user.documents,
-    });
-
     // Handle HOST users differently - they don't need guest verification
     if (user.role === "HOST") {
       // For hosts, check if they have verified host status
@@ -240,20 +181,14 @@ export default function ShortletOverviewPage() {
         user.hostVerification?.status === "VERIFIED" &&
         user.hostVerification?.hasRequiredDocuments
       ) {
-        // Host is verified and can book as guest
-        return {
-          status: "VERIFIED",
-          message: "",
-          action: () => navigate(`/booking-dates/${id}`),
-          canBook: true,
-        };
+        // Host is verified - now check availability
       } else {
         // Check the specific host verification status
         if (user.hostVerification?.status === "PENDING") {
           return {
             status: "HOST_VERIFICATION_PENDING",
             message: "Your documents are undergoing review.",
-            action: null, // No redirect, just show alert
+            action: null,
             canBook: false,
           };
         } else if (!user.hostVerification?.hasRequiredDocuments) {
@@ -265,140 +200,37 @@ export default function ShortletOverviewPage() {
             canBook: false,
           };
         } else {
-          // Generic host verification needed
           return {
             status: "HOST_NEEDS_VERIFICATION",
             message:
               "Your host verification is pending. Please wait for verification to complete.",
-            action: null, // No redirect, just show alert
+            action: null,
             canBook: false,
           };
         }
       }
     }
 
-    // For GUEST users - use guestVerification object if available (preferred)
+    // For GUEST users - check verification
     if (user.guestVerification) {
       const { canBook, status, hasRequiredDocuments } = user.guestVerification;
 
-      console.log("Guest verification details:", {
-        canBook,
-        status,
-        hasRequiredDocuments,
-        documents: user.documents,
-      });
-
-      if (canBook) {
-        return {
-          status: "VERIFIED",
-          message: "",
-          action: () => navigate(`/booking-dates/${id}`),
-          canBook: true,
-        };
-      }
-
-      // Check if documents are missing entirely
-      if (
-        !hasRequiredDocuments &&
-        (!user.documents || user.documents.length === 0)
-      ) {
-        return {
-          status: "DOCUMENTS_REQUIRED",
-          message: "Please upload your ID documents to book an apartment",
-          action: () => navigate("/id-check"),
-          canBook: false,
-        };
-      }
-
-      // Check if documents are pending verification
-      if (status === "PENDING") {
-        return {
-          status: "GUEST_VERIFICATION_PENDING",
-          message:
-            "Your documents are under review. Please wait for verification.",
-          action: null,
-          canBook: false,
-        };
-      }
-
-      // Check if verification was rejected
-      if (status === "REJECTED") {
-        return {
-          status: "GUEST_VERIFICATION_REJECTED",
-          message: "Your documents were rejected. Please upload new documents.",
-          action: () => navigate("/id-check"),
-          canBook: false,
-        };
-      }
-    }
-
-    // Fallback for GUEST users without guestVerification object
-    if (user.role === "GUEST") {
-      // Check guest document status
-      if (user.guestDocumentStatus) {
-        if (user.guestDocumentStatus === "PENDING") {
-          // Check if documents exist but are pending, or if no documents uploaded
-          if (!user.documents || user.documents.length === 0) {
-            return {
-              status: "DOCUMENTS_REQUIRED",
-              message: "Please upload your ID documents to book an apartment",
-              action: () => navigate("/id-check"),
-              canBook: false,
-            };
-          } else {
-            return {
-              status: "GUEST_DOCUMENTS_PENDING",
-              message:
-                "Your documents are under review. Please wait for verification.",
-              action: null,
-              canBook: false,
-            };
-          }
-        }
-
-        if (user.guestDocumentStatus === "REJECTED") {
+      if (!canBook) {
+        if (
+          !hasRequiredDocuments &&
+          (!user.documents || user.documents.length === 0)
+        ) {
           return {
-            status: "GUEST_DOCUMENTS_REJECTED",
-            message:
-              "Your documents were rejected. Please upload new documents.",
+            status: "DOCUMENTS_REQUIRED",
+            message: "Please upload your ID documents to book an apartment",
             action: () => navigate("/id-check"),
             canBook: false,
           };
         }
-      }
 
-      // Check if no documents uploaded at all
-      if (!user.documents || user.documents.length === 0) {
-        return {
-          status: "DOCUMENTS_REQUIRED",
-          message: "Please upload your ID documents to book an apartment",
-          action: () => navigate("/id-check"),
-          canBook: false,
-        };
-      }
-
-      // Check document verification status
-      const documentStatus = checkDocumentStatus();
-      if (!documentStatus.hasRequiredDocuments) {
-        return {
-          status: "DOCUMENTS_REQUIRED",
-          message: "Please upload your ID documents to book an apartment",
-          action: () => navigate("/id-check"),
-          canBook: false,
-        };
-      }
-
-      if (!documentStatus.isFullyVerified) {
-        const pendingDocs = user.documents?.filter(
-          (doc) => doc.status === "PENDING"
-        );
-        const rejectedDocs = user.documents?.filter(
-          (doc) => doc.status === "REJECTED"
-        );
-
-        if (pendingDocs?.length > 0) {
+        if (status === "PENDING") {
           return {
-            status: "DOCUMENTS_PENDING_VERIFICATION",
+            status: "GUEST_VERIFICATION_PENDING",
             message:
               "Your documents are under review. Please wait for verification.",
             action: null,
@@ -406,19 +238,39 @@ export default function ShortletOverviewPage() {
           };
         }
 
-        if (rejectedDocs?.length > 0) {
+        if (status === "REJECTED") {
           return {
-            status: "DOCUMENTS_REJECTED",
+            status: "GUEST_VERIFICATION_REJECTED",
             message:
-              "Some of your documents were rejected. Please upload new documents.",
+              "Your documents were rejected. Please upload new documents.",
             action: () => navigate("/id-check"),
             canBook: false,
           };
         }
       }
+    } else if (user.role === "GUEST") {
+      // Fallback verification checks
+      if (user.guestDocumentStatus === "PENDING") {
+        return {
+          status: "GUEST_DOCUMENTS_PENDING",
+          message:
+            "Your documents are under review. Please wait for verification.",
+          action: null,
+          canBook: false,
+        };
+      }
+
+      if (user.guestDocumentStatus === "REJECTED") {
+        return {
+          status: "GUEST_DOCUMENTS_REJECTED",
+          message: "Your documents were rejected. Please upload new documents.",
+          action: () => navigate("/id-check"),
+          canBook: false,
+        };
+      }
     }
 
-    // Check user verification status (general account verification)
+    // Check user verification status
     if (user.verificationStatus && user.verificationStatus !== "VERIFIED") {
       if (user.verificationStatus === "PENDING") {
         return {
@@ -437,25 +289,58 @@ export default function ShortletOverviewPage() {
       };
     }
 
-    // If we reach here and still can't book, show generic message
-    if (user.guestVerification && !user.guestVerification.canBook) {
+    // ========== AVAILABILITY CHECK ==========
+    const availability = apartment?.availabilityRequest;
+
+    if (!availability) {
       return {
-        status: "CANNOT_BOOK",
-        message:
-          "Your account is not authorized to make bookings at this time. Please contact support.",
+        status: "NO_AVAILABILITY_REQUEST",
+        message: "Please request availability from the host before booking.",
         action: null,
         canBook: false,
       };
     }
 
-    // All checks passed - user can book
-    return {
-      status: "VERIFIED",
-      message: "",
-      action: () => navigate(`/booking-dates/${id}`),
-      canBook: true,
-    };
+    switch (availability.status) {
+      case "PENDING":
+        return {
+          status: "AVAILABILITY_PENDING",
+          message:
+            "Your availability request is still pending. Please wait for host approval.",
+          action: null,
+          canBook: false,
+        };
+      case "CONFIRMED_AVAILABLE":
+        // User is verified AND availability is confirmed - allow booking
+        return {
+          status: "VERIFIED",
+          message: "",
+          action: () => navigate(`/booking-dates/${id}`),
+          canBook: true,
+        };
+      case "CONFIRMED_UNAVAILABLE":
+        return {
+          status: "AVAILABILITY_UNAVAILABLE",
+          message: "This apartment is not available for your requested dates.",
+          action: null,
+          canBook: false,
+        };
+      default:
+        return {
+          status: "AVAILABILITY_UNKNOWN",
+          message: "Cannot proceed with booking. Please try again later.",
+          action: null,
+          canBook: false,
+        };
+    }
   };
+
+  const canBookNow = () => {
+    return checkGuestStatus().canBook;
+  };
+
+  const isBookButtonEnabled = canBookNow();
+
   const handleBookNow = () => {
     const guestStatus = checkGuestStatus();
     console.log("Guest status check:", guestStatus);
@@ -477,12 +362,32 @@ export default function ShortletOverviewPage() {
 
       case "HOST_VERIFICATION_PENDING":
       case "HOST_NEEDS_VERIFICATION":
-      case "PENDING_VERIFICATION":
       case "GUEST_VERIFICATION_PENDING":
       case "USER_VERIFICATION_PENDING":
       case "GUEST_DOCUMENTS_PENDING":
       case "DOCUMENTS_PENDING_VERIFICATION":
         showAlert("info", guestStatus.message);
+        break;
+
+      case "NO_AVAILABILITY_REQUEST":
+        showAlert(
+          "info",
+          "Please request availability from the host before booking."
+        );
+        break;
+
+      case "AVAILABILITY_PENDING":
+        showAlert(
+          "info",
+          "Your availability request is pending host approval. You'll be notified when it's confirmed."
+        );
+        break;
+
+      case "AVAILABILITY_UNAVAILABLE":
+        showAlert(
+          "warning",
+          "The host has marked this apartment as unavailable at the moment. "
+        );
         break;
 
       case "VERIFIED":
@@ -541,8 +446,6 @@ export default function ShortletOverviewPage() {
     setShowSuccess(false);
     navigate("/apartments");
   };
-  // Check if current user is the host and owner of this apartment
-  const isHostAndOwner = user && host && user.id === host.id;
 
   // Check if we should show the request button
   const showRequestButton = shouldShowRequestButton();
@@ -597,6 +500,7 @@ export default function ShortletOverviewPage() {
         showLegalDocuments={false}
         onPriceButtonClick={handleBookNow}
       />
+
       <div className="px-[18px]">
         {/* Security Deposit */}
         {apartment.securityDeposit && (
@@ -653,6 +557,7 @@ export default function ShortletOverviewPage() {
             disabled={isRequesting}
           />
         )}
+
         {/* Book Now Button - Updated to handle guest verification */}
         <Button
           text={`Book @ ₦${apartment.pricing?.pricePerNight?.toLocaleString()}/Night`}
@@ -664,6 +569,7 @@ export default function ShortletOverviewPage() {
               : ""
           }`}
           onClick={handleBookNow}
+          disabled={!isBookButtonEnabled}
         />
       </div>
 

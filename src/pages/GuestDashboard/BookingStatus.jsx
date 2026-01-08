@@ -317,31 +317,29 @@ export default function BookingStatusPage() {
       </div>
 
       {/* Booking ID */}
-      <div className="w-full max-w-md bg-[#E9E9E970] rounded-[40px] px-4 py-3 mb-6">
-        <div className="flex items-center justify-between">
-          {/* Left side - Booking ID label and value */}
-          <div className="flex-1 min-w-0">
-            <div className="text-[12px] ml-[-190px] text-[#000000] mb-1">
-              Booking ID
-            </div>
-            <div className="text-[14px] font-medium text-[#000000] truncate">
-              {booking.id}
-            </div>
+      <div className="w-full max-w-md bg-[#E9E9E970] rounded-[40px] px-[15px] py-3 mb-6 flex items-center justify-between">
+        {/* Left side - Booking ID label and value */}
+        <div className="relative flex flex-col">
+          <div className="absolute top-0 left-0 text-[12px] text-[#000000]">
+            Booking ID
           </div>
-
-          {/* Right side - Copy button */}
-          <button
-            onClick={copyBookingId}
-            className="flex items-center space-x-1 bg-white px-3 py-2 rounded-[40px] text-[12px] hover:bg-gray-100 transition-colors flex-shrink-0 ml-3"
-          >
-            <img
-              src="/icons/tabler_copy.png"
-              alt="Copy"
-              className="w-[17px] h-[17px]"
-            />
-            <span className="text-[13px]">Copy</span>
-          </button>
+          <div className="text-[14px] font-medium text-[#000000] truncate mt-[18px]">
+            {booking.reference || "N/A"}
+          </div>
         </div>
+
+        {/* Right side - Copy button */}
+        <button
+          onClick={copyBookingId}
+          className="flex items-center space-x-1 bg-white px-3 py-2 rounded-[40px] text-[12px] hover:bg-gray-100 transition-colors"
+        >
+          <img
+            src="/icons/tabler_copy.png"
+            alt="Copy"
+            className="w-[17px] h-[17px]"
+          />
+          <span className="text-[13px]">Copy</span>
+        </button>
       </div>
 
       {/* Action Buttons */}

@@ -295,7 +295,7 @@ export default function PaymentPage() {
         </p>
 
         {/* Payment Card */}
-        <div className="bg-white rounded-[8px] w-full h-[228px] px-5 py-4 text-left text-[13px] text-[#333333] mb-[150px]">
+        <div className="bg-white rounded-[8px] w-full h-[228px] px-5 py-4 text-left text-[13px] text-[#333333] mb-[130px]">
           <div className="flex flex-col justify-between space-y-10">
             <div className="flex justify-between">
               <span>Account name</span>

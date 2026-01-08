@@ -48,7 +48,7 @@ export default function ChooseType() {
         </div>
 
         {/* Buttons */}
-        <div className="flex flex-col space-y-[29px] mt-[45px] w-full">
+        <div className="flex flex-col space-y-[29px] mt-[40px] w-full">
           {/* HOST CARD */}
           <button
             onClick={() => handleSelect("host")}
@@ -137,7 +137,7 @@ export default function ChooseType() {
       </div>
 
       {/* Proceed Button */}
-      <div className="w-full max-w-md mt-[88px]">
+      <div className="w-full max-w-md mt-[40px]">
         <Button
           text="Proceed"
           onClick={handleProceed}
