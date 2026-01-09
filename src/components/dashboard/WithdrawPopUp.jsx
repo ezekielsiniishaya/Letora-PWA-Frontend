@@ -13,8 +13,12 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
 
   // Check if amount exceeds balance
   const amountExceedsBalance = numericAmount > numericBalance;
-  // Check if amount is valid (greater than 0 and doesn't exceed balance)
-  const isAmountValid = numericAmount > 0 && !amountExceedsBalance;
+
+  // Check minimum amount
+  const isBelowMinimum = numericAmount > 0 && numericAmount < 100;
+
+  // Check if amount is valid (greater than 0, minimum ₦100, doesn't exceed balance)
+  const isAmountValid = numericAmount >= 100 && !amountExceedsBalance;
 
   const formatAmount = (value) => {
     // Remove non-digit characters
@@ -26,9 +30,21 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
     return parseInt(numericValue, 10).toLocaleString("en-US");
   };
 
-  // In your WithdrawPopup component, make sure onSuccess is called with both parameters
+  // Handle withdrawal
   const handleWithdraw = async (e) => {
     e.preventDefault();
+
+    // Frontend validation
+    if (numericAmount < 100) {
+      setError("Minimum withdrawal amount is ₦100");
+      return;
+    }
+
+    if (amountExceedsBalance) {
+      setError("Amount exceeds available balance");
+      return;
+    }
+
     if (!isAmountValid) return;
 
     setLoading(true);
@@ -39,16 +55,22 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
 
       if (response.success) {
         onClose();
-        onSuccess(amount, response.data); // Pass both amount and full response data
+        onSuccess(amount, response.data);
       } else {
         setError(response.message || "Withdrawal failed");
       }
     } catch (err) {
-      setError(err.message || "Withdrawal request failed");
+      // Check for specific error messages
+      if (err.message && err.message.includes("Minimum withdrawal amount")) {
+        setError("Minimum withdrawal amount is ₦100");
+      } else {
+        setError(err.message || "Withdrawal request failed");
+      }
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <>
       {/* Overlay - clicking closes popup */}
@@ -73,20 +95,33 @@ export default function WithdrawPopup({ balance, onClose, onSuccess }) {
               onChange={(e) => {
                 const formattedValue = formatAmount(e.target.value);
                 setAmount(formattedValue);
+                // Clear error when user types
+                if (error) setError("");
               }}
               placeholder="Enter amount"
               className={`border mt-1 w-full h-[45px] rounded-[5px] px-3 py-2 text-smtext-black outline-none ${
-                amountExceedsBalance ? "border-red-500" : ""
+                amountExceedsBalance || isBelowMinimum ? "border-red-500" : ""
               }`}
             />
-            {/* Error message when amount exceeds balance */}
+
+            {/* Frontend validation messages */}
+            {isBelowMinimum && numericAmount > 0 && (
+              <p className="text-red-500 text-[12px] mt-1">
+                Minimum withdrawal amount is ₦100
+              </p>
+            )}
+
             {amountExceedsBalance && (
               <p className="text-red-500 text-[12px] mt-1">
                 Amount exceeds available balance
               </p>
             )}
-            {/* API error message */}
-            {error && <p className="text-red-500 text-[12px] mt-1">{error}</p>}
+
+            {/* Backend API error message */}
+            {error && !isBelowMinimum && !amountExceedsBalance && (
+              <p className="text-red-500 text-[12px] mt-1">{error}</p>
+            )}
+
             <p className="text-[12px] text-[#0D132180] mt-1">
               Available balance: <span>₦{balance}</span>
             </p>

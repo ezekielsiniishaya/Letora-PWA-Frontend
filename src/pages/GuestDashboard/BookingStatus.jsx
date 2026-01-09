@@ -280,7 +280,7 @@ export default function BookingStatusPage() {
               <img
                 src="/icons/location.svg"
                 alt="Location"
-                className="w-[11px] h-[14px] flex-shrink-0"
+                className="w-[11px] h-[16px] mt-[2px]"
               />
               <span className="text-[13px] text-[#777] truncate">
                 {booking.apartment?.town && booking.apartment?.state

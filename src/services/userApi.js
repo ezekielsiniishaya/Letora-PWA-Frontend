@@ -273,11 +273,36 @@ export const holdSecurityDeposit = async (bookingId) => {
 };
 
 // Process withdrawal (only amount needed)
+// In services/userApi.js - Update the processWithdrawal function
 export const processWithdrawal = async (amount) => {
-  return apiRequest("/api/users/withdraw", {
-    method: "POST",
-    body: { amount },
-  });
+  try {
+    // ✅ UPDATED PATH: Now calls /api/payments/withdraw instead of /api/users/withdraw
+    return apiRequest("/api/payments/withdraw", {
+      method: "POST",
+      body: { amount },
+    });
+  } catch (error) {
+    console.error("Withdrawal error:", error);
+    return {
+      success: false,
+      message: error.message || "Failed to process withdrawal",
+    };
+  }
+};
+
+// ✅ ADD THIS NEW FUNCTION for getting wallet balance
+export const getHostWallet = async () => {
+  try {
+    return apiRequest("/api/payments/wallet", {
+      method: "GET",
+    });
+  } catch (error) {
+    console.error("Get wallet error:", error);
+    return {
+      success: false,
+      message: error.message || "Failed to get wallet information",
+    };
+  }
 };
 
 export const createDepositHold = async (bookingId) => {

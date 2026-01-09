@@ -1,4 +1,4 @@
-// Updated Dashboard component (Host version - corrected)
+// Updated Dashboard component - FIXED VERSION
 import { useState, useEffect } from "react";
 import ApartmentSlider from "../../components/dashboard/ApartmentSlider";
 import ApartmentCard from "../../components/dashboard/ApartmentCard";
@@ -11,6 +11,7 @@ import { useApartmentListing } from "../../hooks/useApartmentListing";
 import { useUser } from "../../hooks/useUser";
 import CurrentLocationDropdown from "../../components/dashboard/SelectState";
 import { useNavigate } from "react-router-dom";
+
 export default function Dashboard() {
   const navigate = useNavigate();
 
@@ -41,6 +42,7 @@ export default function Dashboard() {
   const dismissAlert = () => {
     setAlert((prev) => ({ ...prev, show: false }));
   };
+
   // Get time-based greeting
   const getTimeBasedGreeting = () => {
     const currentHour = new Date().getHours();
@@ -69,14 +71,17 @@ export default function Dashboard() {
     getUnreadNotificationsCount,
     refreshUser,
   } = useUser();
-  // Authentication check - MUST BE AFTER ALL HOOKS
+
+  // Authentication check
   const isAuthenticated = !!user;
+
   const handleLocationChange = (newLocation) => {
     console.log("📍 Location changed to:", newLocation);
     window.location.reload();
   };
+
   const handleWithdrawalSuccess = (amount, data) => {
-    setWithdrawalData(data); // Store the withdrawal data
+    setWithdrawalData(data);
     setShowWithdraw(false);
     setShowSuccess(true);
 
@@ -87,10 +92,12 @@ export default function Dashboard() {
   // Format the withdrawal amount for display
   const getWithdrawalAmount = () => {
     if (withdrawalData) {
-      return withdrawalData.amount.toLocaleString("en-NG", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
+      return (
+        withdrawalData.withdrawalAmount?.toLocaleString("en-NG", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }) || "0.00"
+      );
     }
     return "0.00";
   };
@@ -98,18 +105,20 @@ export default function Dashboard() {
   // Format the new balance for display
   const getNewBalance = () => {
     if (withdrawalData) {
-      // Use newAvailableBalance instead of newBalance
       const balance =
-        withdrawalData.newAvailableBalance || withdrawalData.newBalance;
-      return balance.toLocaleString("en-NG", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
+        withdrawalData.newBalance || withdrawalData.availableBalance;
+      return (
+        balance?.toLocaleString("en-NG", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }) || "0.00"
+      );
     }
     return "0.00";
   };
 
   const unreadCount = getUnreadNotificationsCount();
+
   useEffect(() => {
     const handleAppRefresh = async () => {
       try {
@@ -133,7 +142,7 @@ export default function Dashboard() {
     const getAllBookings = () => {
       const userBookings = getUserBookings().map((booking) => ({
         ...booking,
-        role: "guest", // ADD THIS - same as BookingsPage
+        role: "guest",
       }));
 
       // Bookings where host's apartments are booked by others
@@ -142,18 +151,18 @@ export default function Dashboard() {
           (apartment) =>
             apartment.bookings?.map((booking) => ({
               ...booking,
-              isHostBooking: true, // Keep this for backward compatibility
-              role: "host", // ADD THIS - same as BookingsPage
+              isHostBooking: true,
+              role: "host",
               apartment: {
                 ...apartment,
-                host: user, // Set current user as host
+                host: user,
               },
             })) || []
         ) || [];
 
       // Combine both types of bookings and sort by creation date (newest first)
       const allBookingsCombined = [...userBookings, ...hostApartmentBookings]
-        .filter((booking) => booking && booking.id) // Remove any null/undefined bookings
+        .filter((booking) => booking && booking.id)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
       return allBookingsCombined;
@@ -163,16 +172,15 @@ export default function Dashboard() {
       const bookings = getAllBookings();
       setAllBookings(bookings);
     }
-  }, [user, getUserBookings]); // Add getUserBookings to dependencies
+  }, [user, getUserBookings]);
 
   // Get current/active booking (most recent non-cancelled booking)
   const currentBooking = allBookings.find(
     (booking) => booking.status?.toLowerCase() !== "pending" || null
   );
-  // Get account balance from host profile
-  // NEW:
+
+  // FIXED: Use availableBalance (not withdrawableBalance)
   const accountBalance = user?.hostProfile?.availableBalance || 0;
-  const withdrawableBalance = user?.hostProfile?.withdrawableBalance || 0;
   const formattedBalance =
     accountBalance === 0
       ? "0.0"
@@ -187,7 +195,7 @@ export default function Dashboard() {
 
       if (justLoggedIn === "true") {
         sessionStorage.removeItem("justLoggedIn");
-        return; // 🚫 skip refresh
+        return;
       }
 
       if (isAuthenticated && !userLoading) {
@@ -204,7 +212,6 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ======== MOVE THIS DOWN HERE ========
   // Show loading state for user data
   if (userLoading) {
     return (
@@ -218,24 +225,20 @@ export default function Dashboard() {
     navigate("/login");
     return null;
   }
+
   return (
     <div className="w-full min-h-screen bg-[#F9F9F9] overflow-x-hidden pb-[80px]">
       {/* Header */}
       <div className="relative bg-[#8C068C] h-[298px] text-white px-[20px] pt-[14px]">
-        {/* FIX: Move CurrentLocationDropdown to the top */}
         <div className="relative z-20 pt-[70px] mb-[-20px]">
-          {" "}
-          {/* Added pt-4 and higher z-index */}
           <CurrentLocationDropdown
             onLocationChange={handleLocationChange}
-            className="host-location-dropdown" // Optional: for custom styling
+            className="host-location-dropdown"
           />
         </div>
 
         {/* Header Row */}
         <div className="flex flex-row justify-between items-center">
-          {" "}
-          {/* Reduced mt */}
           <div className="flex items-center gap-3">
             <div>
               <h2 className="text-[16px] font-semibold">
@@ -271,7 +274,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Rest of your host dashboard content... */}
         {/* Balance Section */}
         <div className="mt-[16px] flex flex-col items-center">
           <div className="flex items-center gap-2">
@@ -322,8 +324,7 @@ export default function Dashboard() {
           />
         </div>
       </div>
-      {/* Rest of your dashboard content remains the same... */}
-      {/* My Booking Section */}
+
       {/* Alert Container */}
       {alert.show && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
@@ -335,6 +336,8 @@ export default function Dashboard() {
           />
         </div>
       )}
+
+      {/* My Booking Section */}
       <div className="px-[21px] mt-[25px]">
         <div className="flex justify-between items-center mb-2">
           <h3 className="font-medium text-[14px]">My Booking 🗂</h3>
@@ -352,15 +355,14 @@ export default function Dashboard() {
             completedButtonText={
               currentBooking.status?.toLowerCase() === "completed"
                 ? currentBooking.role === "host"
-                  ? "Hold Security Deposit" // For host's apartments
-                  : "Rate your Stay" // For guest bookings
+                  ? "Hold Security Deposit"
+                  : "Rate your Stay"
                 : undefined
             }
             user={user}
-            role={currentBooking.role} // ADD THIS - pass the role
-            onShowAlert={showAlert} // You might need to add this function
+            role={currentBooking.role}
+            onShowAlert={showAlert}
             onClick={() => {
-              // ADD THIS - navigate with proper role information
               if (currentBooking.role === "host") {
                 navigate(`/host-booking-details/${currentBooking.id}`, {
                   state: {
@@ -395,6 +397,7 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
       {/* Hot Apartments */}
       <div className="px-[22px] mt-1">
         <div className="flex justify-between items-center">
@@ -426,6 +429,7 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
       {/* Available Apartments */}
       <div className="px-[22px]">
         <div className="flex justify-between items-center">
@@ -461,19 +465,23 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
       {/* Bottom Navigation */}
       <Navigation />
+
       {/* Withdraw Popup */}
       {showWithdraw && (
         <WithdrawPopup
-          balance={withdrawableBalance.toLocaleString("en-NG", {
+          balance={accountBalance.toLocaleString("en-NG", {
+            // FIXED: Use accountBalance
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
           onClose={() => setShowWithdraw(false)}
-          onSuccess={handleWithdrawalSuccess} // Use the updated callback
+          onSuccess={handleWithdrawalSuccess}
         />
       )}
+
       {/* Show Success Popup with actual data */}
       {showSuccess && (
         <ShowSuccess
@@ -483,7 +491,7 @@ export default function Dashboard() {
           buttonText="Done"
           onClose={() => {
             setShowSuccess(false);
-            setWithdrawalData(null); // Reset withdrawal data
+            setWithdrawalData(null);
           }}
           height="auto"
         />
