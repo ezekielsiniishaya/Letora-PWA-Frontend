@@ -12,7 +12,6 @@ dist
 dist-ssr
 *.local
 # Capacitor
-android/
 ios/
 # Editor directories and files
 .vscode/*
@@ -24,4 +23,3 @@ ios/
 *.njsproj
 *.sln
 *.sw?
-.env
