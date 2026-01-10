@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "453717452814",
+    "project_id": "letora-94822",
+    "storage_bucket": "letora-94822.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:453717452814:android:3848286a139086ba92f45f",
+        "android_client_info": {
+          "package_name": "com.letora.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsfTn9PQKO0XcJAKTjdXTQj-1blzgZe4c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
