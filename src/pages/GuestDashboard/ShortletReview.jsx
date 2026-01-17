@@ -5,6 +5,8 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import ApartmentDisplay from "../../components/apartment/ApartmentDisplay";
 import { useUser } from "../../hooks/useUser";
 import { getApartmentById, deleteApartment } from "../../services/apartmentApi"; // ✅ Import deleteApartment
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext";
 
 // Helper function to transform API data to match ApartmentDisplay expectations
 const transformApartmentData = (apiData) => {
@@ -72,6 +74,17 @@ const transformApartmentData = (apiData) => {
 };
 
 export default function ListingOverviewPage() {
+  const { setBackgroundColor } = useBackgroundColor();
+
+  useEffect(() => {
+    setBackgroundColor("#F9F9F9");
+
+    if (window.Capacitor || window.capacitor) {
+      StatusBar.setBackgroundColor({ color: "#F9F9F9" });
+      StatusBar.setStyle({ style: Style.Light });
+    }
+  }, [setBackgroundColor]);
+
   const [showSuccess, setShowSuccess] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [apartment, setApartment] = useState(null);
@@ -93,7 +106,7 @@ export default function ListingOverviewPage() {
         if (location.state?.apartment) {
           console.log("✅ Setting apartment from location state");
           const transformedData = transformApartmentData(
-            location.state.apartment
+            location.state.apartment,
           );
           console.log("📦 Transformed apartment data:", transformedData);
           setApartment(transformedData);
@@ -219,7 +232,7 @@ export default function ListingOverviewPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F9F9F9]">
       {/* Error Display */}
       {error && (
         <div className="mx-4 mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">

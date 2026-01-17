@@ -9,8 +9,11 @@ import {
 } from "../../services/apartmentApi";
 import { useUser } from "../../hooks/useUser";
 import ApartmentDisplay from "../../components/apartment/ApartmentDisplay";
-import Alert from "../../components/utils/Alerts"; // or wherever your Alert component is
-// Helper function to convert base64 to File
+import Alert from "../../components/utils/Alerts";
+import { useEffect } from "react";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext";
+
 function base64ToFile(base64Data, fileName, fileType = "image/jpeg") {
   const arr = base64Data.split(",");
   const mime = arr[0].match(/:(.*?);/)[1] || fileType;
@@ -35,6 +38,15 @@ const getFileExtension = (typeOrName) => {
 };
 
 export default function ListingOverviewPage() {
+  const { setBackgroundColor } = useBackgroundColor();
+  useEffect(() => {
+    setBackgroundColor("#F9F9F9");
+
+    if (window.Capacitor || window.capacitor) {
+      StatusBar.setBackgroundColor({ color: "#F9F9F9" });
+      StatusBar.setStyle({ style: Style.Light });
+    }
+  }, [setBackgroundColor]);
   const [agreeInfo, setAgreeInfo] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -123,7 +135,7 @@ export default function ListingOverviewPage() {
             return base64ToFile(
               img.data,
               img.name || `image-${idx}.jpg`,
-              img.type
+              img.type,
             );
           }
           if (img instanceof File) return img;
@@ -145,7 +157,7 @@ export default function ListingOverviewPage() {
           file = base64ToFile(
             doc.data,
             doc.name || `document-${idx}.${ext}`,
-            doc.type
+            doc.type,
           );
         } else if (doc instanceof File) {
           file = doc;
@@ -288,8 +300,8 @@ export default function ListingOverviewPage() {
             ? "Updating..."
             : "Submitting..."
           : isEditing()
-          ? "Update Listing"
-          : "Submit Listing"}
+            ? "Update Listing"
+            : "Submit Listing"}
       </button>
       {showSuccess && (
         <ShowSuccess

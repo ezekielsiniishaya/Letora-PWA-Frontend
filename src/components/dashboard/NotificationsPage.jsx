@@ -3,8 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "../../hooks/useUser";
 import ShowSuccess from "../../components/ShowSuccess";
 import { getNotificationConfig } from "../utils/notificationConfig/index";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext";
 
 export default function NotificationsPage() {
+  const { setBackgroundColor } = useBackgroundColor();
+  useEffect(() => {
+    setBackgroundColor("#F9F9F9");
+
+    if (window.Capacitor || window.capacitor) {
+      StatusBar.setBackgroundColor({ color: "#F9F9F9" });
+      StatusBar.setStyle({ style: Style.Light });
+    }
+  }, [setBackgroundColor]);
+
   const navigate = useNavigate();
   const { user, getUserNotifications, markAsRead, deleteReadNotifications } =
     useUser();
@@ -24,7 +36,7 @@ export default function NotificationsPage() {
 
     // Sort notifications by date (newest first)
     const sortedNotifications = [...userNotifications].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
     );
 
     // Categorize notifications by time
@@ -32,11 +44,11 @@ export default function NotificationsPage() {
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     const recent = sortedNotifications.filter(
-      (n) => new Date(n.createdAt) >= oneWeekAgo
+      (n) => new Date(n.createdAt) >= oneWeekAgo,
     );
 
     const lastWeek = sortedNotifications.filter(
-      (n) => new Date(n.createdAt) < oneWeekAgo
+      (n) => new Date(n.createdAt) < oneWeekAgo,
     );
 
     setNotifications({
@@ -156,7 +168,7 @@ export default function NotificationsPage() {
   const handleNotificationClick = async (
     section,
     notificationId,
-    notification
+    notification,
   ) => {
     // Check if this is an availability-related notification
     const isAvailabilityNotification =
@@ -176,7 +188,7 @@ export default function NotificationsPage() {
           setNotifications((prev) => ({
             ...prev,
             [section]: prev[section].map((item) =>
-              item.id === notificationId ? { ...item, isRead: true } : item
+              item.id === notificationId ? { ...item, isRead: true } : item,
             ),
           }));
         } catch (error) {
@@ -214,7 +226,7 @@ export default function NotificationsPage() {
         setNotifications((prev) => ({
           ...prev,
           [section]: prev[section].map((item) =>
-            item.id === notificationId ? { ...item, isRead: true } : item
+            item.id === notificationId ? { ...item, isRead: true } : item,
           ),
         }));
 
@@ -269,14 +281,14 @@ export default function NotificationsPage() {
         navigate(
           user?.role === "HOST" && user?.hostVerification?.status === "VERIFIED"
             ? "/host-dashboard"
-            : "/guest-homepage"
+            : "/guest-homepage",
         );
         break;
       case "See Bookings":
         navigate(
           user?.role === "HOST" && user?.hostVerification?.status === "VERIFIED"
             ? "/host-dashboard"
-            : "/bookings"
+            : "/bookings",
         );
         break;
       case "See Booking Details":
@@ -420,15 +432,15 @@ export default function NotificationsPage() {
                 !hasReadNotifications()
                   ? "opacity-40 cursor-not-allowed"
                   : deleting
-                  ? "opacity-40 cursor-not-allowed"
-                  : "cursor-pointer hover:opacity-70"
+                    ? "opacity-40 cursor-not-allowed"
+                    : "cursor-pointer hover:opacity-70"
               }`}
               title={
                 !hasReadNotifications()
                   ? "No read notifications to delete"
                   : deleting
-                  ? "Deleting..."
-                  : "Delete read notifications"
+                    ? "Deleting..."
+                    : "Delete read notifications"
               }
               onClick={showDeleteConfirmation}
             />
@@ -445,7 +457,7 @@ export default function NotificationsPage() {
             </h2>
             <div className="space-y-[5px]">
               {notifications.recent.map((notification) =>
-                renderNotification(notification, "recent")
+                renderNotification(notification, "recent"),
               )}
             </div>
           </>
@@ -458,7 +470,7 @@ export default function NotificationsPage() {
             </h2>
             <div className="space-y-[5px]">
               {notifications.lastWeek.map((notification) =>
-                renderNotification(notification, "lastWeek")
+                renderNotification(notification, "lastWeek"),
               )}
             </div>
           </>

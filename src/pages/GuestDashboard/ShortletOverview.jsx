@@ -11,8 +11,21 @@ import { useUser } from "../../hooks/useUser";
 import { useBooking } from "../../hooks/useBooking";
 import Alert from "../../components/utils/Alerts";
 import ShowSuccess from "../../components/ShowSuccess";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { useBackgroundColor } from "../../contexts/BackgroundColorContext";
 
 export default function ShortletOverviewPage() {
+  const { setBackgroundColor } = useBackgroundColor();
+  // status bar background color and icon color
+  useEffect(() => {
+    setBackgroundColor("#F9F9F9");
+
+    if (window.Capacitor || window.capacitor) {
+      StatusBar.setBackgroundColor({ color: "#F9F9F9" });
+      StatusBar.setStyle({ style: Style.Light });
+    }
+  }, [setBackgroundColor]);
+
   const { id } = useParams();
   const [apartment, setApartment] = useState(null);
   const [host, setHost] = useState(null);
@@ -43,7 +56,7 @@ export default function ShortletOverviewPage() {
       setApartmentDetails(
         apartment.id,
         apartment.pricing?.pricePerNight || apartment.price,
-        apartment.securityDeposit?.amount || 0
+        apartment.securityDeposit?.amount || 0,
       );
     }
   }, [apartment, clearBookingData, setApartmentDetails]);
@@ -372,21 +385,21 @@ export default function ShortletOverviewPage() {
       case "NO_AVAILABILITY_REQUEST":
         showAlert(
           "info",
-          "Please request availability from the host before booking."
+          "Please request availability from the host before booking.",
         );
         break;
 
       case "AVAILABILITY_PENDING":
         showAlert(
           "info",
-          "Your availability request is pending host approval. You'll be notified when it's confirmed."
+          "Your availability request is pending host approval. You'll be notified when it's confirmed.",
         );
         break;
 
       case "AVAILABILITY_UNAVAILABLE":
         showAlert(
           "warning",
-          "The host has marked this apartment as unavailable at the moment. "
+          "The host has marked this apartment as unavailable at the moment. ",
         );
         break;
 
@@ -401,7 +414,7 @@ export default function ShortletOverviewPage() {
         showAlert(
           "error",
           guestStatus.message ||
-            "Please complete your verification to book an apartment"
+            "Please complete your verification to book an apartment",
         );
     }
   };
@@ -428,14 +441,14 @@ export default function ShortletOverviewPage() {
       } else {
         showAlert(
           "error",
-          res.message || "Failed to send availability request"
+          res.message || "Failed to send availability request",
         );
       }
     } catch (error) {
       console.error("Failed to send availability request:", error);
       showAlert(
         "error",
-        error.message || "Failed to send availability request"
+        error.message || "Failed to send availability request",
       );
     } finally {
       setIsRequesting(false);
@@ -484,7 +497,7 @@ export default function ShortletOverviewPage() {
   }
 
   return (
-    <div className="bg-white min-h-screen pb-[10px]">
+    <div className="bg-[#F9F9F9] min-h-screen pb-[10px]">
       {/* Alert Display */}
       {alert.show && (
         <div className="fixed top-4 ml-2 w-full left-1/2 transform -translate-x-1/2 z-50">
@@ -565,8 +578,8 @@ export default function ShortletOverviewPage() {
             !isHostAndOwner && !showRequestButton
               ? "mt-20"
               : isHostAndOwner
-              ? "mt-[120px]"
-              : ""
+                ? "mt-[120px]"
+                : ""
           }`}
           onClick={handleBookNow}
           disabled={!isBookButtonEnabled}
